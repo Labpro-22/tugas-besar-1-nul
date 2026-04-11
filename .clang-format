@@ -1,0 +1,36 @@
+---
+# Base style to inherit from
+BasedOnStyle: LLVM
+
+# Language-specific settings
+Language: Cpp
+Standard: Latest
+
+
+# indentation 
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+BreakBeforeBraces: Attach
+
+
+AllowShortFunctionsOnASingleLine: Inline
+BinPackArguments: false
+BinPackParameters: false
+
+BreakStringLiterals: true
+
+# pointer
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+
+# tidy includes
+SortIncludes: CaseSensitive
+SpaceAfterCStyleCast: true
+SpaceBeforeParens: ControlStatements
+
+AlignTrailingComments: true
+
+...
