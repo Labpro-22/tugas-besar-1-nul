@@ -1,0 +1,184 @@
+@startuml 06_Bonus_GUI_COM_Dynamic
+' ============================================================
+' Nimonspoli — 06: Bonus — GUI, COM, Dynamic Board
+' IF2010 Pemrograman Berorientasi Objek — Milestone 1
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classBorderColor #854F0B
+skinparam classArrowColor #854F0B
+skinparam classHeaderBackgroundColor #FAEEDA
+skinparam classFontColor #412402
+skinparam stereotypeFontSize 10
+skinparam linetype ortho
+skinparam shadowing false
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowThickness 1.2
+top to bottom direction
+
+' ============================================================
+' BONUS A — GUI
+' ============================================================
+package "Bonus: GUI" #FFFBF0 {
+
+    class GUIController {
+        - engine : GameEngine
+        - boardRenderer : BoardRenderer
+        - playerPanel : PlayerInfoPanel
+        --
+        + run() : void
+        + handleEvent(event : Event) : void
+        + render() : void
+    }
+
+    class BoardRenderer {
+        - board : Board*
+        - textures : map<string, Texture>
+        --
+        + draw(window : Window) : void
+        + highlightTile(index : int) : void
+        + drawPiece(player : Player*) : void
+    }
+
+    class PlayerInfoPanel {
+        - players : vector<Player*>
+        --
+        + draw(window : Window) : void
+        + update() : void
+    }
+
+    note as GUI_NOTE
+        Implements same commands as CLIController.
+        Reads GameEngine state only — never modifies it directly.
+        Recommended library: <b>Raylib</b> (via CMake FetchContent).
+    end note
+
+    GUIController --> BoardRenderer    : owns
+    GUIController --> PlayerInfoPanel  : owns
+    GUIController --> GameEngine       : reads state from
+
+}
+
+' ============================================================
+' BONUS B — COM (Computer Player)
+' ============================================================
+package "Bonus: COM" #FFF8E8 {
+
+    abstract class Strategy {
+        + {abstract} decideBuy(prop : Property*,\n  player : Player*) : bool
+        + {abstract} decideBid(bid : int,\n  player : Player*) : int
+        + {abstract} decideSkill(hand : vector<SkillCard*>,\n  player : Player*) : int
+        + {abstract} decideMortgage(props : vector<Property*>) : Property*
+    }
+
+    class AggressiveStrategy {
+        ' Buys almost everything, bids aggressively,
+        ' spends skills offensively.
+        --
+        + decideBuy(prop : Property*,\n  player : Player*) : bool
+        + decideBid(bid : int,\n  player : Player*) : int
+        + decideSkill(hand : vector<SkillCard*>,\n  player : Player*) : int
+        + decideMortgage(props : vector<Property*>) : Property*
+    }
+
+    class ConservativeStrategy {
+        ' Buys only cheap properties, bids low,
+        ' hoards ShieldCard and DiscountCard.
+        --
+        + decideBuy(prop : Property*,\n  player : Player*) : bool
+        + decideBid(bid : int,\n  player : Player*) : int
+        + decideSkill(hand : vector<SkillCard*>,\n  player : Player*) : int
+        + decideMortgage(props : vector<Property*>) : Property*
+    }
+
+    class ComputerPlayer {
+        - strategy : Strategy*
+        --
+        + decideAction(ctx : TurnContext&) : void
+        - decideBuy(prop : Property*) : bool
+        - decideBid(currentBid : int) : int
+        - decideSkill() : int
+        - decideBuild() : void
+    }
+
+    note as COM_NOTE
+        ComputerPlayer extends Player (see diagram 04).
+        Strategy is injected at construction — easy to
+        add new strategies without touching ComputerPlayer.
+    end note
+
+    Strategy         <|-- AggressiveStrategy
+    Strategy         <|-- ConservativeStrategy
+    ComputerPlayer   --> Strategy : uses
+
+}
+
+' ============================================================
+' BONUS C — DYNAMIC BOARD
+' ============================================================
+package "Bonus: Dynamic Board" #FFF4EC {
+
+    class TileConfig {
+        + index : int
+        + code : string
+        + type : string
+        + colorCategory : string
+    }
+
+    class DynamicBoardLoader {
+        + loadBoardConfig(file : string) : vector<TileConfig>
+        + validate(tiles : vector<TileConfig>) : bool
+        --
+        ' Validation rules:
+        '   - Exactly 1 GoTile and 1 JailTile
+        '   - 20 <= size <= 60
+        '   - All property codes exist in PropertyData
+    }
+
+    class BoardFactory {
+        + createDefaultBoard(config : Config) : Board
+        + createDynamicBoard(tileConfigs : vector<TileConfig>) : Board
+        - createTile(cfg : TileConfig) : Tile*
+    }
+
+    note as DYNAMIC_NOTE
+        If Tile::onLanded() virtual design is clean,
+        swapping board layout requires no changes to
+        game logic — only BoardFactory needs updating.
+        Default board is also built through BoardFactory
+        to keep construction logic in one place.
+    end note
+
+    BoardFactory        --> DynamicBoardLoader : uses
+    BoardFactory        ..> TileConfig         : consumes
+    DynamicBoardLoader  --> TileConfig         : produces
+    BoardFactory        --> Board              : builds
+
+}
+
+' ============================================================
+' CROSS-PACKAGE STUBS (referenced from other diagrams)
+' ============================================================
+class GameEngine <<context>> {
+    + executeCommand(cmd : string) : void
+}
+
+class Board <<context>> {
+    + getTile(index : int) : Tile*
+    + buildFromConfig(data : vector<TileConfig>) : void
+}
+
+class TurnContext <<context>> {
+    + currentPlayer : Player*
+    + diceTotal : int
+}
+
+' Layout guides: keep major sections stacked so the canvas
+' grows more balanced vertically instead of only to the right.
+GUIController -[hidden]down-> Strategy
+Strategy -[hidden]down-> BoardFactory
+BoardFactory -[hidden]down-> GameEngine
+
+@enduml

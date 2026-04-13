@@ -1,0 +1,181 @@
+@startuml 05_IO_SaveLoad
+' ============================================================
+' Nimonspoli — 05: IO & Save/Load
+' IF2010 Pemrograman Berorientasi Objek — Milestone 1
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classBorderColor #3B6D11
+skinparam classArrowColor #3B6D11
+skinparam classHeaderBackgroundColor #EAF3DE
+skinparam classFontColor #173404
+skinparam stereotypeFontSize 10
+skinparam linetype ortho
+skinparam shadowing false
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowThickness 1.2
+
+' ============================================================
+' SECTION A — CONFIGURATION
+' ============================================================
+package "Configuration" #F2FAE8 {
+
+    class ConfigLoader {
+        + loadAll(path : string) : Config
+        + loadProperty(file : string) : vector<PropertyData>
+        + loadRailroad(file : string) : RailroadConfig
+        + loadUtility(file : string) : UtilityConfig
+        + loadTax(file : string) : TaxConfig
+        + loadSpecial(file : string) : SpecialConfig
+        + loadMisc(file : string) : MiscConfig
+    }
+
+    class Config {
+        + properties : vector<PropertyData>
+        + railroad : RailroadConfig
+        + utility : UtilityConfig
+        + tax : TaxConfig
+        + special : SpecialConfig
+        + misc : MiscConfig
+    }
+
+    class PropertyData {
+        + id : int
+        + code : string
+        + name : string
+        + type : string
+        + color : string
+        + buyPrice : int
+        + mortgageValue : int
+        + houseUpgrade : int
+        + hotelUpgrade : int
+        + rentTable : vector<int>
+    }
+
+    class RailroadConfig {
+        + rentTable : map<int, int>
+    }
+
+    class UtilityConfig {
+        + multiplierTable : map<int, int>
+    }
+
+    class TaxConfig {
+        + pphFlat : int
+        + pphPercent : int
+        + pbmFlat : int
+    }
+
+    class SpecialConfig {
+        + goSalary : int
+        + jailFine : int
+    }
+
+    class MiscConfig {
+        + maxTurn : int
+        + startingBalance : int
+    }
+
+    ConfigLoader --> Config         : produces
+    Config       --> PropertyData   : contains
+    Config       --> RailroadConfig : contains
+    Config       --> UtilityConfig  : contains
+    Config       --> TaxConfig      : contains
+    Config       --> SpecialConfig  : contains
+    Config       --> MiscConfig     : contains
+
+}
+
+' ============================================================
+' SECTION B — SAVE / LOAD
+' ============================================================
+package "Save / Load" #F5FCF0 {
+
+    class SaveLoadManager {
+        + save(state : GameState,\n  filename : string) : void
+        + load(filename : string) : GameState
+        - serializePlayers(v : vector<PlayerState>) : string
+        - serializeProperties(v : vector<PropertyState>) : string
+        - serializeDeck(d : vector<string>) : string
+        - serializeLog(l : vector<LogEntry>) : string
+        - parsePlayers(lines : vector<string>) : vector<PlayerState>
+        - parseProperties(lines : vector<string>) : vector<PropertyState>
+        - parseDeck(lines : vector<string>) : vector<string>
+        - parseLog(lines : vector<string>) : vector<LogEntry>
+    }
+
+    class GameState {
+        + currentTurn : int
+        + maxTurn : int
+        + players : vector<PlayerState>
+        + turnOrder : vector<int>
+        + activePlayerIdx : int
+        + properties : vector<PropertyState>
+        + deckState : vector<string>
+        + log : vector<LogEntry>
+    }
+
+    class PlayerState {
+        + username : string
+        + balance : int
+        + positionCode : string
+        + status : string
+        + hand : vector<CardState>
+    }
+
+    class PropertyState {
+        + code : string
+        + type : string
+        + owner : string
+        + status : string
+        + festivalMult : int
+        + festivalDur : int
+        + buildingCount : int
+        + isHotel : bool
+    }
+
+    class CardState {
+        + type : string
+        + value : int
+        + remainingDuration : int
+    }
+
+    SaveLoadManager --> GameState     : serializes / deserializes
+    GameState       --> PlayerState   : contains
+    GameState       --> PropertyState : contains
+    PlayerState     --> CardState     : contains
+
+}
+
+' ============================================================
+' SECTION C — TRANSACTION LOGGER
+' ============================================================
+package "Logging" #EDFAF4 {
+
+    class TransactionLogger {
+        - entries : vector<LogEntry>
+        --
+        + log(turn : int, user : string,\n  action : string, detail : string) : void
+        + getAll() : vector<LogEntry>
+        + getLast(n : int) : vector<LogEntry>
+        + serialize() : string
+        + deserialize(data : string) : void
+    }
+
+    class LogEntry {
+        + turn : int
+        + username : string
+        + actionType : string
+        + detail : string
+        --
+        + toString() : string
+    }
+
+    TransactionLogger "1" o-- "0..*" LogEntry : records
+    GameState         --> LogEntry             : contains
+
+}
+
+@enduml

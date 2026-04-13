@@ -1,0 +1,176 @@
+@startuml 03_Property_Card
+' ============================================================
+' Nimonspoli — 03: Property & Card
+' IF2010 Pemrograman Berorientasi Objek — Milestone 1
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classBorderColor #993C1D
+skinparam classArrowColor #993C1D
+skinparam classHeaderBackgroundColor #FAECE7
+skinparam classFontColor #4A1B0C
+skinparam stereotypeFontSize 10
+skinparam linetype ortho
+skinparam shadowing false
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam ArrowThickness 1.2
+
+' ============================================================
+' SECTION A — PROPERTY HIERARCHY
+' ============================================================
+package "Property" #FEF5F2 {
+
+    enum PropertyStatus {
+        BANK
+        OWNED
+        MORTGAGED
+    }
+
+    abstract class Property {
+        # code : string
+        # name : string
+        # status : PropertyStatus
+        # owner : Player*
+        # buyPrice : int
+        # mortgageValue : int
+        --
+        + getCode() : string
+        + getOwner() : Player*
+        + setOwner(p : Player*) : void
+        + getStatus() : PropertyStatus
+        + mortgage() : void
+        + redeem() : void
+        + {abstract} getRent(ctx : TurnContext&) : int
+        + sellToBank() : int
+        + operator==(other : Property&) : bool
+    }
+
+    class StreetProperty {
+        - colorGroup : string
+        - buildingCount : int
+        - isHotel : bool
+        - housePrice : int
+        - hotelPrice : int
+        - rentTable : vector<int>
+        - festivalMult : int
+        - festivalDur : int
+        --
+        + getRent(ctx : TurnContext&) : int
+        + buildHouse() : void
+        + upgradeToHotel() : void
+        + demolish() : void
+        + applyFestival() : void
+        + decreaseFestivalDur() : void
+        + isMonopolized() : bool
+        + canBuild() : bool
+    }
+
+    class RailroadProperty {
+        + getRent(ctx : TurnContext&) : int
+    }
+
+    class UtilityProperty {
+        + getRent(ctx : TurnContext&) : int
+    }
+
+    Property <|-- StreetProperty
+    Property <|-- RailroadProperty
+    Property <|-- UtilityProperty
+    Property --> PropertyStatus : has
+
+}
+
+' ============================================================
+' SECTION B — CARD HIERARCHY
+' ============================================================
+package "Card" #FFF6F2 {
+
+    abstract class Card {
+        # description : string
+        --
+        + getDescription() : string
+        + {abstract} execute(player : Player*,\n  ctx : TurnContext&) : void
+    }
+
+    class ChanceCard {
+        - type : ChanceType
+        --
+        + execute(player : Player*,\n  ctx : TurnContext&) : void
+    }
+
+    class CommunityCard {
+        - type : CommunityType
+        --
+        + execute(player : Player*,\n  ctx : TurnContext&) : void
+    }
+
+    abstract class SkillCard {
+        # value : int
+        # remainingDuration : int
+        --
+        + getValue() : int
+        + getDuration() : int
+        + {abstract} use(player : Player*,\n  ctx : TurnContext&) : void
+    }
+
+    class MoveCard {
+        - steps : int
+        --
+        + use(player : Player*,\n  ctx : TurnContext&) : void
+    }
+
+    class DiscountCard {
+        - discountPercent : int
+        - duration : int
+        --
+        + use(player : Player*,\n  ctx : TurnContext&) : void
+        + tick() : void
+    }
+
+    class ShieldCard {
+        + use(player : Player*,\n  ctx : TurnContext&) : void
+    }
+
+    class TeleportCard {
+        + use(player : Player*,\n  ctx : TurnContext&) : void
+    }
+
+    class LassoCard {
+        + use(player : Player*,\n  ctx : TurnContext&) : void
+    }
+
+    class DemolitionCard {
+        + use(player : Player*,\n  ctx : TurnContext&) : void
+    }
+
+    class CardDeck <T> {
+        - deck : vector<T*>
+        - discard : vector<T*>
+        --
+        + draw() : T*
+        + shuffle() : void
+        + addToDiscard(card : T*) : void
+        + refillFromDiscard() : void
+        + size() : int
+    }
+
+    ' Inheritance
+    Card <|-- ChanceCard
+    Card <|-- CommunityCard
+    Card <|-- SkillCard
+
+    SkillCard <|-- MoveCard
+    SkillCard <|-- DiscountCard
+    SkillCard <|-- ShieldCard
+    SkillCard <|-- TeleportCard
+    SkillCard <|-- LassoCard
+    SkillCard <|-- DemolitionCard
+
+    ' Generic container
+    CardDeck "1" o-- "0..*" Card : contains
+
+}
+
+@enduml

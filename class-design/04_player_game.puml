@@ -1,0 +1,194 @@
+@startuml 04_Player_Game
+' ============================================================
+' Nimonspoli — 04: Player & Game
+' IF2010 Pemrograman Berorientasi Objek — Milestone 1
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classBorderColor #185FA5
+skinparam classArrowColor #185FA5
+skinparam classHeaderBackgroundColor #E6F1FB
+skinparam classFontColor #042C53
+skinparam stereotypeFontSize 10
+skinparam linetype ortho
+skinparam shadowing false
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowThickness 1.2
+
+' ============================================================
+' ENUMS
+' ============================================================
+enum PlayerStatus {
+    ACTIVE
+    JAILED
+    BANKRUPT
+}
+
+' ============================================================
+' PLAYER HIERARCHY
+' ============================================================
+abstract class Player {
+    # username : string
+    # balance : int
+    # position : int
+    # status : PlayerStatus
+    # jailTurns : int
+    # properties : vector<Property*>
+    # hand : vector<SkillCard*>
+    # usedSkillThisTurn : bool
+    --
+    + getUsername() : string
+    + getBalance() : int
+    + getPosition() : int
+    + getStatus() : PlayerStatus
+    + operator+(amount : int) : Player&
+    + operator+=(amount : int) : Player&
+    + operator-(amount : int) : Player&
+    + operator-=(amount : int) : Player&
+    + operator>(other : Player&) : bool
+    + operator<(other : Player&) : bool
+    + move(steps : int) : void
+    + moveTo(index : int) : void
+    + addProperty(p : Property*) : void
+    + removeProperty(p : Property*) : void
+    + drawSkillCard(card : SkillCard*) : void
+    + discardSkillCard(idx : int) : void
+    + useSkillCard(idx : int, ctx : TurnContext&) : void
+    + getTotalWealth() : int
+    + isInJail() : bool
+    + enterJail() : void
+    + exitJail() : void
+    + {abstract} decideAction(ctx : TurnContext&) : void
+}
+
+class HumanPlayer {
+    + decideAction(ctx : TurnContext&) : void
+}
+
+class ComputerPlayer {
+    - strategy : Strategy*
+    --
+    + decideAction(ctx : TurnContext&) : void
+    - decideBuy(prop : Property*) : bool
+    - decideBid(currentBid : int) : int
+    - decideSkill() : int
+    - decideBuild() : void
+}
+
+' ============================================================
+' STRATEGY PATTERN (COM)
+' ============================================================
+abstract class Strategy {
+    + {abstract} decideBuy(prop : Property*,\n  player : Player*) : bool
+    + {abstract} decideBid(bid : int,\n  player : Player*) : int
+    + {abstract} decideSkill(hand : vector<SkillCard*>,\n  player : Player*) : int
+    + {abstract} decideMortgage(props : vector<Property*>) : Property*
+}
+
+class AggressiveStrategy {
+    + decideBuy(prop : Property*,\n  player : Player*) : bool
+    + decideBid(bid : int,\n  player : Player*) : int
+    + decideSkill(hand : vector<SkillCard*>,\n  player : Player*) : int
+    + decideMortgage(props : vector<Property*>) : Property*
+}
+
+class ConservativeStrategy {
+    + decideBuy(prop : Property*,\n  player : Player*) : bool
+    + decideBid(bid : int,\n  player : Player*) : int
+    + decideSkill(hand : vector<SkillCard*>,\n  player : Player*) : int
+    + decideMortgage(props : vector<Property*>) : Property*
+}
+
+' ============================================================
+' GAME ENGINE & SUPPORT
+' ============================================================
+class GameEngine {
+    - board : Board
+    - players : vector<Player*>
+    - turnMgr : TurnManager
+    - logger : TransactionLogger
+    - chanceDeck : CardDeck<ChanceCard>
+    - communityDeck : CardDeck<CommunityCard>
+    - skillDeck : CardDeck<SkillCard>
+    - config : Config
+    --
+    + startNewGame() : void
+    + loadGame(file : string) : void
+    + saveGame(file : string) : void
+    + executeCommand(cmd : string) : void
+}
+
+class TurnManager {
+    - currentTurn : int
+    - maxTurn : int
+    - activePlayerIdx : int
+    - turnOrder : vector<int>
+    --
+    + nextTurn() : void
+    + getCurrentPlayer() : Player*
+    + isGameOver() : bool
+    + determineWinner() : vector<Player*>
+}
+
+class TurnContext {
+    + currentPlayer : Player*
+    + dice : Dice*
+    + board : Board*
+    + engine : GameEngine*
+    + diceTotal : int
+}
+
+class AuctionManager {
+    + runAuction(prop : Property*,\n  players : vector<Player*>,\n  startIdx : int) : Player*
+}
+
+class BankruptcyManager {
+    + check(player : Player*,\n  debt : int, creditor : Player*) : void
+    + liquidate(player : Player*, debt : int) : void
+    + declare(player : Player*,\n  creditor : Player*) : void
+}
+
+class Dice {
+    - die1 : int
+    - die2 : int
+    - doubleCount : int
+    --
+    + roll() : pair<int,int>
+    + setManual(x : int, y : int) : void
+    + isDouble() : bool
+    + getTotal() : int
+}
+
+' ============================================================
+' RELATIONSHIPS
+' ============================================================
+
+' Player hierarchy
+Player <|-- HumanPlayer
+Player <|-- ComputerPlayer
+Player --> PlayerStatus : has
+
+' Strategy pattern
+ComputerPlayer --> Strategy     : uses
+Strategy       <|-- AggressiveStrategy
+Strategy       <|-- ConservativeStrategy
+
+' Player ↔ owned objects
+Player "1" o-- "0..*" Property  : owns
+Player "1" o-- "0..3" SkillCard : holds in hand
+
+' Players use TurnContext
+HumanPlayer    ..> TurnContext : reads
+ComputerPlayer ..> TurnContext : reads
+
+' GameEngine orchestrates
+GameEngine "1" o-- "2..4" Player      : contains
+GameEngine     --> TurnManager        : manages
+GameEngine     --> AuctionManager     : delegates
+GameEngine     --> BankruptcyManager  : delegates
+GameEngine     --> Dice               : uses
+GameEngine     --> TurnContext        : creates
+
+@enduml

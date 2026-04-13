@@ -1,0 +1,172 @@
+@startuml 01_Overview_Layer
+' ============================================================
+' Nimonspoli — 01: Overview & Layered Architecture
+' IF2010 Pemrograman Berorientasi Objek — Milestone 1
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classBorderColor #534AB7
+skinparam classArrowColor #444441
+skinparam classFontColor #26215C
+skinparam stereotypeFontSize 10
+skinparam packageFontSize 12
+skinparam packageFontStyle bold
+skinparam linetype ortho
+skinparam shadowing false
+skinparam nodesep 50
+skinparam ranksep 60
+skinparam ArrowThickness 1.2
+
+' ============================================================
+' UI LAYER
+' ============================================================
+package "UI Layer" #EEF0FB {
+
+    class CLIController {
+        - engine : GameEngine
+        --
+        + run() : void
+        + parseCommand(input : string) : void
+        + printBoard() : void
+        + printLog(n : int) : void
+        + printDeed(code : string) : void
+        + printProperty() : void
+    }
+
+    class AuctionUI {
+        + conductAuction(prop : Property*,\n  players : vector<Player*>) : Player*
+    }
+
+    class BankruptcyUI {
+        + showLiquidationPanel(player : Player*,\n  debt : int) : void
+    }
+
+}
+
+' ============================================================
+' GAME LOGIC LAYER
+' ============================================================
+package "Game Logic Layer" #EBF5F0 {
+
+    class GameEngine {
+        - board : Board
+        - players : vector<Player*>
+        - turnMgr : TurnManager
+        - logger : TransactionLogger
+        - chanceDeck : CardDeck<ChanceCard>
+        - communityDeck : CardDeck<CommunityCard>
+        - skillDeck : CardDeck<SkillCard>
+        - config : Config
+        --
+        + startNewGame() : void
+        + loadGame(file : string) : void
+        + saveGame(file : string) : void
+        + executeCommand(cmd : string) : void
+    }
+
+    class TurnManager {
+        - currentTurn : int
+        - maxTurn : int
+        - activePlayerIdx : int
+        - turnOrder : vector<int>
+        --
+        + nextTurn() : void
+        + getCurrentPlayer() : Player*
+        + isGameOver() : bool
+        + determineWinner() : vector<Player*>
+    }
+
+    class Dice {
+        - die1 : int
+        - die2 : int
+        - doubleCount : int
+        --
+        + roll() : pair<int,int>
+        + setManual(x : int, y : int) : void
+        + isDouble() : bool
+        + getTotal() : int
+    }
+
+    class AuctionManager {
+        + runAuction(prop : Property*,\n  players : vector<Player*>,\n  startIdx : int) : Player*
+    }
+
+    class BankruptcyManager {
+        + check(player : Player*,\n  debt : int, creditor : Player*) : void
+        + liquidate(player : Player*, debt : int) : void
+        + declare(player : Player*,\n  creditor : Player*) : void
+    }
+
+    class TurnContext {
+        + currentPlayer : Player*
+        + dice : Dice*
+        + board : Board*
+        + engine : GameEngine*
+        + diceTotal : int
+    }
+
+}
+
+' ============================================================
+' DATA ACCESS LAYER
+' ============================================================
+package "Data Access Layer" #FBF0EB {
+
+    class ConfigLoader {
+        + loadAll(path : string) : Config
+        + loadProperty(file : string) : vector<PropertyData>
+        + loadRailroad(file : string) : RailroadConfig
+        + loadUtility(file : string) : UtilityConfig
+        + loadTax(file : string) : TaxConfig
+        + loadSpecial(file : string) : SpecialConfig
+        + loadMisc(file : string) : MiscConfig
+    }
+
+    class SaveLoadManager {
+        + save(state : GameState, filename : string) : void
+        + load(filename : string) : GameState
+        - serializePlayers(v : vector<PlayerState>) : string
+        - serializeProperties(v : vector<PropertyState>) : string
+        - serializeDeck(d : vector<string>) : string
+        - serializeLog(l : vector<LogEntry>) : string
+        - parsePlayers(lines : vector<string>) : vector<PlayerState>
+        - parseProperties(lines : vector<string>) : vector<PropertyState>
+        - parseDeck(lines : vector<string>) : vector<string>
+        - parseLog(lines : vector<string>) : vector<LogEntry>
+    }
+
+    class TransactionLogger {
+        - entries : vector<LogEntry>
+        --
+        + log(turn : int, user : string,\n  action : string, detail : string) : void
+        + getAll() : vector<LogEntry>
+        + getLast(n : int) : vector<LogEntry>
+        + serialize() : string
+        + deserialize(data : string) : void
+    }
+
+}
+
+' ============================================================
+' RELATIONSHIPS
+' ============================================================
+
+' UI → Game Logic
+CLIController --> GameEngine : uses
+AuctionUI      --> GameEngine : notifies
+BankruptcyUI   --> GameEngine : notifies
+
+' Game Logic internal
+GameEngine --> TurnManager       : manages
+GameEngine --> AuctionManager    : delegates
+GameEngine --> BankruptcyManager : delegates
+GameEngine --> Dice              : uses
+GameEngine --> TurnContext       : creates
+
+' Game Logic → Data Access
+GameEngine --> ConfigLoader      : reads config via
+GameEngine --> SaveLoadManager   : persists via
+GameEngine --> TransactionLogger : logs to
+
+@enduml

@@ -1,0 +1,170 @@
+@startuml 02_Tile_Hierarchy
+' ============================================================
+' Nimonspoli — 02: Tile Hierarchy
+' IF2010 Pemrograman Berorientasi Objek — Milestone 1
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classBorderColor #0F6E56
+skinparam classArrowColor #0F6E56
+skinparam classHeaderBackgroundColor #E1F5EE
+skinparam classFontColor #04342C
+skinparam stereotypeFontSize 10
+skinparam linetype ortho
+skinparam shadowing false
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam ArrowThickness 1.2
+
+' ============================================================
+' CONTEXT (referenced, not defined here)
+' ============================================================
+class TurnContext <<context>> {
+    + currentPlayer : Player*
+    + dice : Dice*
+    + board : Board*
+    + engine : GameEngine*
+    + diceTotal : int
+}
+
+class Property <<abstract>> {
+    + {abstract} getRent(ctx : TurnContext&) : int
+}
+
+' ============================================================
+' ROOT ABSTRACT
+' ============================================================
+abstract class Tile {
+    # index : int
+    # code : string
+    # name : string
+    # colorCategory : string
+    --
+    + getIndex() : int
+    + getCode() : string
+    + getName() : string
+    + {abstract} onLanded(player : Player*,\n  ctx : TurnContext&) : void
+    + getDisplay() : string
+    + getColorTag() : string
+}
+
+' ============================================================
+' BRANCH 1 — PropertyTile
+' ============================================================
+abstract class PropertyTile {
+    # property : Property*
+    --
+    + getProperty() : Property*
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+}
+
+class StreetTile {
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+    + triggerBuyOrAuction(player : Player*) : void
+    + triggerRentPayment(player : Player*) : void
+}
+
+class RailroadTile {
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+    + autoAcquire(player : Player*) : void
+}
+
+class UtilityTile {
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+    + autoAcquire(player : Player*) : void
+}
+
+' ============================================================
+' BRANCH 2 — ActionTile
+' ============================================================
+abstract class ActionTile {
+    + {abstract} onLanded(player : Player*,\n  ctx : TurnContext&) : void
+}
+
+class GoTile {
+    - salary : int
+    --
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+    + paySalary(player : Player*) : void
+}
+
+class JailTile {
+    - inmates : vector<Player*>
+    - visitors : vector<Player*>
+    --
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+    + addInmate(player : Player*) : void
+    + removeInmate(player : Player*) : void
+    + isInmate(player : Player*) : bool
+}
+
+class FreeParkingTile {
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+}
+
+class GoToJailTile {
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+}
+
+class CardTile {
+    - type : CardType
+    --
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+}
+
+class FestivalTile {
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+    + applyFestival(player : Player*,\n  prop : StreetProperty*) : void
+}
+
+class TaxTile {
+    - taxType : TaxType
+    --
+    + onLanded(player : Player*,\n  ctx : TurnContext&) : void
+    + applyPPH(player : Player*) : void
+    + applyPBM(player : Player*) : void
+}
+
+' ============================================================
+' BOARD (owner of all Tiles)
+' ============================================================
+class Board {
+    - tiles : vector<Tile*>
+    - codeToIndex : map<string, int>
+    - size : int
+    --
+    + getTile(index : int) : Tile*
+    + getTileByCode(code : string) : Tile*
+    + getSize() : int
+    + getColorGroup(color : string) : vector<StreetTile*>
+    + buildFromConfig(data : vector<TileConfig>) : void
+}
+
+' ============================================================
+' RELATIONSHIPS
+' ============================================================
+
+' Inheritance tree
+Tile <|-- PropertyTile
+Tile <|-- ActionTile
+
+PropertyTile <|-- StreetTile
+PropertyTile <|-- RailroadTile
+PropertyTile <|-- UtilityTile
+
+ActionTile <|-- GoTile
+ActionTile <|-- JailTile
+ActionTile <|-- FreeParkingTile
+ActionTile <|-- GoToJailTile
+ActionTile <|-- CardTile
+ActionTile <|-- FestivalTile
+ActionTile <|-- TaxTile
+
+' Composition
+Board "1" o-- "20..60" Tile : holds
+
+' PropertyTile references a Property
+PropertyTile --> Property : references
+
+@enduml
