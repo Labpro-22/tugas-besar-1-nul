@@ -10,6 +10,7 @@ build/
 obj/
 bin/
 
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -51,3 +52,7 @@ cmake_install.cmake
 compile_commands.json
 CTestTestfile.cmake
 Testing/
+
+
+# class-design
+class-design/*.md
