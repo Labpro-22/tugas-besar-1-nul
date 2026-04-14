@@ -3,6 +3,9 @@
 > Kelompok **NUL — nullptr**  
 > 13524031 Vincent Rionarlie · 13524033 Ray Owen Martin · 13524037 Nicholas Wise Saragih Sumbayak · 13524061 Muhammad Aufar Rizqi Kusuma · 13524065 Kurt Mikhael Purba
 
+> **Status acuan dokumen:** `NIMONSPOLI_GROUND_TRUTH.md` adalah acuan utama untuk aturan gameplay, flow program, command CLI, format konfigurasi, save/load, dan logging. Dokumen ini berfungsi sebagai panduan arsitektur, OOP, dan mapping implementasi kelas.  
+> **Aturan prioritas jika ada konflik:** Ground Truth > NIMONSPOLI_SPEC > catatan implementasi lain.
+
 ---
 
 ## Daftar Isi
@@ -23,7 +26,7 @@
 
 **Aturan umum permainan:**
 - Dimainkan oleh **2–4 pemain** (human dan/atau computer).
-- Papan terdiri dari **20–60 petak** (default standard).
+- Papan core terdiri dari **40 petak** (sesuai Ground Truth). Rentang **20–60 petak** hanya berlaku untuk fitur bonus Dynamic Board.
 - Pemain melempar dua dadu setiap giliran dan bergerak di papan.
 - Pemain dapat membeli properti, membangun rumah/hotel, membayar sewa, dan menggunakan kartu skill.
 - Pemain yang bangkrut (tidak mampu bayar utang) dikeluarkan dari permainan.
@@ -74,7 +77,10 @@ File `.puml` tersedia di direktori proyek. Render menggunakan PlantUML atau ekst
 | `05_io_saveload.puml` | ConfigLoader, Config, SaveLoadManager, GameState, TransactionLogger |
 | `06_bonus_gui_com_dynamic.puml` | GUIController, BoardRenderer, Strategy pattern detail, BoardFactory, DynamicBoardLoader |
 
-> **Catatan untuk model:** Selalu jadikan file `.puml` sebagai **sumber kebenaran** untuk nama atribut, method signature, dan relasi antar kelas. Jangan mengarang nama method yang tidak ada di diagram.
+> **Catatan untuk model:**
+> 1. `NIMONSPOLI_GROUND_TRUTH.md` adalah sumber kebenaran untuk **aturan permainan dan perilaku fitur**.
+> 2. File `.puml` adalah sumber kebenaran untuk **nama class, atribut, method signature, dan relasi**.
+> 3. Jika terjadi pertentangan antara aturan game dan desain kelas, ikuti aturan game dari Ground Truth lalu sesuaikan desain tanpa mengubah intent diagram.
 
 ---
 
@@ -270,6 +276,8 @@ File `.puml` tersedia di direktori proyek. Render menggunakan PlantUML atau ekst
 
 ## 5. Alur Permainan (Flow)
 
+> Flow di bawah adalah ringkasan arsitektural. Detail urutan aksi dan aturan edge-case (jail, tax, auction, card, bankruptcy, command timing) wajib mengikuti `NIMONSPOLI_GROUND_TRUTH.md` bagian Alur Program, Mekanisme Inti, dan Operasi CLI.
+
 ```
 1. CLIController::run()
 2. ConfigLoader::loadAll() → Config
@@ -302,6 +310,8 @@ File `.puml` tersedia di direktori proyek. Render menggunakan PlantUML atau ekst
 
 ## 6. Checklist Fitur yang Harus Diimplementasi
 
+Sebelum menandai fitur selesai, validasikan perilaku fitur terhadap `NIMONSPOLI_GROUND_TRUTH.md`.
+
 ### Wajib (Core)
 - [ ] Papan permainan dengan semua jenis tile
 - [ ] Pergerakan pemain dengan dadu (termasuk triple double → penjara)
@@ -333,7 +343,7 @@ File `.puml` tersedia di direktori proyek. Render menggunakan PlantUML atau ekst
 > Instruksi khusus bagi AI model yang membantu mengerjakan proyek ini.
 
 ### Prinsip Utama
-1. **File `.puml` adalah sumber kebenaran.** Nama class, atribut, method signature, dan relasi harus sesuai. Jangan menginventasi nama yang tidak ada di diagram.
+1. **Gunakan dual source of truth secara tegas.** `NIMONSPOLI_GROUND_TRUTH.md` untuk aturan game; file `.puml` untuk desain class (nama, atribut, method signature, relasi). Jangan menginventasi method yang tidak ada di diagram.
 2. **Bahasa: C++17.** Gunakan `std::vector`, `std::map`, `std::pair`, raw pointer sesuai diagram.
 3. **Satu header + implementasi per kelas** (`ClassName.h` + `ClassName.cpp`).
 4. **UI Layer tidak boleh akses Board/Player langsung** — hanya via `GameEngine::executeCommand()`.
@@ -419,4 +429,4 @@ virtual Property* decideMortgage(vector<Property*> props) = 0;
 
 ---
 
-*Dokumen ini di-generate dari Laporan M1 TB1 NUL-nullptr dan file diagram `.puml`. Selalu update dokumen ini jika ada perubahan desain kelas.*
+*Dokumen ini di-generate dari Laporan M1 TB1 NUL-nullptr, file diagram `.puml`, dan harus selalu sinkron terhadap `NIMONSPOLI_GROUND_TRUTH.md` sebagai acuan utama perilaku game.*

@@ -55,4 +55,5 @@ Testing/
 
 
 # class-design
-class-design/*.md
+class-design/NIMONSPOLI_SPEC.md
+class-design/NIMONSPOLI_GROUND_TRUTH.md
