@@ -8,7 +8,7 @@
 #include <vector>
 using namespace std;
 
-class Tile : public Board{
+class Tile{
     protected:
         int index;
         string code;
