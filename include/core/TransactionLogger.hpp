@@ -13,6 +13,7 @@ class TransactionLogger {
              const std::string& detail);
     std::vector<LogEntry> getAll() const;
     std::vector<LogEntry> getLast(int n) const;
+    void printLogs(int n = -1) const;
     std::string serialize() const;
     void deserialize(const std::string& data);
 
