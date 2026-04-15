@@ -7,7 +7,7 @@
 
 namespace {
 
-void printProperty(const PropertyData& property) {
+void printProperty(const PropertyData &property) {
     std::cout << "- ID=" << property.id << ", CODE=" << property.code
               << ", NAME=" << property.name << ", TYPE=" << property.type
               << ", COLOR=" << property.color << ", BUY=" << property.buyPrice
@@ -25,39 +25,28 @@ void printProperty(const PropertyData& property) {
     std::cout << "]\n";
 }
 
+void printIntMap(const std::map<int, int> &m, const std::string &title) {
+    std::cout << title << " (" << m.size() << " entries)\n";
+    for (const auto &[k, v] : m) {
+        std::cout << "  " << k << " -> " << v << "\n";
+    }
+}
+
 } // namespace
 
-void runConfigLoaderDriver(const std::string& basePath) {
+void runConfigLoaderDriver(const std::string &basePath) {
     ConfigLoader loader;
-    Config config = loader.loadAll(basePath);
+    Config cfg = loader.loadAll(basePath);
 
-    std::cout << "[CONFIG DRIVER] Loaded config from: " << basePath << "\n";
-    std::cout << "[CONFIG DRIVER] Property count: " << config.properties.size()
-              << "\n";
+    std::cout << "CONFIG DRIVER\n";
+    std::cout << "Base path: " << basePath << "\n\n";
 
-    const std::size_t previewCount =
-        config.properties.size() < 8 ? config.properties.size() : 8;
-
-    std::cout << "[CONFIG DRIVER] Preview first " << previewCount
-              << " properties:\n";
-    for (std::size_t i = 0; i < previewCount; ++i) {
-        printProperty(config.properties[i]);
+    std::cout << "[Properties] count = " << cfg.properties.size() << "\n";
+    for (const PropertyData &p : cfg.properties) {
+        printProperty(p);
     }
+    std::cout << "\n";
 
-    /* std::cout << "[CONFIG DRIVER] Tax config: pphFlat=" << config.tax.pphFlat
-              << ", pphPercent=" << config.tax.pphPercent
-              << ", pbmFlat=" << config.tax.pbmFlat << "\n";
-*/
-    /*
-    std::cout << "[CONFIG DRIVER] Special config: goSalary="
-              << config.special.goSalary
-              << ", jailFine=" << config.special.jailFine << "\n";
-*/
-
-    /*
-        std::cout << "[CONFIG DRIVER] Misc config: maxTurn=" <<
-       config.misc.maxTurn
-                  << ", startingBalance=" << config.misc.startingBalance <<
-       "\n";
-                  */
+    printIntMap(cfg.railroad.rentTable, "[Railroad rent table]");
+    std::cout << "\n";
 }
