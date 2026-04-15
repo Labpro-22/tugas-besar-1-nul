@@ -7,7 +7,7 @@
 
 namespace {
 
-void printProperty(const PropertyData &property) {
+void printProperty(const PropertyData& property) {
     std::cout << "- ID=" << property.id << ", CODE=" << property.code
               << ", NAME=" << property.name << ", TYPE=" << property.type
               << ", COLOR=" << property.color << ", BUY=" << property.buyPrice
@@ -27,7 +27,7 @@ void printProperty(const PropertyData &property) {
 
 } // namespace
 
-void runConfigLoaderDriver(const std::string &basePath) {
+void runConfigLoaderDriver(const std::string& basePath) {
     ConfigLoader loader;
     Config config = loader.loadAll(basePath);
 

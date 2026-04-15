@@ -7,7 +7,7 @@
 
 namespace {
 
-bool tryParseInt(const std::string &token, int &out) {
+bool tryParseInt(const std::string& token, int& out) {
     if (token.empty()) {
         return false;
     }
@@ -30,7 +30,7 @@ bool tryParseInt(const std::string &token, int &out) {
     return true;
 }
 
-std::vector<std::string> splitWhitespace(const std::string &line) {
+std::vector<std::string> splitWhitespace(const std::string& line) {
     std::istringstream iss(line);
     std::vector<std::string> tokens;
     std::string token;
@@ -42,7 +42,7 @@ std::vector<std::string> splitWhitespace(const std::string &line) {
 
 } // namespace
 
-Config ConfigLoader::loadAll(const std::string &path) const {
+Config ConfigLoader::loadAll(const std::string& path) const {
     Config config;
     config.properties = loadProperty(path + "/property.txt");
     config.railroad = loadRailroad(path + "/railroad.txt");
@@ -54,7 +54,7 @@ Config ConfigLoader::loadAll(const std::string &path) const {
 }
 
 std::vector<PropertyData>
-ConfigLoader::loadProperty(const std::string &file) const {
+ConfigLoader::loadProperty(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
         throw std::runtime_error("Failed to open property config file: " +
@@ -145,27 +145,27 @@ ConfigLoader::loadProperty(const std::string &file) const {
     return result;
 }
 
-RailroadConfig ConfigLoader::loadRailroad(const std::string &file) const {
-    (void)file;
+RailroadConfig ConfigLoader::loadRailroad(const std::string& file) const {
+    (void) file;
     return {};
 }
 
-UtilityConfig ConfigLoader::loadUtility(const std::string &file) const {
-    (void)file;
+UtilityConfig ConfigLoader::loadUtility(const std::string& file) const {
+    (void) file;
     return {};
 }
 
-TaxConfig ConfigLoader::loadTax(const std::string &file) const {
-    (void)file;
+TaxConfig ConfigLoader::loadTax(const std::string& file) const {
+    (void) file;
     return {};
 }
 
-SpecialConfig ConfigLoader::loadSpecial(const std::string &file) const {
-    (void)file;
+SpecialConfig ConfigLoader::loadSpecial(const std::string& file) const {
+    (void) file;
     return {};
 }
 
-MiscConfig ConfigLoader::loadMisc(const std::string &file) const {
-    (void)file;
+MiscConfig ConfigLoader::loadMisc(const std::string& file) const {
+    (void) file;
     return {};
 }
