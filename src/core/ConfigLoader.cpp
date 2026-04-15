@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <string>
 
-Config ConfigLoader::loadAll(const std::string &path) const {
+Config ConfigLoader::loadAll(const std::string& path) const {
     Config config;
     config.properties = loadProperty(path + "/property.txt");
     config.railroad = loadRailroad(path + "/railroad.txt");
@@ -18,7 +18,7 @@ Config ConfigLoader::loadAll(const std::string &path) const {
 }
 
 std::vector<PropertyData>
-ConfigLoader::loadProperty(const std::string &file) const {
+ConfigLoader::loadProperty(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
         throw std::runtime_error("Failed to open property config file: " +
@@ -109,7 +109,7 @@ ConfigLoader::loadProperty(const std::string &file) const {
     return result;
 }
 
-RailroadConfig ConfigLoader::loadRailroad(const std::string &file) const {
+RailroadConfig ConfigLoader::loadRailroad(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
         throw std::runtime_error("Failed to open property railroad config: " +
@@ -147,22 +147,82 @@ RailroadConfig ConfigLoader::loadRailroad(const std::string &file) const {
     return config;
 }
 
-UtilityConfig ConfigLoader::loadUtility(const std::string &file) const {
-    (void)file;
+UtilityConfig ConfigLoader::loadUtility(const std::string& file) const {
+    std::ifstream in(file);
+    if (!in.is_open()) {
+        throw std::runtime_error("Failed to open utility config file: " + file);
+    }
+
+    UtilityConfig config;
+    std::string line;
+    int lineNumber = 0;
+
+    while (std::getline(in, line)) {
+        ++lineNumber;
+        const std::vector<std::string> tokens = splitWhitespace(line);
+        if (tokens.empty()) {
+            continue;
+        }
+
+        int count = 0;
+        int factor = 0;
+        const bool firstIsInt = tryParseInt(tokens[0], count);
+        const bool secondIsInt =
+            (tokens.size() > 1) && tryParseInt(tokens[1], factor);
+
+        if (!firstIsInt) {
+            continue; // header row
+        }
+        if (!secondIsInt) {
+            throw std::runtime_error("Invalid utility row at line " +
+                                     std::to_string(lineNumber));
+        }
+
+        config.multiplierTable[count] = factor;
+    }
+
+    return config;
+}
+
+TaxConfig ConfigLoader::loadTax(const std::string& file) const {
+    std::ifstream in(file);
+    if (!in.is_open()) {
+        throw std::runtime_error("Failed to open tax config file: " + file);
+    }
+
+    int lineNumber = 0;
+    while (true) {
+        std::vector<std::string> tokens = readNextDataTokens(in, lineNumber);
+        if (tokens.empty()) {
+            throw std::runtime_error("Tax config has no data row: " + file);
+        }
+
+        int pphFlat = 0;
+        int pphPercent = 0;
+        int pbmFlat = 0;
+        if (!tryParseInt(tokens[0], pphFlat)) {
+            continue; // header row
+        }
+        if (tokens.size() < 3 || !tryParseInt(tokens[1], pphPercent) ||
+            !tryParseInt(tokens[2], pbmFlat)) {
+            throw std::runtime_error("Invalid tax row at line " +
+                                     std::to_string(lineNumber));
+        }
+
+        TaxConfig config;
+        config.pphFlat = pphFlat;
+        config.pphPercent = pphPercent;
+        config.pbmFlat = pbmFlat;
+        return config;
+    }
+}
+
+SpecialConfig ConfigLoader::loadSpecial(const std::string& file) const {
+    (void) file;
     return {};
 }
 
-TaxConfig ConfigLoader::loadTax(const std::string &file) const {
-    (void)file;
-    return {};
-}
-
-SpecialConfig ConfigLoader::loadSpecial(const std::string &file) const {
-    (void)file;
-    return {};
-}
-
-MiscConfig ConfigLoader::loadMisc(const std::string &file) const {
-    (void)file;
+MiscConfig ConfigLoader::loadMisc(const std::string& file) const {
+    (void) file;
     return {};
 }
