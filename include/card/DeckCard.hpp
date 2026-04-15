@@ -1,8 +1,8 @@
-template <typename T>
+#include "card.hpp"
 class CardDeck {
 private:
-    std::vector<T*> deck;
-    std::vector<T*> discard;
+    std::vector<Card*> deck;
+    std::vector<Card*> discard;
 
 public:
     CardDeck() = default;
@@ -12,16 +12,16 @@ public:
         for (auto card : discard) delete card;
     }
 
-    void addCard(T* card) {
+    void addCard(Card * card) {
         deck.push_back(card);
     }
 
-    T* draw() {
+    Card* draw() {
         if (deck.empty()) {
             if (discard.empty()) return nullptr;
         }
         
-        T* drawnCard = deck.back();
+        Card* drawnCard = deck.back();
         deck.pop_back();
         return drawnCard;
     }
@@ -32,7 +32,7 @@ public:
         std::shuffle(deck.begin(), deck.end(), g);
     }
 
-    void addToDiscard(T* card) {
+    void addToDiscard(Card* card) {
         discard.push_back(card);
     }
 
