@@ -42,6 +42,20 @@
 				"$gcc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Rebuild after ParseUtils fix",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
 		}
 	]
 }
