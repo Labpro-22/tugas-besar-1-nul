@@ -4,8 +4,6 @@
 
 Nimonspoliiiiiii
 
-(clone, checkout dev, and branch from dev yes)
-
 ## Build and Formatting
 
 We use CMake + clang-format biar accecee
