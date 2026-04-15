@@ -57,4 +57,11 @@ void runConfigLoaderDriver(const std::string& basePath) {
     std::cout << "  pphFlat=" << cfg.tax.pphFlat
               << ", pphPercent=" << cfg.tax.pphPercent
               << ", pbmFlat=" << cfg.tax.pbmFlat << "\n\n";
+    std::cout << "[Special]\n";
+    std::cout << "  goSalary=" << cfg.special.goSalary
+              << ", jailFine=" << cfg.special.jailFine << "\n\n";
+
+    std::cout << "[Misc]\n";
+    std::cout << "  maxTurn=" << cfg.misc.maxTurn
+              << ", startingBalance=" << cfg.misc.startingBalance << "\n";
 }

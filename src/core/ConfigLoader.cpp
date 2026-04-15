@@ -218,11 +218,61 @@ TaxConfig ConfigLoader::loadTax(const std::string& file) const {
 }
 
 SpecialConfig ConfigLoader::loadSpecial(const std::string& file) const {
-    (void) file;
-    return {};
+    std::ifstream in(file);
+    if (!in.is_open()) {
+        throw std::runtime_error("Failed to open special config file: " + file);
+    }
+
+    int lineNumber = 0;
+    while (true) {
+        std::vector<std::string> tokens = readNextDataTokens(in, lineNumber);
+        if (tokens.empty()) {
+            throw std::runtime_error("Special config has no data row: " + file);
+        }
+
+        int goSalary = 0;
+        int jailFine = 0;
+        if (!tryParseInt(tokens[0], goSalary)) {
+            continue; // header row
+        }
+        if (tokens.size() < 2 || !tryParseInt(tokens[1], jailFine)) {
+            throw std::runtime_error("Invalid special row at line " +
+                                     std::to_string(lineNumber));
+        }
+
+        SpecialConfig config;
+        config.goSalary = goSalary;
+        config.jailFine = jailFine;
+        return config;
+    }
 }
 
 MiscConfig ConfigLoader::loadMisc(const std::string& file) const {
-    (void) file;
-    return {};
+    std::ifstream in(file);
+    if (!in.is_open()) {
+        throw std::runtime_error("Failed to open misc config file: " + file);
+    }
+
+    int lineNumber = 0;
+    while (true) {
+        std::vector<std::string> tokens = readNextDataTokens(in, lineNumber);
+        if (tokens.empty()) {
+            throw std::runtime_error("Misc config has no data row: " + file);
+        }
+
+        int maxTurn = 0;
+        int startingBalance = 0;
+        if (!tryParseInt(tokens[0], maxTurn)) {
+            continue; // header row
+        }
+        if (tokens.size() < 2 || !tryParseInt(tokens[1], startingBalance)) {
+            throw std::runtime_error("Invalid misc row at line " +
+                                     std::to_string(lineNumber));
+        }
+
+        MiscConfig config;
+        config.maxTurn = maxTurn;
+        config.startingBalance = startingBalance;
+        return config;
+    }
 }
