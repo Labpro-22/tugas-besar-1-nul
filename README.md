@@ -4,6 +4,8 @@
 
 Nimonspoliiiiiii
 
+(clone, checkout dev, and branch from dev yes)
+
 ## Build and Formatting
 
 We use CMake + clang-format biar accecee
@@ -18,7 +20,7 @@ cmake --build cmake-build
 - Format kode sebelum push!!!
 
 ```bash
-clang-format -i src/**/*.cpp include/**/*.h
+clang-format -i src/**/*.cpp include/**/*.hpp
 ```
 
 Jika shell tidak mendukung glob `**`, gunakan pendekatan `find`:

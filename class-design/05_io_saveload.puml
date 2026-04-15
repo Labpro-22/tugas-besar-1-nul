@@ -178,4 +178,32 @@ package "Logging" #EDFAF4 {
 
 }
 
+' ============================================================
+' SECTION D — EXCEPTIONS
+' ============================================================
+package "Exceptions" #FDEFF3 {
+
+    abstract class NimonspoliException {
+        # message : string
+        --
+        + what() : string
+    }
+
+    class ConfigException
+    class SaveLoadException
+    class InvalidGameStateException
+
+    NimonspoliException <|-- ConfigException
+    NimonspoliException <|-- SaveLoadException
+    NimonspoliException <|-- InvalidGameStateException
+
+}
+
+' Exception usage
+ConfigLoader ..> ConfigException : invalid/missing config data
+ConfigLoader ..> InvalidGameStateException : invalid config constraints
+SaveLoadManager ..> SaveLoadException : file format/read/write error
+SaveLoadManager ..> InvalidGameStateException : corrupted state payload
+TransactionLogger ..> SaveLoadException : serialize/deserialize failure
+
 @enduml

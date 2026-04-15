@@ -173,4 +173,31 @@ package "Card" #FFF6F2 {
 
 }
 
+' ============================================================
+' SECTION C — EXCEPTIONS
+' ============================================================
+package "Exceptions" #FDEFF3 {
+
+    abstract class NimonspoliException {
+        # message : string
+        --
+        + what() : string
+    }
+
+    class InsufficientFundsException
+    class CardSlotFullException
+    class InvalidGameStateException
+
+    NimonspoliException <|-- InsufficientFundsException
+    NimonspoliException <|-- CardSlotFullException
+    NimonspoliException <|-- InvalidGameStateException
+
+}
+
+' Exception usage
+Property ..> InvalidGameStateException : invalid status transition
+StreetProperty ..> InvalidGameStateException : invalid build rule
+CardDeck ..> InvalidGameStateException : invalid draw/refill state
+SkillCard ..> InvalidGameStateException : invalid usage timing/state
+
 @enduml

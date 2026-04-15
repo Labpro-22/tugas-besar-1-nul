@@ -162,6 +162,31 @@ class Dice {
 }
 
 ' ============================================================
+' EXCEPTIONS
+' ============================================================
+package "Exceptions" #FDEFF3 {
+
+    abstract class NimonspoliException {
+        # message : string
+        --
+        + what() : string
+    }
+
+    class SaveLoadException
+    class CommandException
+    class InsufficientFundsException
+    class CardSlotFullException
+    class InvalidGameStateException
+
+    NimonspoliException <|-- SaveLoadException
+    NimonspoliException <|-- CommandException
+    NimonspoliException <|-- InsufficientFundsException
+    NimonspoliException <|-- CardSlotFullException
+    NimonspoliException <|-- InvalidGameStateException
+
+}
+
+' ============================================================
 ' RELATIONSHIPS
 ' ============================================================
 
@@ -190,5 +215,14 @@ GameEngine     --> AuctionManager     : delegates
 GameEngine     --> BankruptcyManager  : delegates
 GameEngine     --> Dice               : uses
 GameEngine     --> TurnContext        : creates
+
+' Exception usage
+Player ..> InsufficientFundsException : pay/buy/bid
+Player ..> CardSlotFullException : draw 4th card without drop
+Player ..> InvalidGameStateException : illegal state transition
+GameEngine ..> CommandException : invalid CLI command
+GameEngine ..> SaveLoadException : load/save failure
+TurnManager ..> InvalidGameStateException : invalid turn order/state
+Dice ..> InvalidGameStateException : invalid manual dice value
 
 @enduml
