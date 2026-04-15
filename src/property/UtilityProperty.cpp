@@ -4,6 +4,7 @@
 
 #include "exception/InvalidGameStateException.hpp"
 
+// Creates utility property with multiplier mapping by owned utility count.
 UtilityProperty::UtilityProperty(std::string code,
                                  std::string name,
                                  int buyPrice,
@@ -17,6 +18,7 @@ UtilityProperty::UtilityProperty(std::string code,
     }
 }
 
+// Computes utility rent from owned count and dice total callbacks.
 int UtilityProperty::getRent(const TurnContext& ctx) const {
     if (status_ != PropertyStatus::OWNED) {
         return 0;
@@ -39,6 +41,7 @@ int UtilityProperty::getRent(const TurnContext& ctx) const {
     return getRentFromOwnedCountAndDice(ownedUtilities, diceTotal);
 }
 
+// Resolves utility rent directly from owned utility count and dice total.
 int UtilityProperty::getRentFromOwnedCountAndDice(int ownedUtilities,
                                                   int diceTotal) const {
     if (ownedUtilities <= 0) {
@@ -61,11 +64,13 @@ int UtilityProperty::getRentFromOwnedCountAndDice(int ownedUtilities,
     return it->second * diceTotal;
 }
 
+// Injects integration hook to count owned utilities for a given player.
 void UtilityProperty::setOwnedUtilityCounter(
     std::function<int(const Player*)> counter) {
     ownedUtilityCounter_ = std::move(counter);
 }
 
+// Injects integration hook to read dice total from turn context.
 void UtilityProperty::setDiceTotalExtractor(
     std::function<int(const TurnContext&)> extractor) {
     diceTotalExtractor_ = std::move(extractor);

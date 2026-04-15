@@ -4,6 +4,7 @@
 
 #include "exception/InvalidGameStateException.hpp"
 
+// Creates railroad property with rent mapping by owned railroad count.
 RailroadProperty::RailroadProperty(std::string code,
                                    std::string name,
                                    int buyPrice,
@@ -16,6 +17,7 @@ RailroadProperty::RailroadProperty(std::string code,
     }
 }
 
+// Computes rent by querying owner railroad count through injected callback.
 int RailroadProperty::getRent(const TurnContext& ctx) const {
     (void) ctx;
 
@@ -35,6 +37,7 @@ int RailroadProperty::getRent(const TurnContext& ctx) const {
     return getRentFromOwnedCount(ownedRailroads);
 }
 
+// Resolves railroad rent directly from number of owned railroads.
 int RailroadProperty::getRentFromOwnedCount(int ownedRailroads) const {
     if (ownedRailroads <= 0) {
         throw InvalidGameStateException(
@@ -53,6 +56,7 @@ int RailroadProperty::getRentFromOwnedCount(int ownedRailroads) const {
     return it->second;
 }
 
+// Injects integration hook to count owned railroads for a given player.
 void RailroadProperty::setOwnedRailroadCounter(
     std::function<int(const Player*)> counter) {
     ownedRailroadCounter_ = std::move(counter);

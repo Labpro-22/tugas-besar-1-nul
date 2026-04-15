@@ -5,6 +5,7 @@
 
 #include "exception/InvalidGameStateException.hpp"
 
+// Creates a street property and validates rent/build configuration.
 StreetProperty::StreetProperty(std::string code,
                                std::string name,
                                int buyPrice,
@@ -32,6 +33,7 @@ StreetProperty::StreetProperty(std::string code,
     }
 }
 
+// Computes rent using building level and active festival multiplier.
 int StreetProperty::getRent(const TurnContext& ctx) const {
     (void) ctx;
 
@@ -44,46 +46,57 @@ int StreetProperty::getRent(const TurnContext& ctx) const {
     return baseRent * festivalMult_;
 }
 
+// Returns color group used for monopoly/build validation.
 const std::string& StreetProperty::getColorGroup() const {
     return colorGroup_;
 }
 
+// Returns current number of built levels (0-5).
 int StreetProperty::getBuildingCount() const {
     return buildingCount_;
 }
 
+// Returns true when level 5 is represented as hotel state.
 bool StreetProperty::hasHotel() const {
     return isHotel_;
 }
 
+// Returns house build cost from config.
 int StreetProperty::getHousePrice() const {
     return housePrice_;
 }
 
+// Returns hotel upgrade cost from config.
 int StreetProperty::getHotelPrice() const {
     return hotelPrice_;
 }
 
+// Returns current festival rent multiplier.
 int StreetProperty::getFestivalMultiplier() const {
     return festivalMult_;
 }
 
+// Returns remaining owner turns of festival effect.
 int StreetProperty::getFestivalDuration() const {
     return festivalDur_;
 }
 
+// Returns whether full color-set ownership is satisfied.
 bool StreetProperty::isMonopolized() const {
     return monopolized_;
 }
 
+// Updates monopoly flag (typically managed by board/engine checks).
 void StreetProperty::setMonopolized(bool monopolized) {
     monopolized_ = monopolized;
 }
 
+// Checks if this street is eligible for adding buildings.
 bool StreetProperty::canBuild() const {
     return status_ == PropertyStatus::OWNED && monopolized_ && !isHotel_;
 }
 
+// Adds one house level up to level 4.
 void StreetProperty::buildHouse() {
     if (!canBuild()) {
         throw InvalidGameStateException(
@@ -96,6 +109,7 @@ void StreetProperty::buildHouse() {
     ++buildingCount_;
 }
 
+// Converts four houses into a hotel (level 5).
 void StreetProperty::upgradeToHotel() {
     if (!canBuild()) {
         throw InvalidGameStateException(
@@ -109,6 +123,7 @@ void StreetProperty::upgradeToHotel() {
     isHotel_ = true;
 }
 
+// Removes one building level, or downgrades hotel back to 4 houses.
 void StreetProperty::demolish() {
     if (buildingCount_ <= 0) {
         throw InvalidGameStateException("No building available to demolish");
@@ -123,6 +138,7 @@ void StreetProperty::demolish() {
     --buildingCount_;
 }
 
+// Applies festival effect with capped stack and duration reset.
 void StreetProperty::applyFestival() {
     if (status_ != PropertyStatus::OWNED) {
         throw InvalidGameStateException(
@@ -133,6 +149,7 @@ void StreetProperty::applyFestival() {
     festivalDur_ = 3;
 }
 
+// Ticks festival duration each owner turn and clears effect when expired.
 void StreetProperty::decreaseFestivalDuration() {
     if (festivalDur_ <= 0) {
         return;
