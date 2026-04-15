@@ -56,6 +56,20 @@
 				"$gcc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Build logger implementation",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
 		}
 	]
 }
