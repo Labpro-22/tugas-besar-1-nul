@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "exception/NimonspoliException.h"
+#include "exception/NimonspoliException.hpp"
 
 class InvalidGameStateException : public NimonspoliException {
-public:
+  public:
     explicit InvalidGameStateException(const std::string& message);
 };

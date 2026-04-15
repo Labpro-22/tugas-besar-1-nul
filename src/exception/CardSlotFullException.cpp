@@ -1,4 +1,4 @@
-#include "exception/CardSlotFullException.h"
+#include "exception/CardSlotFullException.hpp"
 
 CardSlotFullException::CardSlotFullException(const std::string& message)
     : NimonspoliException(message) {}

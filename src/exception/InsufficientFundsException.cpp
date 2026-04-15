@@ -1,4 +1,5 @@
-#include "exception/InsufficientFundsException.h"
+#include "exception/InsufficientFundsException.hpp"
 
-InsufficientFundsException::InsufficientFundsException(const std::string& message)
+InsufficientFundsException::InsufficientFundsException(
+    const std::string& message)
     : NimonspoliException(message) {}

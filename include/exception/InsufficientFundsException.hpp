@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "exception/NimonspoliException.h"
+#include "exception/NimonspoliException.hpp"
 
 class InsufficientFundsException : public NimonspoliException {
-public:
+  public:
     explicit InsufficientFundsException(const std::string& message);
 };

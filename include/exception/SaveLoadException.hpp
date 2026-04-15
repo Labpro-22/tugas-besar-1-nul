@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "exception/NimonspoliException.h"
+#include "exception/NimonspoliException.hpp"
 
 class SaveLoadException : public NimonspoliException {
-public:
+  public:
     explicit SaveLoadException(const std::string& message);
 };

@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "exception/NimonspoliException.h"
+#include "exception/NimonspoliException.hpp"
 
 class CardSlotFullException : public NimonspoliException {
-public:
+  public:
     explicit CardSlotFullException(const std::string& message);
 };

@@ -4,6 +4,6 @@
 #include <string>
 
 class NimonspoliException : public std::runtime_error {
-public:
+  public:
     explicit NimonspoliException(const std::string& message);
 };

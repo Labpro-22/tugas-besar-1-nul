@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "exception/NimonspoliException.h"
+#include "exception/NimonspoliException.hpp"
 
 class ConfigException : public NimonspoliException {
-public:
+  public:
     explicit ConfigException(const std::string& message);
 };
