@@ -7,5 +7,5 @@ private:
 public:
     MoveCard(int stp) ;
 
-    void use(Player* player, TurnContext& ctx) override ;
+    void apply(Player& player) override ;
 };

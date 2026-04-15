@@ -3,5 +3,5 @@ class LassoCard : public SkillCard {
 public:
     LassoCard() ;
 
-    void use(Player* player, TurnContext& ctx) override ;
+    void apply(Player& player) override ;
 };
