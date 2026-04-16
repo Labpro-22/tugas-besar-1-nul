@@ -1,4 +1,5 @@
 #include "SkillCard.hpp"
+
 class DiscountCard : public SkillCard {
 private:
     int discountPercent;
