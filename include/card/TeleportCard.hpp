@@ -1,7 +1,10 @@
 #include "SkillCard.hpp"
 class TeleportCard : public SkillCard {
-public:
-    TeleportCard();
+private:
+    int position;
 
-    void use(Player* player, TurnContext& ctx) override ;
+public:
+    TeleportCard(int pos);
+
+    void apply(Player& player) override ;
 };
