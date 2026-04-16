@@ -54,6 +54,7 @@ public:
     int getPropertiesAmount() const;
     int getHandsAmount() const;
     int getWealth() const;
+    const std::vector<Property*>& getProperties() const;
 
     // op
     bool operator>=(const Player& other);

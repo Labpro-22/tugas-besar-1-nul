@@ -40,6 +40,8 @@ int Player::getPropertiesAmount() const { return this->properties.size(); }
 
 int Player::getHandsAmount() const { return this->hand.size(); }
 
+const std::vector<Property*>& Player::getProperties() const { return this->properties; }
+
 int Player::getWealth() const {
     return 0; //pastiin
 }
