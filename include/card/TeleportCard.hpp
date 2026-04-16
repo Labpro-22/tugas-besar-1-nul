@@ -4,7 +4,7 @@ private:
     int position;
 
 public:
-    TeleportCard();
+    TeleportCard(int pos);
 
     void apply(Player& player) override ;
 };
