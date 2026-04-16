@@ -1,28 +1,31 @@
 #include "player/Player.h"
-#include "exception/InsufficientFundsException.h" //nanti ganti ke yg general
+#include <iostream>
 
-// enum class PlayerStatus {
-//     ACTIVE,
-//     JAILED,
-//     BANKRUPT
-// };
+#include "card/SkillCard.hpp"
+#include "exception/CardSlotFullException.hpp"
+#include "exception/InsufficientFundsException.hpp" //nanti ganti ke yg general
+#include "exception/InvalidGameStateException.hpp"
+#include "property/Property.hpp"
 
-    // string username;
-    // PlayerStatus status;
-    
-    // int balance;
-    // int position;
-    // int jailTurns;
-    // bool usedSkillThisTurn;
+/* === CTOR DTOR === */
+Player::Player(std::string username, int balance)
+        : username(username),
+            status(PlayerStatus::ACTIVE),
+            balance(balance),
+            position(0),
+            jailTurns(0),
+            usedSkillThisTurn(false),
+            discountRate(0),
+            boardSizeSource(nullptr),
+            properties({}),
+            hand({}) {}
 
-    // vector<Property*> properties;
-    // vector<SkillCard*> hand;
-
-/* ctor dtor */
-Player::Player(std::string username, int balance) : username(username), status(PlayerStatus::ACTIVE), balance(balance), position(0), jailTurns(0), usedSkillThisTurn(false), properties({}), hand({}) {}
 Player::~Player() {}
 
-/* getter */
+
+
+
+/* === GETTERS === */
 std::string Player::getUsername() const { return this->username; }
 
 PlayerStatus Player::getStatus() const { return this->status; }
@@ -30,6 +33,8 @@ PlayerStatus Player::getStatus() const { return this->status; }
 int Player::getBalance() const { return this->balance; }
 
 bool Player::isInJail() const { return this->getStatus()==PlayerStatus::JAILED; }
+
+int Player::getDiscountRate() const { return this->discountRate; }
 
 int Player::getPropertiesAmount() const { return this->properties.size(); }
 
@@ -39,7 +44,10 @@ int Player::getWealth() const {
     return 0; //pastiin
 }
 
-/* op */
+
+
+
+/* === OPERATORS === */
 bool Player::operator>=(const Player& other) {
     if (this->balance == other.balance) {
         if (this->getPropertiesAmount() == other.getPropertiesAmount()) {
@@ -61,25 +69,42 @@ bool Player::operator<(const Player& other) {
     return this->getBalance() < other.getBalance();
 }
 
-/* moving */
-void Player::move(int steps, int size) {
-    this->position %= (this->position + steps)%size;
+
+
+
+/* === MOVING === */
+void Player::setBoardSizeSource(const int* sizeSource) {
+    this->boardSizeSource = sizeSource;
 }
 
-void Player::moveForwardTo(int index, int size) {
+void Player::clearBoardSizeSource() {
+    this->boardSizeSource = nullptr;
+}
+
+void Player::move(int steps) {
+    if (this->boardSizeSource == nullptr) { throw InvalidGameStateException("Board size source is not set for player movement.");}
+    if (*this->boardSizeSource <= 0) { throw InvalidGameStateException("Board size must be positive."); }
+    const int trueSteps = ((steps % *this->boardSizeSource) + *this->boardSizeSource) % *this->boardSizeSource;
+    this->position = (this->position + trueSteps) % *this->boardSizeSource;
+}
+
+void Player::moveForwardTo(int index) {
     this->position = index;
     // ni nanti implement ngapain tilenya, kalo start jg
 }
 
-void Player::moveBackwardTo(int index, int size) {
+void Player::moveBackwardTo(int index) {
     this->position = index;
     // ni nanti implement ngapain tilenya
 }
 
-/* properties */
+
+
+
+/* === PROPERTIES === */
 void Player::buy(Property* p) {
     // double check property
-    if (this->getBalance() < p->cost) { throw InsufficientFundsException("Not enough money!"); }
+    if (this->getBalance() < p->getBuyPrice()) { throw InsufficientFundsException("Not enough money!"); }
     this->addProperty(p);
 }
 
@@ -104,13 +129,32 @@ void Player::removeProperty(Property& p) {
     // cross check
 }
 
-void Player::drawSCard(SkillCard* card) {}
+
+
+
+/* === SKILL CARDS === */
+void Player::drawSCard(SkillCard* card) {
+    if (card == nullptr) {
+        throw InvalidGameStateException("Cannot draw a null skill card.");
+    }
+    if (this->hand.size() >= 3) {
+        throw CardSlotFullException("Skill card hand is full (max 3 cards).");
+    }
+
+    this->hand.push_back(card);
+    std::cout << "[MENDAPATKAN KEMAMPUAN] " << card->getDescription() << " ditambahkan ke tangan.\n";
+}
 
 void Player::discardSCard(int idx) {}
 
 void Player::useSCard(int idx, TurnContext& ctx) {}
 
+void Player::setDiscountRate(int discount) { this->discountRate = discount; }
+
+void Player::activateShield() { this->isShieldActive = true; }
+
 void Player::enterJail() { this->status = PlayerStatus::JAILED; this->jailTurns = 3; }
+
 void Player::exitJail() { this->status = PlayerStatus::ACTIVE; }
 
 void Player::decideAction(TurnContext& ctx) { 

@@ -4,6 +4,10 @@
 #include <vector>
 // using namespace std;
 
+class Property;
+class SkillCard;
+class TurnContext;
+
 enum class PlayerStatus {
     ACTIVE,
     JAILED,
@@ -12,14 +16,22 @@ enum class PlayerStatus {
 
 class Player {
 protected:
+    /* misc */
+    const int* boardSizeSource; // non-owning pointer (ngikut RAII krn ga manage lgsg)
+
+    /* general */
     std::string username;
     PlayerStatus status;
-    
     int balance;
     int position;
     int jailTurns;
-    bool usedSkillThisTurn;
 
+    /* skills */
+    bool usedSkillThisTurn;
+    int discountRate; // DiscountCard
+    bool isShieldActive; // ShieldCard
+
+    /* containers */
     std::vector<Property*> properties;
     std::vector<SkillCard*> hand;
 
@@ -38,6 +50,7 @@ public:
     PlayerStatus getStatus() const;
     int getBalance() const;
     bool isInJail() const;
+    int getDiscountRate() const;
     int getPropertiesAmount() const;
     int getHandsAmount() const;
     int getWealth() const;
@@ -47,9 +60,12 @@ public:
     bool operator<(const Player& other);
 
     // moving
-    void move(int steps, int size);
-    void moveForwardTo(int index, int size);
-    void moveBackwardTo(int index, int size);
+    void setBoardSizeSource(const int* sizeSource);
+    void clearBoardSizeSource();
+    void move(int steps);
+    void moveForwardTo(int index);
+    void moveBackwardTo(int index);
+    void onLanded(TurnContext& ctx);
 
     // properties
     void buy(Property* p);
@@ -60,6 +76,8 @@ public:
     void drawSCard(SkillCard* deck);
     void discardSCard(int idx);
     void useSCard(int idx, TurnContext& ctx);
+    void setDiscountRate(int discount);
+    void activateShield();
 
     // jail
     void enterJail();
