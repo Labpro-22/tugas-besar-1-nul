@@ -7,5 +7,5 @@ private:
 public:
     DiscountCard(int discount) ;
 
-    void apply(Player& player) override ;
+    void apply(TurnContext& ctx) override ;
 };
