@@ -70,6 +70,62 @@
 				"$gcc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Build states implementation",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build DTO-aligned states",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build SaveLoad refactor",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Rebuild SaveLoad refactor",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
 		}
 	]
 }
