@@ -1,8 +1,9 @@
 #include "DemolitionCard.hpp"
+#include "player/Player.h"
 
 DemolitionCard::DemolitionCard() : SkillCard("DemolitionCard: Menghancurkan properti lawan", 0) {}
 
-void DemolitionCard::use(Player* player, TurnContext& ctx)  {
+void DemolitionCard::apply(Player& player)  {
     std::cout << "[MENGGUNAKAN] DemolitionCard: Menghancurkan properti lawan.\n";
     // TODO: Tampilkan daftar pemain lain
     // TODO: Tampilkan properti milik target yang memiliki bangunan (Rumah/Hotel)
