@@ -7,5 +7,6 @@ DiscountCard::DiscountCard(int discount)
 
 void DiscountCard::apply(Player& player) {
     std::cout << "[MENGGUNAKAN] DiscountCard: Diskon " << discountPercent << "% aktif untuk 1 giliran.\n";
+    
     player.setDiscountRate(discountPercent);
 }
