@@ -1,4 +1,7 @@
 #include "card.hpp"
+
+class Player;
+
 class SkillCard : public Card {
 protected:
     int remainingDuration; 
