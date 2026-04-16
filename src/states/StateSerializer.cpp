@@ -2,62 +2,87 @@
 
 #include <sstream>
 
+#include "states/CardState.hpp"
+
 #include "utils/SerializeUtils.hpp"
 
 std::string
-StateSerializer::serializeHand(const std::vector<CardState> &hand) const {
+StateSerializer::serializeHand(const std::vector<CardState>& hand) const {
     std::ostringstream out;
-    for (std::size_t i = 0; i < hand.size(); ++i) {
-        if (i > 0) {
-            out << ';';
+    out << hand.size() << '\n';
+
+    for (const CardState& card : hand) {
+        out << card.type;
+
+        const bool hasValue = card.value != 0;
+        const bool hasDuration = card.remainingDuration != 0;
+        if (hasDuration || card.type == "DiscountCard") {
+            out << ' ' << card.value << ' ' << card.remainingDuration;
+        } else if (hasValue) {
+            out << ' ' << card.value;
         }
-        out << escapeField(hand[i].type) << ',' << hand[i].value << ','
-            << hand[i].remainingDuration;
+
+        out << '\n';
     }
+
     return out.str();
 }
 
 std::string StateSerializer::serializePlayers(
-    const std::vector<PlayerState> &players) const {
+    const std::vector<PlayerState>& players) const {
     std::ostringstream out;
-    for (const PlayerState &player : players) {
-        out << escapeField(player.username) << '\t' << player.balance << '\t'
-            << escapeField(player.positionCode) << '\t'
-            << escapeField(player.status) << '\t' << serializeHand(player.hand)
-            << '\n';
+    out << players.size() << '\n';
+
+    for (const PlayerState& player : players) {
+        out << player.username << ' ' << player.balance << ' '
+            << player.positionCode << ' ' << player.status << '\n';
+        out << serializeHand(player.hand);
     }
+
     return out.str();
 }
 
 std::string StateSerializer::serializeProperties(
-    const std::vector<PropertyState> &properties) const {
+    const std::vector<PropertyState>& properties) const {
     std::ostringstream out;
-    for (const PropertyState &property : properties) {
-        out << escapeField(property.code) << '\t' << escapeField(property.type)
-            << '\t' << escapeField(property.owner) << '\t'
-            << escapeField(property.status) << '\t' << property.festivalMult
-            << '\t' << property.festivalDur << '\t' << property.buildingCount
-            << '\t' << (property.isHotel ? 1 : 0) << '\n';
+    out << properties.size() << '\n';
+
+    for (const PropertyState& property : properties) {
+        out << property.code << ' ' << property.type << ' ' << property.owner
+            << ' ' << property.status << ' ' << property.festivalMult << ' '
+            << property.festivalDur << ' '
+            << (property.isHotel ? std::string("H")
+                                 : std::to_string(property.buildingCount))
+            << '\n';
     }
+
     return out.str();
 }
 
 std::string
-StateSerializer::serializeDeck(const std::vector<std::string> &deck) const {
+StateSerializer::serializeDeck(const std::vector<std::string>& deck) const {
     std::ostringstream out;
-    for (const std::string &card : deck) {
-        out << escapeField(card) << '\n';
+    out << deck.size() << '\n';
+
+    for (const std::string& card : deck) {
+        out << card << '\n';
     }
+
     return out.str();
 }
 
 std::string
-StateSerializer::serializeLog(const std::vector<LogEntry> &logs) const {
+StateSerializer::serializeLog(const std::vector<LogEntry>& logs) const {
     std::ostringstream out;
-    for (const LogEntry &entry : logs) {
-        out << entry.turn << '\t' << escapeField(entry.username) << '\t'
-            << escapeField(entry.actionType) << '\t'
-            << escapeField(entry.detail) << '\n';
+    out << logs.size() << '\n';
+
+    for (const LogEntry& entry : logs) {
+        out << entry.turn << ' ' << entry.username << ' ' << entry.actionType;
+        if (!entry.detail.empty()) {
+            out << ' ' << entry.detail;
+        }
+        out << '\n';
     }
+
     return out.str();
 }
