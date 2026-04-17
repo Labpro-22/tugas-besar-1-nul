@@ -1,4 +1,7 @@
 #include "card.hpp"
+
+class Player;
+
 class SkillCard : public Card {
 protected:
     int remainingDuration; 
@@ -12,5 +15,5 @@ public:
 
     void execute(Player* player, TurnContext& ctx) override ;
 
-    virtual void use(Player* player, TurnContext& ctx) = 0;
+    virtual void apply(Player& player) = 0;
 };

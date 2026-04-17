@@ -4,5 +4,5 @@ class DemolitionCard : public SkillCard {
 public:
     DemolitionCard() ;
 
-    void use(Player* player, TurnContext& ctx) override ;
+    void apply(Player& player) override ;
 };
