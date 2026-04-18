@@ -162,11 +162,10 @@ void StreetProperty::decreaseFestivalDuration() {
     }
 }
 
-void StreetProperty::printStatus(){
-    // TurnContext ctx;
+void StreetProperty::printStatus(TurnContext& ctx){
     std::cout << "+================================+\n";
     std::cout << "| [" << getColorGroup() << "] " << getName() << " (" << getCode() << ")\t|\n";
     std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t|\n";
-    std::cout << "| Sewa dasar    : M" << "getRent(&ctx)" << "\t|\n";
+    std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\t|\n";
     std::cout << "+================================+\n";
 }

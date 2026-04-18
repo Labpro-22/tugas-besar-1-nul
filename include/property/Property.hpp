@@ -40,7 +40,7 @@ class Property {
 
     bool operator==(const Property& other) const;
 
-    virtual void printStatus() = 0;
+    virtual void printStatus(TurnContext& ctx) = 0;
 
   protected:
     std::string code_;

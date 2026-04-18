@@ -39,7 +39,7 @@ class StreetProperty : public Property {
     void applyFestival();
     void decreaseFestivalDuration();
 
-    void printStatus() override;
+    void printStatus(TurnContext& ctx) override;
 
   private:
     std::string colorGroup_;

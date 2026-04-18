@@ -22,7 +22,7 @@ class UtilityProperty : public Property {
     // implementation.
     void setOwnedUtilityCounter(std::function<int(const Player*)> counter);
     void setDiceTotalExtractor(std::function<int(const TurnContext&)> extractor);
-    void printStatus() override;
+    void printStatus(TurnContext& ctx) override;
 
   private:
     std::map<int, int> multiplierTable_;

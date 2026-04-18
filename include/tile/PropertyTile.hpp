@@ -38,7 +38,7 @@ class StreetTile : public PropertyTile{
     public:
         using PropertyTile::PropertyTile;
         void onLanded(Player* player, TurnContext& ctx) override;
-        void triggerBuyOrAuction(Player* player);
+        void triggerBuyOrAuction(Player* player, TurnContext& ctx);
         void triggerRentPayment(Player* player);
 };
 

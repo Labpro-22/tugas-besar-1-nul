@@ -63,11 +63,10 @@ void RailroadProperty::setOwnedRailroadCounter(
     ownedRailroadCounter_ = std::move(counter);
 }
 
-void RailroadProperty::printStatus(){
-    // TurnContext ctx;
+void RailroadProperty::printStatus(TurnContext& ctx){
     std::cout << "+================================+\n";
     std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\t|\n";
     std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t|\n";
-    std::cout << "| Sewa dasar    : M" << "getRent(&ctx)" << "\t|\n";
+    std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\t|\n";
     std::cout << "+================================+\n";
 }

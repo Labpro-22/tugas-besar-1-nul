@@ -25,6 +25,7 @@ private:
 
 public:
     // ctor dtor lom ada
+    GameEngine ge();
 
     void startNewGame();
     void loadGame(const std::string& file);

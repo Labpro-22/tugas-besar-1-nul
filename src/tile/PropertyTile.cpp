@@ -24,16 +24,16 @@ void StreetTile::onLanded(Player* player, TurnContext& ctx){
             triggerRentPayment(player);
         }
     } else if (property->getStatus() == PropertyStatus::BANK){
-        triggerBuyOrAuction(player);
+        triggerBuyOrAuction(player, ctx);
     } else{
         //kalau Mortgaged lewat aja sih
     }
 };
 
-void StreetTile::triggerBuyOrAuction(Player* player){
+void StreetTile::triggerBuyOrAuction(Player* player, TurnContext& ctx){
     cout << "triggerBuyOrAuction milik StreetTile!\n";
     cout << "Anda mendarat di " << getName() << ".\n";
-    getProperty()->printStatus();
+    getProperty()->printStatus(ctx);
     cout << "Apakah Anda mau beli " << getName() << "? (Harga: " << getProperty()->getBuyPrice() << ")\n";
     string ans;
     cin >> ans;
