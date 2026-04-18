@@ -4,5 +4,5 @@ class ShieldCard : public SkillCard {
 public:
     ShieldCard();
 
-    void apply(Player& player) override ;
+    void apply(TurnContext& ctx) override ;
 };
