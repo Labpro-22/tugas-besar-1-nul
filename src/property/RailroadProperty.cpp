@@ -1,6 +1,7 @@
 #include "property/RailroadProperty.hpp"
 
 #include <utility>
+#include <iostream>
 
 #include "exception/InvalidGameStateException.hpp"
 
@@ -60,4 +61,13 @@ int RailroadProperty::getRentFromOwnedCount(int ownedRailroads) const {
 void RailroadProperty::setOwnedRailroadCounter(
     std::function<int(const Player*)> counter) {
     ownedRailroadCounter_ = std::move(counter);
+}
+
+void RailroadProperty::printStatus(){
+    // TurnContext ctx;
+    std::cout << "+================================+\n";
+    std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\t|\n";
+    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t|\n";
+    std::cout << "| Sewa dasar    : M" << "getRent(&ctx)" << "\t|\n";
+    std::cout << "+================================+\n";
 }

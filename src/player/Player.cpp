@@ -121,6 +121,7 @@ void Player::sell(Property& p) {
 // ni nnti make sure parameter type
 void Player::addProperty(Property* p) {
     this->properties.push_back(p);
+
 }
 
 //make sure lgi type p

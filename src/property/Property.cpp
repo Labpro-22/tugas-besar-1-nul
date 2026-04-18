@@ -1,8 +1,10 @@
-#include "property/Property.hpp"
+// #include "property/Property.hpp"
+#include "../../include/property/Property.hpp"
 
 #include <utility>
+#include <iostream>
 
-#include "exception/InvalidGameStateException.hpp"
+#include "../../include/exception/InvalidGameStateException.hpp"
 
 // Initializes common property state and validates basic invariants.
 Property::Property(std::string code,

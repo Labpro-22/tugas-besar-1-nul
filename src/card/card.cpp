@@ -1,4 +1,4 @@
-#include "card.hpp"
+#include "card/card.hpp"
 Card::Card(std::string desc) : description(std::move(desc)) {}
 
 std::string Card::getDescription() const {

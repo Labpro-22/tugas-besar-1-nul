@@ -1,0 +1,20 @@
+#include "board/Board.hpp"
+#include "tile/PropertyTile.hpp"
+#include "property/StreetProperty.hpp"
+
+using namespace std;
+#include <vector>
+
+int main(){
+    cout << "Hello, World\n";
+    Player p = Player("tensai", 30);
+    Player p2 = Player("sakuragi", 2000);
+    vector<int> x = {100, 150, 200, 250, 300, 350, 400, 450};
+    StreetProperty prop("LNDN", "Lundun", 300, 150, "GREEN", 300, 400, x);
+    StreetTile st(6, "LNDN", "Lundun", "GREEN", &prop);
+    TurnContext tc;
+    p2.buy(&prop);
+    prop.setOwner(&p2); // ini harus dihandle di buy
+    st.onLanded(&p, tc);
+    return 0;
+}

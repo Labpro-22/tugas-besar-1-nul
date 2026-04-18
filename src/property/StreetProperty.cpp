@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <iostream>
 
 #include "exception/InvalidGameStateException.hpp"
 
@@ -159,4 +160,13 @@ void StreetProperty::decreaseFestivalDuration() {
     if (festivalDur_ == 0) {
         festivalMult_ = 1;
     }
+}
+
+void StreetProperty::printStatus(){
+    // TurnContext ctx;
+    std::cout << "+================================+\n";
+    std::cout << "| [" << getColorGroup() << "] " << getName() << " (" << getCode() << ")\t|\n";
+    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t|\n";
+    std::cout << "| Sewa dasar    : M" << "getRent(&ctx)" << "\t|\n";
+    std::cout << "+================================+\n";
 }

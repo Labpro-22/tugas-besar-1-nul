@@ -21,6 +21,8 @@ class RailroadProperty : public Property {
     // Allows integration without hard-coupling this module to Player internals.
     void setOwnedRailroadCounter(std::function<int(const Player*)> counter);
 
+    void printStatus() override;
+
   private:
     std::map<int, int> rentTable_;
     std::function<int(const Player*)> ownedRailroadCounter_;

@@ -1,4 +1,4 @@
-#include "ShieldCard.hpp"
+#include "card/ShieldCard.hpp"
 #include "player/Player.h"
 
 ShieldCard::ShieldCard() : SkillCard("ShieldCard: Kebal tagihan/sanksi", 1) {}
