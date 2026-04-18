@@ -1,5 +1,5 @@
 #include "SkillCard.hpp"
-
+#pragma once
 class MoveCard : public SkillCard {
 private:
     int steps;

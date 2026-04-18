@@ -21,7 +21,7 @@ void StreetTile::onLanded(Player* player, TurnContext& ctx){
             cout << "Welcome home, brader\n";
         } else{
             cout << "Nah loh ke tempat siapa ni\n";
-            triggerRentPayment(player);
+            triggerRentPayment(player, ctx);
         }
     } else if (property->getStatus() == PropertyStatus::BANK){
         triggerBuyOrAuction(player, ctx);
@@ -39,8 +39,9 @@ void StreetTile::triggerBuyOrAuction(Player* player, TurnContext& ctx){
     cin >> ans;
 };
 
-void StreetTile::triggerRentPayment(Player* player){
+void StreetTile::triggerRentPayment(Player* player, TurnContext& ctx){
     cout << "triggerRentPayment milik StreetTile!\n";
+    getProperty()->printStatus(ctx);
     cout << "Anda mendarat di " << property->getName() << " milik " << property->getOwner()->getUsername() << "\n";
 };
 

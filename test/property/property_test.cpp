@@ -11,7 +11,7 @@
 #include "property/StreetProperty.hpp"
 #include "property/UtilityProperty.hpp"
 
-class TurnContext {};
+class TurnContext;
 
 namespace {
 

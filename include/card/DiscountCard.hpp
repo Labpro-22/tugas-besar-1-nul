@@ -1,5 +1,5 @@
 #include "SkillCard.hpp"
-
+#pragma once
 class DiscountCard : public SkillCard {
 private:
     int discountPercent;

@@ -6,19 +6,16 @@
 #include "../board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
 #include "../property/Property.hpp"
 #include "../player/Player.h"
+#include "core/Dice.hpp"
 #include "Tile.hpp"
 #include <iostream>
 #include <vector>
 
 // =================================== dummy classes =====================================
 
-class Dice{
-    //dummy data
-};
+class Dice;
 
-class TurnContext{
-    //dummy data
-};
+class TurnContext;
 
 
 // ======================================================================================
@@ -39,7 +36,7 @@ class StreetTile : public PropertyTile{
         using PropertyTile::PropertyTile;
         void onLanded(Player* player, TurnContext& ctx) override;
         void triggerBuyOrAuction(Player* player, TurnContext& ctx);
-        void triggerRentPayment(Player* player);
+        void triggerRentPayment(Player* player, TurnContext& ctx);
 };
 
 class RailroadTile : public PropertyTile{

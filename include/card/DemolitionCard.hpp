@@ -1,5 +1,5 @@
 #include "SkillCard.hpp"
-
+#pragma once
 class DemolitionCard : public SkillCard {
 public:
     DemolitionCard() ;

@@ -1,5 +1,5 @@
 #include "card.hpp"
-
+#pragma once
 template <typename T>
 class CardDeck {
 private:

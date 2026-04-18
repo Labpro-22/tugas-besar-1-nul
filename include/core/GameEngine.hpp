@@ -14,7 +14,8 @@
 
 class GameEngine {
 private:
-    Board board;
+    // Board board;
+    Board board{20};
     TurnManager turnmgr;
     CardDeck<ChanceCard> chanceDeck;
     // CardDeck<CommunityCard> communityDeck;
@@ -25,7 +26,7 @@ private:
 
 public:
     // ctor dtor lom ada
-    GameEngine ge();
+    GameEngine() = default;
 
     void startNewGame();
     void loadGame(const std::string& file);
