@@ -163,9 +163,28 @@ void StreetProperty::decreaseFestivalDuration() {
 }
 
 void StreetProperty::printStatus(TurnContext& ctx){
-    std::cout << "+================================+\n";
-    std::cout << "| [" << getColorGroup() << "] " << getName() << " (" << getCode() << ")\t\t|\n";
-    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t\t|\n";
-    std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\t\t|\n";
-    std::cout << "+================================+\n";
+    //nanti perbaiki di trigger agar tunjukin kalau di daerah bukan sendiri
+    std::cout << "+=============================================+\n";
+    std::cout << "| [" << getColorGroup() << "] " << getName() << " (" << getCode() << ")\n";
+    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
+    printRentTable();
+    std::cout << "+=============================================+\n";
+    if (getStatus() == PropertyStatus::OWNED){
+        std::cout << "Harga saat ini : M" << getRent(ctx) << "\n";
+    }
+}
+
+const std::vector<int>& StreetProperty::getRentTable() const{
+    return rentTable_;
+}
+
+void StreetProperty::printRentTable(){
+    std::vector<int> rt = getRentTable();
+    for (int i = 0; i<rt.size(); i++){
+        if (i < rt.size()-1){
+            std::cout << "| Sewa dengan banyak rumah " << i << ": M" << rt[i] << "\n";
+        } else{
+            std::cout << "| Sewa dengan hotel: M" << rt[i] << "\n";
+        }
+    }
 }

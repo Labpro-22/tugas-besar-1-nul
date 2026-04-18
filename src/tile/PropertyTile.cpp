@@ -10,17 +10,13 @@ void printOwner(Player* player){
 }
 
 void PropertyTile::onLanded(Player* player, TurnContext& ctx){
-    cout << "onLanded milik PropertyTile!\n";
     printOwner(player);
 };
 
 void StreetTile::onLanded(Player* player, TurnContext& ctx){
-    cout << "onLanded milik StreetTile!\n";
     if (property->getStatus() == PropertyStatus::OWNED){
         if (property->getOwner() == player){
-            cout << "Welcome home, brader\n";
         } else{
-            cout << "Nah loh ke tempat siapa ni\n";
             triggerRentPayment(player, ctx);
         }
     } else if (property->getStatus() == PropertyStatus::BANK){
@@ -31,18 +27,30 @@ void StreetTile::onLanded(Player* player, TurnContext& ctx){
 };
 
 void StreetTile::triggerBuyOrAuction(Player* player, TurnContext& ctx){
-    cout << "triggerBuyOrAuction milik StreetTile!\n";
     cout << "Anda mendarat di " << getName() << ".\n";
     getProperty()->printStatus(ctx);
-    cout << "Apakah Anda mau beli " << getName() << "? (Harga: " << getProperty()->getBuyPrice() << ")\n";
     string ans;
-    cin >> ans;
+    while (true){
+        cout << "[Y/N] Apakah Anda mau beli " << getName() << "? (Harga: " << getProperty()->getBuyPrice() << ")\n";
+        cin >> ans;
+        if (ans == "Y" || ans == "y"){
+            player->buy(getProperty());
+            cout << "Anda baru saja membeli " << getName() << "\n";
+            cout << "Uang anda tersisa: " << player->getBalance() - getProperty()->getBuyPrice() << "\n"; //nanti implement dari player
+            break;
+        } else if (ans == "N" || ans == "n"){
+            cout << "AUCTIONNNNNNNNN\n";
+            break;
+        } else{
+            cout << "input tidak valid. Throw input invalid exception?\n";
+        }
+    }
 };
 
 void StreetTile::triggerRentPayment(Player* player, TurnContext& ctx){
-    cout << "triggerRentPayment milik StreetTile!\n";
+    cout << "Anda mendarat di " << getProperty()->getName() << " milik " << getProperty()->getOwner()->getUsername() << "\n";
     getProperty()->printStatus(ctx);
-    cout << "Anda mendarat di " << property->getName() << " milik " << property->getOwner()->getUsername() << "\n";
+    cout << "Uang anda tersisa: " << player->getBalance() - getProperty()->getRent(ctx) << "\n"; //nanti implement dari player
 };
 
 void RailroadTile::onLanded(Player* player, TurnContext& ctx){
