@@ -10,6 +10,7 @@ build/
 obj/
 bin/
 
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -52,3 +53,8 @@ compile_commands.json
 CTestTestfile.cmake
 Testing/
 .cache/
+
+
+# class-design
+class-design/NIMONSPOLI_SPEC.md
+class-design/NIMONSPOLI_GROUND_TRUTH.md

@@ -159,6 +159,37 @@ package "Bonus: Dynamic Board" #FFF4EC {
 }
 
 ' ============================================================
+' EXCEPTIONS
+' ============================================================
+package "Exceptions" #FDEFF3 {
+
+    abstract class NimonspoliException {
+        # message : string
+        --
+        + what() : string
+    }
+
+    class CommandException
+    class CardSlotFullException
+    class InvalidGameStateException
+    class ConfigException
+
+    NimonspoliException <|-- CommandException
+    NimonspoliException <|-- CardSlotFullException
+    NimonspoliException <|-- InvalidGameStateException
+    NimonspoliException <|-- ConfigException
+
+}
+
+' Exception usage
+GUIController ..> CommandException : invalid GUI command/input
+ComputerPlayer ..> InvalidGameStateException : invalid autonomous action state
+ComputerPlayer ..> CardSlotFullException : receives 4th skill card
+DynamicBoardLoader ..> ConfigException : invalid board config file
+DynamicBoardLoader ..> InvalidGameStateException : board rules violated
+BoardFactory ..> InvalidGameStateException : failed tile construction
+
+' ============================================================
 ' CROSS-PACKAGE STUBS (referenced from other diagrams)
 ' ============================================================
 class GameEngine <<context>> {

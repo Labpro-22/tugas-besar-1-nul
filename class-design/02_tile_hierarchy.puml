@@ -142,6 +142,18 @@ class Board {
 }
 
 ' ============================================================
+' EXCEPTIONS (relevant to tile flow)
+' ============================================================
+package "Exceptions" #FDEFF3 {
+    abstract class NimonspoliException
+    class InsufficientFundsException
+    class InvalidGameStateException
+
+    NimonspoliException <|-- InsufficientFundsException
+    NimonspoliException <|-- InvalidGameStateException
+}
+
+' ============================================================
 ' RELATIONSHIPS
 ' ============================================================
 
@@ -166,5 +178,11 @@ Board "1" o-- "20..60" Tile : holds
 
 ' PropertyTile references a Property
 PropertyTile --> Property : references
+
+' Exception usage
+StreetTile ..> InsufficientFundsException : may trigger payment failure
+TaxTile ..> InsufficientFundsException : may trigger tax failure
+Board ..> InvalidGameStateException : may throw on invalid config/index
+GoToJailTile ..> InvalidGameStateException : invalid jail state
 
 @enduml

@@ -149,6 +149,33 @@ package "Data Access Layer" #FBF0EB {
 }
 
 ' ============================================================
+' CROSS-CUTTING — EXCEPTIONS
+' ============================================================
+package "Exception" #FDEFF3 {
+
+    abstract class NimonspoliException {
+        # message : string
+        --
+        + what() : string
+    }
+
+    class ConfigException
+    class SaveLoadException
+    class CommandException
+    class InsufficientFundsException
+    class CardSlotFullException
+    class InvalidGameStateException
+
+    NimonspoliException <|-- ConfigException
+    NimonspoliException <|-- SaveLoadException
+    NimonspoliException <|-- CommandException
+    NimonspoliException <|-- InsufficientFundsException
+    NimonspoliException <|-- CardSlotFullException
+    NimonspoliException <|-- InvalidGameStateException
+
+}
+
+' ============================================================
 ' RELATIONSHIPS
 ' ============================================================
 
@@ -168,5 +195,15 @@ GameEngine --> TurnContext       : creates
 GameEngine --> ConfigLoader      : reads config via
 GameEngine --> SaveLoadManager   : persists via
 GameEngine --> TransactionLogger : logs to
+
+' Exceptions used across layers
+CLIController ..> CommandException          : handles
+GameEngine ..> CommandException             : throws
+GameEngine ..> SaveLoadException            : throws
+GameEngine ..> InvalidGameStateException    : throws
+AuctionManager ..> InsufficientFundsException : may throw
+BankruptcyManager ..> InsufficientFundsException : may throw
+ConfigLoader ..> ConfigException            : throws
+SaveLoadManager ..> SaveLoadException       : throws
 
 @enduml

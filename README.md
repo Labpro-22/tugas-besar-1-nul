@@ -18,7 +18,55 @@ cmake --build cmake-build
 - Format kode sebelum push!!!
 
 ```bash
-clang-format -i src/**/*.cpp include/**/*.h
+clang-format -i src/**/*.cpp include/**/*.hpp test/**/*.cpp
 ```
 
 Jika shell tidak mendukung glob `**`, gunakan pendekatan `find`:
+
+## Unit Test
+
+Semua file test dengan pola `test/**/*_test.cpp` akan otomatis didaftarkan sebagai target CMake saat configure.
+
+- Configure project:
+
+```bash
+cmake -S . -B cmake-build
+```
+
+- Lihat daftar target test yang tersedia:
+
+```bash
+cmake --build cmake-build --target help
+```
+
+- Build satu target test (contoh: `property_test`):
+
+```bash
+cmake --build cmake-build --target property_test
+```
+
+- Build semua target test sekaligus:
+
+```bash
+cmake --build cmake-build --target all_tests
+```
+
+- Jalankan executable test:
+
+```bash
+./cmake-build/property_test
+```
+
+Jika build generator yang dipakai membuat binary di subfolder konfigurasi, jalankan `property_test.exe` dari folder seperti `cmake-build/Debug` atau `cmake-build/Release`.
+
+Contoh PowerShell (Windows):
+
+```powershell
+.\cmake-build\property_test.exe
+```
+
+Contoh WSL/Linux shell:
+
+```bash
+./cmake-build/property_test
+```
