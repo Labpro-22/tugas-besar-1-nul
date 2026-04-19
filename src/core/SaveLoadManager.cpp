@@ -1,9 +1,9 @@
 #include "core/SaveLoadManager.hpp"
 
+#include "exception/SaveLoadException.hpp"
 #include <fstream>
 #include <map>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -21,14 +21,14 @@ std::string readRequiredNonEmptyLine(std::istream& in,
             return line;
         }
     }
-    throw std::runtime_error(errorMessage);
+    throw SaveLoadException(errorMessage);
 }
 
 std::vector<std::string>
 readLines(std::istream& in, int count, const std::string& sectionName) {
     if (count < 0) {
-        throw std::runtime_error("Invalid negative count in section: " +
-                                 sectionName);
+        throw SaveLoadException("Invalid negative count in section: " +
+                                sectionName);
     }
 
     std::vector<std::string> lines;
@@ -36,8 +36,8 @@ readLines(std::istream& in, int count, const std::string& sectionName) {
     for (int i = 0; i < count; ++i) {
         std::string line;
         if (!std::getline(in, line)) {
-            throw std::runtime_error("Unexpected EOF while reading section: " +
-                                     sectionName);
+            throw SaveLoadException("Unexpected EOF while reading section: " +
+                                    sectionName);
         }
         lines.push_back(line);
     }
@@ -50,8 +50,8 @@ void SaveLoadManager::save(const GameState& state,
                            const std::string& filename) const {
     std::ofstream out(filename);
     if (!out.is_open()) {
-        throw std::runtime_error("Failed to open save file for writing: " +
-                                 filename);
+        throw SaveLoadException("Failed to open save file for writing: " +
+                                filename);
     }
 
     out << state.currentTurn << ' ' << state.maxTurn << '\n';
@@ -60,7 +60,7 @@ void SaveLoadManager::save(const GameState& state,
     for (std::size_t i = 0; i < state.turnOrder.size(); ++i) {
         const int idx = state.turnOrder[i];
         if (idx < 0 || idx >= static_cast<int>(state.players.size())) {
-            throw std::runtime_error(
+            throw SaveLoadException(
                 "TURN_ORDER contains invalid player index while saving");
         }
         if (i > 0) {
@@ -72,7 +72,7 @@ void SaveLoadManager::save(const GameState& state,
 
     if (state.activePlayerIdx < 0 ||
         state.activePlayerIdx >= static_cast<int>(state.players.size())) {
-        throw std::runtime_error(
+        throw SaveLoadException(
             "ACTIVE_PLAYER_IDX is invalid while saving game state");
     }
     out << state.players[state.activePlayerIdx].username << '\n';
@@ -85,8 +85,8 @@ void SaveLoadManager::save(const GameState& state,
 GameState SaveLoadManager::load(const std::string& filename) const {
     std::ifstream in(filename);
     if (!in.is_open()) {
-        throw std::runtime_error("Failed to open save file for reading: " +
-                                 filename);
+        throw SaveLoadException("Failed to open save file for reading: " +
+                                filename);
     }
 
     GameState state;
@@ -96,8 +96,8 @@ GameState SaveLoadManager::load(const std::string& filename) const {
         const std::vector<std::string> parts = splitWhitespace(turnLine);
         if (parts.size() < 2 || !tryParseInt(parts[0], state.currentTurn) ||
             !tryParseInt(parts[1], state.maxTurn)) {
-            throw std::runtime_error("Invalid first line format, expected: "
-                                     "<TURN_SAAT_INI> <MAX_TURN>");
+            throw SaveLoadException("Invalid first line format, expected: "
+                                    "<TURN_SAAT_INI> <MAX_TURN>");
         }
     }
 
@@ -108,7 +108,7 @@ GameState SaveLoadManager::load(const std::string& filename) const {
         splitWhitespace(playerCountLine);
     if (playerCountTokens.empty() ||
         !tryParseInt(playerCountTokens[0], playerCount) || playerCount < 0) {
-        throw std::runtime_error("Invalid <JUMLAH_PEMAIN>");
+        throw SaveLoadException("Invalid <JUMLAH_PEMAIN>");
     }
 
     std::vector<std::string> playerBlock;
@@ -127,7 +127,7 @@ GameState SaveLoadManager::load(const std::string& filename) const {
             splitWhitespace(handCountLine);
         if (handCountTokens.empty() ||
             !tryParseInt(handCountTokens[0], handCount) || handCount < 0) {
-            throw std::runtime_error("Invalid <JUMLAH_KARTU_TANGAN>");
+            throw SaveLoadException("Invalid <JUMLAH_KARTU_TANGAN>");
         }
 
         for (int h = 0; h < handCount; ++h) {
@@ -142,7 +142,7 @@ GameState SaveLoadManager::load(const std::string& filename) const {
     const std::vector<std::string> turnOrderUsernames =
         splitWhitespace(turnOrderLine);
     if (static_cast<int>(turnOrderUsernames.size()) != playerCount) {
-        throw std::runtime_error("Turn order count must match <JUMLAH_PEMAIN>");
+        throw SaveLoadException("Turn order count must match <JUMLAH_PEMAIN>");
     }
 
     std::map<std::string, int> usernameToIndex;
@@ -154,8 +154,8 @@ GameState SaveLoadManager::load(const std::string& filename) const {
     for (const std::string& username : turnOrderUsernames) {
         auto it = usernameToIndex.find(username);
         if (it == usernameToIndex.end()) {
-            throw std::runtime_error("Unknown username in turn order: " +
-                                     username);
+            throw SaveLoadException("Unknown username in turn order: " +
+                                    username);
         }
         state.turnOrder.push_back(it->second);
     }
@@ -166,13 +166,13 @@ GameState SaveLoadManager::load(const std::string& filename) const {
         const std::vector<std::string> activeTokens =
             splitWhitespace(activePlayerLine);
         if (activeTokens.empty()) {
-            throw std::runtime_error("Invalid active player line");
+            throw SaveLoadException("Invalid active player line");
         }
 
         auto it = usernameToIndex.find(activeTokens[0]);
         if (it == usernameToIndex.end()) {
-            throw std::runtime_error("Unknown active player username: " +
-                                     activeTokens[0]);
+            throw SaveLoadException("Unknown active player username: " +
+                                    activeTokens[0]);
         }
         state.activePlayerIdx = it->second;
     }
@@ -185,7 +185,7 @@ GameState SaveLoadManager::load(const std::string& filename) const {
     if (propertyCountTokens.empty() ||
         !tryParseInt(propertyCountTokens[0], propertyCount) ||
         propertyCount < 0) {
-        throw std::runtime_error("Invalid <JUMLAH_PROPERTI>");
+        throw SaveLoadException("Invalid <JUMLAH_PROPERTI>");
     }
     std::vector<std::string> propertyBlock;
     propertyBlock.push_back(std::to_string(propertyCount));
@@ -202,7 +202,7 @@ GameState SaveLoadManager::load(const std::string& filename) const {
         splitWhitespace(deckCountLine);
     if (deckCountTokens.empty() ||
         !tryParseInt(deckCountTokens[0], deckCount) || deckCount < 0) {
-        throw std::runtime_error("Invalid <JUMLAH_KARTU_DECK_KEMAMPUAN>");
+        throw SaveLoadException("Invalid <JUMLAH_KARTU_DECK_KEMAMPUAN>");
     }
     std::vector<std::string> deckBlock;
     deckBlock.push_back(std::to_string(deckCount));
@@ -217,7 +217,7 @@ GameState SaveLoadManager::load(const std::string& filename) const {
         splitWhitespace(logCountLine);
     if (logCountTokens.empty() || !tryParseInt(logCountTokens[0], logCount) ||
         logCount < 0) {
-        throw std::runtime_error("Invalid <JUMLAH_ENTRI_LOG>");
+        throw SaveLoadException("Invalid <JUMLAH_ENTRI_LOG>");
     }
     std::vector<std::string> logBlock;
     logBlock.push_back(std::to_string(logCount));

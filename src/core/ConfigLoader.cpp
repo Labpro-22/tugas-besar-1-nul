@@ -1,9 +1,9 @@
 #include "core/ConfigLoader.hpp"
+#include "exception/ConfigException.hpp"
 #include "utils/ParseUtils.hpp"
 #include <cctype>
 #include <fstream>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 
 Config ConfigLoader::loadAll(const std::string& path) const {
@@ -21,8 +21,7 @@ std::vector<PropertyData>
 ConfigLoader::loadProperty(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
-        throw std::runtime_error("Failed to open property config file: " +
-                                 file);
+        throw ConfigException("Failed to open property config file: " + file);
     }
 
     std::vector<PropertyData> result;
@@ -42,9 +41,9 @@ ConfigLoader::loadProperty(const std::string& file) const {
         }
 
         if (tokens.size() < 7) {
-            throw std::runtime_error("Invalid property row at line " +
-                                     std::to_string(lineNumber) +
-                                     ": expected at least 7 columns");
+            throw ConfigException("Invalid property row at line " +
+                                  std::to_string(lineNumber) +
+                                  ": expected at least 7 columns");
         }
 
         PropertyData property;
@@ -53,8 +52,8 @@ ConfigLoader::loadProperty(const std::string& file) const {
             if (tokens[0] == "ID") {
                 continue;
             }
-            throw std::runtime_error("Invalid property ID at line " +
-                                     std::to_string(lineNumber));
+            throw ConfigException("Invalid property ID at line " +
+                                  std::to_string(lineNumber));
         }
 
         property.code = tokens[1];
@@ -73,7 +72,7 @@ ConfigLoader::loadProperty(const std::string& file) const {
 
         if (property.type == "STREET") {
             if (numericTail.size() < 10) {
-                throw std::runtime_error(
+                throw ConfigException(
                     "Invalid STREET row at line " + std::to_string(lineNumber) +
                     ": expected at least 10 numeric values after color");
             }
@@ -86,7 +85,7 @@ ConfigLoader::loadProperty(const std::string& file) const {
                                       numericTail.begin() + 10);
         } else {
             if (numericTail.size() < 2) {
-                throw std::runtime_error(
+                throw ConfigException(
                     "Invalid non-STREET row at line " +
                     std::to_string(lineNumber) +
                     ": expected at least buy price and mortgage value");
@@ -112,8 +111,8 @@ ConfigLoader::loadProperty(const std::string& file) const {
 RailroadConfig ConfigLoader::loadRailroad(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
-        throw std::runtime_error("Failed to open property railroad config: " +
-                                 file);
+        throw ConfigException("Failed to open property railroad config: " +
+                              file);
     }
 
     RailroadConfig config;
@@ -138,8 +137,8 @@ RailroadConfig ConfigLoader::loadRailroad(const std::string& file) const {
             continue; // header row
         }
         if (!secondIsInt) {
-            throw std::runtime_error("Invalid railroad row at line " +
-                                     std::to_string(lineNumber));
+            throw ConfigException("Invalid railroad row at line " +
+                                  std::to_string(lineNumber));
         }
 
         config.rentTable[count] = rent;
@@ -150,7 +149,7 @@ RailroadConfig ConfigLoader::loadRailroad(const std::string& file) const {
 UtilityConfig ConfigLoader::loadUtility(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
-        throw std::runtime_error("Failed to open utility config file: " + file);
+        throw ConfigException("Failed to open utility config file: " + file);
     }
 
     UtilityConfig config;
@@ -174,8 +173,8 @@ UtilityConfig ConfigLoader::loadUtility(const std::string& file) const {
             continue; // header row
         }
         if (!secondIsInt) {
-            throw std::runtime_error("Invalid utility row at line " +
-                                     std::to_string(lineNumber));
+            throw ConfigException("Invalid utility row at line " +
+                                  std::to_string(lineNumber));
         }
 
         config.multiplierTable[count] = factor;
@@ -187,14 +186,14 @@ UtilityConfig ConfigLoader::loadUtility(const std::string& file) const {
 TaxConfig ConfigLoader::loadTax(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
-        throw std::runtime_error("Failed to open tax config file: " + file);
+        throw ConfigException("Failed to open tax config file: " + file);
     }
 
     int lineNumber = 0;
     while (true) {
         std::vector<std::string> tokens = readNextDataTokens(in, lineNumber);
         if (tokens.empty()) {
-            throw std::runtime_error("Tax config has no data row: " + file);
+            throw ConfigException("Tax config has no data row: " + file);
         }
 
         int pphFlat = 0;
@@ -205,8 +204,8 @@ TaxConfig ConfigLoader::loadTax(const std::string& file) const {
         }
         if (tokens.size() < 3 || !tryParseInt(tokens[1], pphPercent) ||
             !tryParseInt(tokens[2], pbmFlat)) {
-            throw std::runtime_error("Invalid tax row at line " +
-                                     std::to_string(lineNumber));
+            throw ConfigException("Invalid tax row at line " +
+                                  std::to_string(lineNumber));
         }
 
         TaxConfig config;
@@ -220,14 +219,14 @@ TaxConfig ConfigLoader::loadTax(const std::string& file) const {
 SpecialConfig ConfigLoader::loadSpecial(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
-        throw std::runtime_error("Failed to open special config file: " + file);
+        throw ConfigException("Failed to open special config file: " + file);
     }
 
     int lineNumber = 0;
     while (true) {
         std::vector<std::string> tokens = readNextDataTokens(in, lineNumber);
         if (tokens.empty()) {
-            throw std::runtime_error("Special config has no data row: " + file);
+            throw ConfigException("Special config has no data row: " + file);
         }
 
         int goSalary = 0;
@@ -236,8 +235,8 @@ SpecialConfig ConfigLoader::loadSpecial(const std::string& file) const {
             continue; // header row
         }
         if (tokens.size() < 2 || !tryParseInt(tokens[1], jailFine)) {
-            throw std::runtime_error("Invalid special row at line " +
-                                     std::to_string(lineNumber));
+            throw ConfigException("Invalid special row at line " +
+                                  std::to_string(lineNumber));
         }
 
         SpecialConfig config;
@@ -250,14 +249,14 @@ SpecialConfig ConfigLoader::loadSpecial(const std::string& file) const {
 MiscConfig ConfigLoader::loadMisc(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
-        throw std::runtime_error("Failed to open misc config file: " + file);
+        throw ConfigException("Failed to open misc config file: " + file);
     }
 
     int lineNumber = 0;
     while (true) {
         std::vector<std::string> tokens = readNextDataTokens(in, lineNumber);
         if (tokens.empty()) {
-            throw std::runtime_error("Misc config has no data row: " + file);
+            throw ConfigException("Misc config has no data row: " + file);
         }
 
         int maxTurn = 0;
@@ -266,8 +265,8 @@ MiscConfig ConfigLoader::loadMisc(const std::string& file) const {
             continue; // header row
         }
         if (tokens.size() < 2 || !tryParseInt(tokens[1], startingBalance)) {
-            throw std::runtime_error("Invalid misc row at line " +
-                                     std::to_string(lineNumber));
+            throw ConfigException("Invalid misc row at line " +
+                                  std::to_string(lineNumber));
         }
 
         MiscConfig config;

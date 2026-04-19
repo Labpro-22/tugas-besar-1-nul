@@ -1,7 +1,7 @@
 #include "states/StateParser.hpp"
 
+#include "exception/SaveLoadException.hpp"
 #include <sstream>
-#include <stdexcept>
 
 #include "utils/ParseUtils.hpp"
 
@@ -19,17 +19,17 @@ StateParser::parseHand(const std::string& serializedHand) const {
 
     int cardCount = 0;
     if (!tryParseInt(lines[0], cardCount) || cardCount < 0) {
-        throw std::runtime_error("Invalid hand card count");
+        throw SaveLoadException("Invalid hand card count");
     }
 
     if (static_cast<int>(lines.size()) < cardCount + 1) {
-        throw std::runtime_error("Insufficient card lines in hand block");
+        throw SaveLoadException("Insufficient card lines in hand block");
     }
 
     for (int i = 0; i < cardCount; ++i) {
         const std::vector<std::string> tokens = splitWhitespace(lines[i + 1]);
         if (tokens.empty()) {
-            throw std::runtime_error("Invalid empty card line in hand block");
+            throw SaveLoadException("Invalid empty card line in hand block");
         }
 
         CardState card;
@@ -38,7 +38,7 @@ StateParser::parseHand(const std::string& serializedHand) const {
         if (tokens.size() >= 2) {
             int value = 0;
             if (!tryParseInt(tokens[1], value)) {
-                throw std::runtime_error("Invalid card value: " + lines[i + 1]);
+                throw SaveLoadException("Invalid card value: " + lines[i + 1]);
             }
             card.value = value;
         }
@@ -46,8 +46,8 @@ StateParser::parseHand(const std::string& serializedHand) const {
         if (tokens.size() >= 3) {
             int duration = 0;
             if (!tryParseInt(tokens[2], duration)) {
-                throw std::runtime_error("Invalid card duration: " +
-                                         lines[i + 1]);
+                throw SaveLoadException("Invalid card duration: " +
+                                        lines[i + 1]);
             }
             card.remainingDuration = duration;
         }
@@ -67,27 +67,27 @@ StateParser::parsePlayers(const std::vector<std::string>& lines) const {
 
     int playerCount = 0;
     if (!tryParseInt(lines[0], playerCount) || playerCount < 0) {
-        throw std::runtime_error("Invalid player count line");
+        throw SaveLoadException("Invalid player count line");
     }
 
     std::size_t idx = 1;
     for (int i = 0; i < playerCount; ++i) {
         if (idx >= lines.size()) {
-            throw std::runtime_error("Unexpected EOF while parsing players");
+            throw SaveLoadException("Unexpected EOF while parsing players");
         }
 
         const std::vector<std::string> head = splitWhitespace(lines[idx++]);
         if (head.size() < 4) {
-            throw std::runtime_error("Invalid player state line");
+            throw SaveLoadException("Invalid player state line");
         }
 
         int balance = 0;
         if (!tryParseInt(head[1], balance)) {
-            throw std::runtime_error("Invalid player balance value");
+            throw SaveLoadException("Invalid player balance value");
         }
 
         if (idx >= lines.size()) {
-            throw std::runtime_error("Missing player hand count line");
+            throw SaveLoadException("Missing player hand count line");
         }
 
         int handCount = 0;
@@ -95,13 +95,13 @@ StateParser::parsePlayers(const std::vector<std::string>& lines) const {
             splitWhitespace(lines[idx]);
         if (handCountTokens.empty() ||
             !tryParseInt(handCountTokens[0], handCount) || handCount < 0) {
-            throw std::runtime_error("Invalid player hand count line");
+            throw SaveLoadException("Invalid player hand count line");
         }
 
         std::string handBlock = lines[idx++] + '\n';
         for (int h = 0; h < handCount; ++h) {
             if (idx >= lines.size()) {
-                throw std::runtime_error("Unexpected EOF while parsing hand");
+                throw SaveLoadException("Unexpected EOF while parsing hand");
             }
             handBlock += lines[idx++] + '\n';
         }
@@ -128,24 +128,24 @@ StateParser::parseProperties(const std::vector<std::string>& lines) const {
 
     int propertyCount = 0;
     if (!tryParseInt(lines[0], propertyCount) || propertyCount < 0) {
-        throw std::runtime_error("Invalid property count line");
+        throw SaveLoadException("Invalid property count line");
     }
 
     if (static_cast<int>(lines.size()) < propertyCount + 1) {
-        throw std::runtime_error("Insufficient property lines");
+        throw SaveLoadException("Insufficient property lines");
     }
 
     for (int i = 0; i < propertyCount; ++i) {
         const std::vector<std::string> fields = splitWhitespace(lines[i + 1]);
         if (fields.size() < 7) {
-            throw std::runtime_error("Invalid property line: " + lines[i + 1]);
+            throw SaveLoadException("Invalid property line: " + lines[i + 1]);
         }
 
         int festivalMult = 0;
         int festivalDur = 0;
         if (!tryParseInt(fields[4], festivalMult) ||
             !tryParseInt(fields[5], festivalDur)) {
-            throw std::runtime_error("Invalid property festival fields");
+            throw SaveLoadException("Invalid property festival fields");
         }
 
         PropertyState property;
@@ -162,8 +162,8 @@ StateParser::parseProperties(const std::vector<std::string>& lines) const {
         } else {
             int buildingCount = 0;
             if (!tryParseInt(fields[6], buildingCount)) {
-                throw std::runtime_error("Invalid building count: " +
-                                         lines[i + 1]);
+                throw SaveLoadException("Invalid building count: " +
+                                        lines[i + 1]);
             }
             property.isHotel = false;
             property.buildingCount = buildingCount;
@@ -184,11 +184,11 @@ StateParser::parseDeck(const std::vector<std::string>& lines) const {
 
     int deckCount = 0;
     if (!tryParseInt(lines[0], deckCount) || deckCount < 0) {
-        throw std::runtime_error("Invalid deck count line");
+        throw SaveLoadException("Invalid deck count line");
     }
 
     if (static_cast<int>(lines.size()) < deckCount + 1) {
-        throw std::runtime_error("Insufficient deck lines");
+        throw SaveLoadException("Insufficient deck lines");
     }
 
     for (int i = 0; i < deckCount; ++i) {
@@ -207,23 +207,23 @@ StateParser::parseLog(const std::vector<std::string>& lines) const {
 
     int logCount = 0;
     if (!tryParseInt(lines[0], logCount) || logCount < 0) {
-        throw std::runtime_error("Invalid log count line");
+        throw SaveLoadException("Invalid log count line");
     }
 
     if (static_cast<int>(lines.size()) < logCount + 1) {
-        throw std::runtime_error("Insufficient log lines");
+        throw SaveLoadException("Insufficient log lines");
     }
 
     for (int i = 0; i < logCount; ++i) {
         const std::string& line = lines[i + 1];
         const std::vector<std::string> head = splitWhitespace(line);
         if (head.size() < 3) {
-            throw std::runtime_error("Invalid log line: " + line);
+            throw SaveLoadException("Invalid log line: " + line);
         }
 
         int turn = 0;
         if (!tryParseInt(head[0], turn)) {
-            throw std::runtime_error("Invalid log turn: " + line);
+            throw SaveLoadException("Invalid log turn: " + line);
         }
 
         std::string detail;
