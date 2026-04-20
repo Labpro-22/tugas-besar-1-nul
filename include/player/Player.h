@@ -73,6 +73,12 @@ public:
     void sell(Property& p);
     void mortgage(Property* p);
 
+    // cash management and bankruptcy
+    void addCash(int amount);
+    void deductCash(int amount);
+    void setBankruptStatus();
+    bool checkBankruptcy(int requiredAmount);
+
     // hands or cards
     void drawSCard(SkillCard* deck);
     void discardSCard(int idx);
