@@ -32,26 +32,12 @@ void TurnManager::resetTurns() {
 void TurnManager::nextTurn() {
     if (this->turnOrder.empty()) return;
 
-    if (this->activePlayerIndex < 0) {
-        this->activePlayerIndex = 0;
-        return;
-    }
-
     this->activePlayerIndex = (this->activePlayerIndex + 1) % this->turnOrder.size();
     this->currentTurn++;
 }
 
 Player* TurnManager::getCurrentPlayer() {
     if (this->turnOrder.empty()) return nullptr;
-
-    if (this->activePlayerIndex < 0) {
-        this->activePlayerIndex = 0;
-    }
-
-    if (this->activePlayerIndex >= static_cast<int>(this->turnOrder.size())) {
-        this->activePlayerIndex %= this->turnOrder.size();
-    }
-
     return this->turnOrder[this->activePlayerIndex];
 }
 
