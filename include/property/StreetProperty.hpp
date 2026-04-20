@@ -17,6 +17,7 @@ class StreetProperty : public Property {
                    std::vector<int> rentTable);
 
     int getRent(const TurnContext& ctx) const override;
+    int sellToBank() override;
 
     const std::string& getColorGroup() const;
 

@@ -46,6 +46,31 @@ int StreetProperty::getRent(const TurnContext& ctx) const {
     return baseRent * festivalMult_;
 }
 
+// Sells property back to bank and demolishes all buildings.
+// Returns mortgage value + half the building cost.
+int StreetProperty::sellToBank() {
+    int buildingCost = 0;
+
+    // Calculate total building cost before demolition
+    if (buildingCount_ > 0) {
+        if (isHotel_) {
+            buildingCost = (4 * housePrice_) + hotelPrice_;
+        } else {
+            buildingCost = buildingCount_ * housePrice_;
+        }
+    }
+
+    // Demolish all buildings
+    buildingCount_ = 0;
+    isHotel_ = false;
+
+    // Call parent's sellToBank to handle ownership transfer
+    int baseValue = Property::sellToBank();
+
+    // Return base value + half building cost
+    return baseValue + (buildingCost / 2);
+}
+
 // Returns color group used for monopoly/build validation.
 const std::string& StreetProperty::getColorGroup() const {
     return colorGroup_;

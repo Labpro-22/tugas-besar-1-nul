@@ -3,13 +3,14 @@
 #include <algorithm>
 
 #include "exception/BankruptcyException.hpp"
+#include "exception/InvalidGameStateException.hpp"
 #include "player/Player.h"
 #include "property/Property.hpp"
 #include "property/StreetProperty.hpp"
 
 int BankruptcyManager::calculateMaxLiquidationFunds(Player* player) {
     if (player == nullptr) {
-        return 0;
+        throw InvalidGameStateException("Cannot calculate liquidation funds for null player");
     }
 
     int totalFunds = 0;
@@ -28,7 +29,7 @@ int BankruptcyManager::calculateMaxLiquidationFunds(Player* player) {
 
 int BankruptcyManager::calculateSellValue(Property* property) {
     if (property == nullptr) {
-        return 0;
+        throw InvalidGameStateException("Cannot calculate sell value for null property");
     }
 
     int baseValue = property->getMortgageValue();
@@ -51,8 +52,11 @@ int BankruptcyManager::calculateSellValue(Property* property) {
 }
 
 bool BankruptcyManager::canCoverDebt(Player* player, int debtAmount) {
-    if (player == nullptr || debtAmount <= 0) {
-        return false;
+    if (player == nullptr) {
+        throw InvalidGameStateException("Cannot check debt coverage for null player");
+    }
+    if (debtAmount <= 0) {
+        throw InvalidGameStateException("Debt amount must be positive, got: " + std::to_string(debtAmount));
     }
 
     int currentBalance = player->getBalance();
@@ -60,7 +64,6 @@ bool BankruptcyManager::canCoverDebt(Player* player, int debtAmount) {
         return true;
     }
 
-    // Check if liquidation can cover remaining debt
     int remainingDebt = debtAmount - currentBalance;
     int liquidationFunds = calculateMaxLiquidationFunds(player);
 
@@ -69,19 +72,17 @@ bool BankruptcyManager::canCoverDebt(Player* player, int debtAmount) {
 
 std::vector<LiquidationOption> BankruptcyManager::getAvailableLiquidationOptions(
     Player* player) {
-    std::vector<LiquidationOption> options;
-
     if (player == nullptr) {
-        return options;
+        throw InvalidGameStateException("Cannot get liquidation options for null player");
     }
+
+    std::vector<LiquidationOption> options;
 
     for (auto property : player->getProperties()) {
         if (property == nullptr) continue;
 
         if (property->getStatus() == PropertyStatus::OWNED) {
-            options.emplace_back(property, LiquidationOption::MORTGAGE,
-                                  property->getMortgageValue());
-
+            options.emplace_back(property, LiquidationOption::MORTGAGE,property->getMortgageValue());
             int sellValue = calculateSellValue(property);
             options.emplace_back(property, LiquidationOption::SELL, sellValue);
         }
@@ -94,22 +95,19 @@ std::vector<LiquidationOption> BankruptcyManager::getAvailableLiquidationOptions
     return options;
 }
 
-void BankruptcyManager::performForcedLiquidation(Player* player,
-                                                   int debtAmount) {
+void BankruptcyManager::performForcedLiquidation(Player* player,int debtAmount) {
     if (player == nullptr) {
         throw BankruptcyException("Cannot liquidate null player");
     }
 
     int currentBalance = player->getBalance();
     if (currentBalance >= debtAmount) {
-        return;  // No liquidation needed
+        return;  
     }
 
     int remainingDebt = debtAmount - currentBalance;
     auto options = getAvailableLiquidationOptions(player);
 
-    // Prioritize mortgaging over selling to preserve properties
-    // Sort: mortgages first, then sells
     std::stable_sort(options.begin(), options.end(),[](const LiquidationOption& a, const LiquidationOption& b) {
         if (a.type != b.type) {
             return a.type == LiquidationOption::MORTGAGE;
@@ -117,18 +115,16 @@ void BankruptcyManager::performForcedLiquidation(Player* player,
         return a.cashValue > b.cashValue;
     });
 
-    // Liquidate properties to cover debt
     for (const auto& option : options) {
         if (remainingDebt <= 0) break;
 
         if (option.type == LiquidationOption::MORTGAGE) {
-            // Mortgage the property
             option.property->mortgage();
             player->addCash(option.cashValue);
             remainingDebt -= option.cashValue;
 
-        } else {  // SELL
-            // Sell the property
+        } 
+        else {  
             int saleValue = option.property->sellToBank();
             player->addCash(saleValue);
             remainingDebt -= saleValue;
@@ -137,7 +133,6 @@ void BankruptcyManager::performForcedLiquidation(Player* player,
         }
     }
 
-    // If still cannot cover debt, declare bankrupt
     if (remainingDebt > 0) {
         declareBankrupt(player);
         throw BankruptcyException(
@@ -147,6 +142,8 @@ void BankruptcyManager::performForcedLiquidation(Player* player,
 }
 
 void BankruptcyManager::declareBankrupt(Player* player) {
-    if (player == nullptr) return;
+    if (player == nullptr) {
+        throw InvalidGameStateException("Cannot declare null player as bankrupt");
+    }
     player->setBankruptStatus();
 }

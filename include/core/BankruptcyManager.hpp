@@ -7,16 +7,14 @@
 
 class Player;
 
-// Struct to represent a liquidation option
 struct LiquidationOption {
     enum Type { SELL, MORTGAGE };
 
     Property* property;
     Type type;
-    int cashValue;  // Cash received if executed
+    int cashValue;  
 
-    LiquidationOption(Property* prop, Type t, int value)
-        : property(prop), type(t), cashValue(value) {}
+    LiquidationOption(Property* prop, Type t, int value): property(prop), type(t), cashValue(value) {}
 };
 
 class BankruptcyManager {

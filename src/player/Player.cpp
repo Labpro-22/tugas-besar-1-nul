@@ -190,18 +190,17 @@ void Player::decideAction(TurnContext& ctx) {
 
 }
 
-/* === CASH MANAGEMENT AND BANKRUPTCY === */
 
 void Player::addCash(int amount) {
-    if (amount < 0) {
-        throw InvalidGameStateException("Cannot add negative cash amount");
+    if (amount <= 0) {
+        throw InvalidGameStateException("Cannot add non-positive cash amount: " + std::to_string(amount));
     }
     this->balance += amount;
 }
 
 void Player::deductCash(int amount) {
-    if (amount < 0) {
-        throw InvalidGameStateException("Cannot deduct negative cash amount");
+    if (amount <= 0) {
+        throw InvalidGameStateException("Cannot deduct non-positive cash amount: " + std::to_string(amount));
     }
     if (this->balance < amount) {
         throw InsufficientFundsException("Insufficient funds for payment of " +
@@ -211,27 +210,30 @@ void Player::deductCash(int amount) {
 }
 
 void Player::setBankruptStatus() {
+    if (this->status == PlayerStatus::BANKRUPT) {
+        throw InvalidGameStateException("Player " + this->username + " is already declared bankrupt");
+    }
     this->status = PlayerStatus::BANKRUPT;
 }
 
 bool Player::checkBankruptcy(int requiredAmount) {
+    if (requiredAmount <= 0) {
+        throw InvalidGameStateException("Required amount must be positive, got: " + std::to_string(requiredAmount));
+    }
+
     if (this->status == PlayerStatus::BANKRUPT) {
-        return false;
+        throw InvalidGameStateException("Player " + this->username + " is already bankrupt");
     }
 
-    // Check if player has enough cash
     if (this->balance >= requiredAmount) {
-        return false;  // No bankruptcy needed
+        return false;  
     }
 
-    // Check if player can cover through liquidation
     if (!BankruptcyManager::canCoverDebt(this, requiredAmount)) {
-        // Cannot cover debt - declare bankrupt
         BankruptcyManager::declareBankrupt(this);
         return true;
     }
 
-    // Can cover through liquidation
     return false;
 }
 
