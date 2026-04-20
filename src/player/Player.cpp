@@ -1,7 +1,10 @@
 #include "player/Player.h"
+#include <algorithm>
 #include <iostream>
 
 #include "card/SkillCard.hpp"
+#include "core/BankruptcyManager.hpp"
+#include "exception/BankruptcyException.hpp"
 #include "exception/CardSlotFullException.hpp"
 #include "exception/InsufficientFundsException.hpp" //nanti ganti ke yg general
 #include "exception/InvalidGameStateException.hpp"
@@ -106,7 +109,14 @@ void Player::moveBackwardTo(int index) {
 /* === PROPERTIES === */
 void Player::buy(Property* p) {
     // double check property
-    if (this->getBalance() < p->getBuyPrice()) { throw InsufficientFundsException("Not enough money!"); }
+    if (p == nullptr) {
+        throw InvalidGameStateException("Cannot buy null property");
+    }
+    if (this->getBalance() < p->getBuyPrice()) {
+        throw InsufficientFundsException("Not enough money to buy " + 
+                                         p->getName());
+    }
+    this->deductCash(p->getBuyPrice());
     this->addProperty(p);
 }
 
@@ -118,17 +128,34 @@ void Player::sell(Property& p) {
     this->removeProperty(p);
 }
 
+void Player::mortgage(Property* p) {
+    if (p == nullptr) {
+        throw InvalidGameStateException("Cannot mortgage null property");
+    }
+    if (p->getStatus() != PropertyStatus::OWNED) {
+        throw InvalidGameStateException("Can only mortgage owned properties");
+    }
+    p->mortgage();
+    this->addCash(p->getMortgageValue());
+}
+
 // ni nnti make sure parameter type
 void Player::addProperty(Property* p) {
+    if (p == nullptr) {
+        throw InvalidGameStateException("Cannot add null property");
+    }
+    p->setOwner(this);
     this->properties.push_back(p);
 }
 
 //make sure lgi type p
 void Player::removeProperty(Property& p) {
-    // std::_Erase_nodes_if(this->properties, [](const Properties* props) {
-    //     return props->name == p->name;
-    // })
-    // cross check
+    auto it = std::find_if(
+        this->properties.begin(), this->properties.end(),
+        [&p](const Property* prop) { return prop != nullptr && *prop == p; });
+    if (it != this->properties.end()) {
+        this->properties.erase(it);
+    }
 }
 
 
@@ -161,5 +188,50 @@ void Player::exitJail() { this->status = PlayerStatus::ACTIVE; }
 
 void Player::decideAction(TurnContext& ctx) { 
 
+}
+
+/* === CASH MANAGEMENT AND BANKRUPTCY === */
+
+void Player::addCash(int amount) {
+    if (amount < 0) {
+        throw InvalidGameStateException("Cannot add negative cash amount");
+    }
+    this->balance += amount;
+}
+
+void Player::deductCash(int amount) {
+    if (amount < 0) {
+        throw InvalidGameStateException("Cannot deduct negative cash amount");
+    }
+    if (this->balance < amount) {
+        throw InsufficientFundsException("Insufficient funds for payment of " +
+                                          std::to_string(amount));
+    }
+    this->balance -= amount;
+}
+
+void Player::setBankruptStatus() {
+    this->status = PlayerStatus::BANKRUPT;
+}
+
+bool Player::checkBankruptcy(int requiredAmount) {
+    if (this->status == PlayerStatus::BANKRUPT) {
+        return false;
+    }
+
+    // Check if player has enough cash
+    if (this->balance >= requiredAmount) {
+        return false;  // No bankruptcy needed
+    }
+
+    // Check if player can cover through liquidation
+    if (!BankruptcyManager::canCoverDebt(this, requiredAmount)) {
+        // Cannot cover debt - declare bankrupt
+        BankruptcyManager::declareBankrupt(this);
+        return true;
+    }
+
+    // Can cover through liquidation
+    return false;
 }
 
