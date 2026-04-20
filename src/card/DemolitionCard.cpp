@@ -11,11 +11,11 @@
 DemolitionCard::DemolitionCard() : SkillCard("DemolitionCard: Menghancurkan properti lawan", 0) {}
 
 void DemolitionCard::apply(TurnContext& ctx) {
-    Player& player = *ctx.currentPlayer;
+    Player& player = ctx.currentPlayer;
     std::cout << "[MENGGUNAKAN] DemolitionCard: Menghancurkan properti lawan.\n";
 
     std::vector<Player*> candidates;
-    const std::vector<Player*> allPlayers = ctx.gameEngine->getPlayers();
+    const std::vector<Player*> allPlayers = ctx.gameEngine.getPlayers();
     for (Player* other : allPlayers) {
         if (other == nullptr || other == &player) continue;
         candidates.push_back(other);

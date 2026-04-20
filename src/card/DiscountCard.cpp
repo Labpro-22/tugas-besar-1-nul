@@ -7,7 +7,7 @@ DiscountCard::DiscountCard(int discount)
           discountPercent(discount) {}
 
 void DiscountCard::apply(TurnContext& ctx) {
-    Player& player = *ctx.currentPlayer;
+  Player& player = ctx.currentPlayer;
     std::cout << "[MENGGUNAKAN] DiscountCard: Diskon " << discountPercent << "% aktif untuk 1 giliran.\n";
     
     player.setDiscountRate(discountPercent);
