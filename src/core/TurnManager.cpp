@@ -3,7 +3,7 @@
 #include "player/Player.h"
 
 TurnManager::TurnManager(int maxTurn)
-    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : 1), activePlayerIndex(-1), turnOrder() {}
+    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), turnOrder() {}
 
 void TurnManager::setTurnOrder(const std::vector<Player*>& players) {
     this->turnOrder.clear();
@@ -61,7 +61,10 @@ int TurnManager::getActivePlayerIndex() const { return this->activePlayerIndex; 
 
 const std::vector<Player*>& TurnManager::getTurnOrder() const { return this->turnOrder; }
 
-bool TurnManager::isGameOver() const { return this->currentTurn >= this->maxTurn; }
+bool TurnManager::isGameOver() const { 
+    if (maxTurn < 0) return false; // nanti bikin kalo smua ud bangkrut
+    return this->currentTurn >= this->maxTurn; 
+}
 
 std::vector<Player*> TurnManager::determineWinner() {
     std::vector<Player*> winners;
