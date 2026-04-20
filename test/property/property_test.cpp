@@ -36,6 +36,10 @@ class DummyProperty : public Property {
         return rent_;
     }
 
+    void printStatus(TurnContext& ctx) override {
+        (void) ctx;
+    }
+
   private:
     int rent_;
 };
