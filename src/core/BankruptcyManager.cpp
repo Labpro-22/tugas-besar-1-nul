@@ -108,6 +108,7 @@ void BankruptcyManager::performForcedLiquidation(Player* player,int debtAmount) 
     int remainingDebt = debtAmount - currentBalance;
     auto options = getAvailableLiquidationOptions(player);
 
+
     std::stable_sort(options.begin(), options.end(),[](const LiquidationOption& a, const LiquidationOption& b) {
         if (a.type != b.type) {
             return a.type == LiquidationOption::MORTGAGE;
