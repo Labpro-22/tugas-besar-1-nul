@@ -174,13 +174,46 @@ void Player::drawSCard(SkillCard* card) {
     std::cout << "[MENDAPATKAN KEMAMPUAN] " << card->getDescription() << " ditambahkan ke tangan.\n";
 }
 
-void Player::discardSCard(int idx) {}
+void Player::discardSCard(int idx) {
+    if (idx < 0) {
+        throw InvalidGameStateException("Card index cannot be negative, got: " + std::to_string(idx));
+    }
+    if (idx >= static_cast<int>(this->hand.size())) {
+        throw InvalidGameStateException("Card index out of range: " + std::to_string(idx) + ", hand size: " + std::to_string(this->hand.size()));
+    }
+    this->hand.erase(this->hand.begin() + idx);
+}
 
-void Player::useSCard(int idx, TurnContext& ctx) {}
+void Player::useSCard(int idx, TurnContext& ctx) {
+    if (idx < 0) {
+        throw InvalidGameStateException("Card index cannot be negative, got: " + std::to_string(idx));
+    }
+    if (idx >= static_cast<int>(this->hand.size())) {
+        throw InvalidGameStateException("Card index out of range: " + std::to_string(idx) + ", hand size: " + std::to_string(this->hand.size()));
+    }
+    if (this->usedSkillThisTurn) {
+        throw InvalidGameStateException("Skill card already used this turn");
+    }
+    // TODO: Implement actual card usage logic
+    this->usedSkillThisTurn = true;
+}
 
-void Player::setDiscountRate(int discount) { this->discountRate = discount; }
+void Player::setDiscountRate(int discount) {
+    if (discount < 0) {
+        throw InvalidGameStateException("Discount rate cannot be negative, got: " + std::to_string(discount));
+    }
+    if (discount > 100) {
+        throw InvalidGameStateException("Discount rate cannot exceed 100%, got: " + std::to_string(discount));
+    }
+    this->discountRate = discount;
+}
 
-void Player::activateShield() { this->isShieldActive = true; }
+void Player::activateShield() {
+    if (this->isShieldActive) {
+        throw InvalidGameStateException("Shield is already active for player " + this->username);
+    }
+    this->isShieldActive = true;
+}
 
 void Player::enterJail() { this->status = PlayerStatus::JAILED; this->jailTurns = 3; }
 
