@@ -9,9 +9,12 @@ private:
     int doubleCount;
 
 public:
+    explicit Dice() : die1(0), die2(0), doubleCount(0) {};
+    ~Dice() = default;
+
     bool isDouble() const;
     int getTotal() const;
 
-    std::pair<int, int> roll();
+    void roll();
     void setManual(int x, int y);
 };
