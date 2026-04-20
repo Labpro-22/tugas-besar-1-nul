@@ -1,3 +1,5 @@
+#pragma once
+
 #include "SkillCard.hpp"
 
 class DiscountCard : public SkillCard {

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "card.hpp"
 
 class Player;
@@ -7,7 +9,7 @@ protected:
     int remainingDuration; 
 
 public:
-    SkillCard(std::string desc, int duration) ;
+    SkillCard(std::string desc, int duration);
 
     int getDuration() const ;
 

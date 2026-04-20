@@ -1,3 +1,5 @@
+#pragma once
+
 #include "SkillCard.hpp"
 class LassoCard : public SkillCard {
 public:
