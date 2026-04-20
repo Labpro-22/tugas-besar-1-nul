@@ -1,4 +1,4 @@
-#include "ChanceCard.hpp"
+#include "card/ChanceCard.hpp"
 
 ChanceCard::ChanceCard(std::string desc, ChanceType t) : Card(std::move(desc)), type(t) {}
 

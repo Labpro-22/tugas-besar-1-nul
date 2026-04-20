@@ -2,7 +2,9 @@
 
 #include <string>
 
-#include "property/PropertyStatus.hpp"
+// #include "property/PropertyStatus.hpp"
+
+#include "PropertyStatus.hpp"
 
 class Player;
 class TurnContext;
@@ -37,6 +39,8 @@ class Property {
     virtual int getRent(const TurnContext& ctx) const = 0;
 
     bool operator==(const Property& other) const;
+
+    virtual void printStatus(TurnContext& ctx) = 0;
 
   protected:
     std::string code_;

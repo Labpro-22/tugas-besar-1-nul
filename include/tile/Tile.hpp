@@ -3,10 +3,13 @@
 
 #pragma once
 
-#include "../board/Board.hpp"
+#include "board/Board.hpp"
 #include <iostream>
 #include <vector>
 using namespace std;
+
+class Player;
+class TurnContext;
 
 class Tile{
     protected:
@@ -22,7 +25,7 @@ class Tile{
         string getName();
         string getDisplay();
         string getColorTag();
-        virtual void onLanded();
+        virtual void onLanded(Player* player, TurnContext& ctx) = 0;
 };
 
 #endif

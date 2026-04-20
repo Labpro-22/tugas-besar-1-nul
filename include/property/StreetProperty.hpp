@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "property/Property.hpp"
+#include "../../include/property/Property.hpp"
 
 class StreetProperty : public Property {
   public:
@@ -38,6 +38,8 @@ class StreetProperty : public Property {
 
     void applyFestival();
     void decreaseFestivalDuration();
+
+    void printStatus(TurnContext& ctx) override;
 
   private:
     std::string colorGroup_;

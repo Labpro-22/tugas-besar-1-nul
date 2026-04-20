@@ -3,7 +3,6 @@
 
 
 #pragma once
-#include "../tile/Tile.hpp"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -11,12 +10,11 @@
 #include <algorithm>
 using namespace std;
 
+class Tile;
+class StreetTile;
+
 // =================================== dummy classes =====================================
 class TileConfig{
-    //dummy data
-};
-
-class StreetTile{
     //dummy data
 };
 

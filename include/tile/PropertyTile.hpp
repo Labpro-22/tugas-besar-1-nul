@@ -4,10 +4,11 @@
 #pragma once
 
 #include "../board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
+#include "../property/Property.hpp"
+#include "../player/Player.h"
 #include "Tile.hpp"
 #include <iostream>
 #include <vector>
-
 
 // =================================== dummy classes =====================================
 
@@ -15,18 +16,10 @@ class Dice{
     //dummy data
 };
 
-class Player{
-    //dummy data
-};
-
 class TurnContext{
     //dummy data
 };
 
-class Property{
-    public: 
-        int getRent(TurnContext& ctx);
-};
 
 // ======================================================================================
 
@@ -34,6 +27,7 @@ class PropertyTile : public Tile{
     protected: 
         Property* property;
     public:
+        PropertyTile(int idx, string cd, string nm, string cat, Property* p) : Tile(idx, cd, nm, cat) , property(p){};
         Property* getProperty();
         virtual void onLanded(Player* player, TurnContext& ctx);
 };
@@ -42,8 +36,9 @@ class PropertyTile : public Tile{
 
 class StreetTile : public PropertyTile{
     public:
+        using PropertyTile::PropertyTile;
         void onLanded(Player* player, TurnContext& ctx) override;
-        void triggerBuyOrAuction(Player* player);
+        void triggerBuyOrAuction(Player* player, TurnContext& ctx);
         void triggerRentPayment(Player* player);
 };
 
@@ -58,5 +53,8 @@ class UtilityTile : public PropertyTile{
         void onLanded(Player* player, TurnContext& ctx) override;
         void autoAcquire(Player* player); 
 };
+
+//================================= HELPER ================================
+void printOwner(Player* player);
 
 #endif

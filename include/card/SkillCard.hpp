@@ -15,5 +15,5 @@ public:
 
     void execute(Player* player, TurnContext& ctx) override ;
 
-    virtual void apply(Player& player) = 0;
+    virtual void apply(TurnContext& ctx) = 0;
 };
