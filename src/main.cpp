@@ -1,20 +1,23 @@
 #include <iostream>
 #include <string>
 
-#include "config/ConfigDriver.hpp"
+// #include "config/ConfigDriver.hpp"
+#include "core/GameEngine.hpp"
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    const string basePath = (argc >= 2) ? argv[1] : "config";
+    // const string basePath = (argc >= 2) ? argv[1] : "config";
 
-    try {
-        runConfigLoaderDriver(basePath);
-    } catch (const exception& ex) {
-        cerr << "[CONFIG DRIVER] Failed: " << ex.what() << endl;
-        cerr << "Usage: ./game [config_base_path]" << endl;
-        return 1;
-    }
+    // try {
+    //     runConfigLoaderDriver(basePath);
+    // } catch (const exception& ex) {
+    //     cerr << "[CONFIG DRIVER] Failed: " << ex.what() << endl;
+    //     cerr << "Usage: ./game [config_base_path]" << endl;
+    //     return 1;
+    // }
 
-    return 0;
+    // return 0;
+    GameEngine ge(10);
+    ge.run();
 }
