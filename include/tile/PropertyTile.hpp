@@ -1,24 +1,13 @@
-#ifndef PROPERTY_TILE_HPP
-#define PROPERTY_TILE_HPP
-
 #pragma once
 
-#include "../board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
-#include "../property/Property.hpp"
-#include "../player/Player.h"
+#include "core/TurnContext.hpp"
+#include "core/Dice.hpp"
+#include "board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
+#include "property/Property.hpp"
+#include "player/Player.h"
 #include "Tile.hpp"
 #include <iostream>
 #include <vector>
-
-// =================================== dummy classes =====================================
-
-class Dice{
-    //dummy data
-};
-
-class TurnContext{
-    //dummy data
-};
 
 
 // ======================================================================================
@@ -56,5 +45,3 @@ class UtilityTile : public PropertyTile{
 
 //================================= HELPER ================================
 void printOwner(Player* player);
-
-#endif
