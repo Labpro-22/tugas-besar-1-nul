@@ -6,7 +6,7 @@ using namespace std;
 Board::Board(const map<string, int>& data, int s) : 
     tiles(s, nullptr), codeToIndex(data), size(s){
         if (size <0){
-            size == 0;
+            size = 0;
             //can either throw exception or cap size minimum at 0
         }
     };
@@ -14,7 +14,7 @@ Board::Board(const map<string, int>& data, int s) :
 Board::Board(int s) : tiles(s, nullptr), size(s){
     codeToIndex["initializer"] = -1; //untuk inisialisasi codeToIndex
     if (size <0){
-        size == 0;
+        size = 0;
         //can either throw exception or cap size minimum at 0
     }
 };
