@@ -10,6 +10,7 @@
 #include "card/ChanceCard.hpp"
 // #include "card/CommunityCard.hpp"
 #include "card/SkillCard.hpp"
+#include "TurnContext.hpp"
 #include "TurnManager.hpp"
 
 class GameEngine {
@@ -34,7 +35,7 @@ public:
     void run();
     void loadGame(const std::string& file);
     void saveGame(const std::string& file);
-    void executeCommand(const std::string& cmd);
+    void executeCommand(TurnContext& ctx);
 
     void displayPlayers() const;
     std::vector<Player*> getPlayers() const;

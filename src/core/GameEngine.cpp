@@ -1,5 +1,5 @@
 #include "core/GameEngine.hpp"
-#include "core/TurnContext.hpp"
+#include "core/Command.hpp"
 
 void GameEngine::run() {
     std::cout << "=== Welcome to Nimonspoli ===" << endl;
@@ -8,12 +8,13 @@ void GameEngine::run() {
     
 
     while (!turnmgr.isGameOver()) {
-        turnmgr.nextTurn();
-        TurnContext ctx(turnmgr.getCurrentPlayer(), nullptr, &board, this);
+        Dice turnDice;
+        TurnContext ctx(*turnmgr.getCurrentPlayer(), turnDice, board, *this);
         Player* currentPlayer = turnmgr.getCurrentPlayer();
-        std::cout << "\n=== Giliran " << turnmgr.getCurrentTurn() << ": " << currentPlayer->getUsername() << " ===\n";
+        std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": " << currentPlayer->getUsername() << " ===\n";
         
-        // TO-DO: player decide action
+        this->executeCommand(ctx);
+        turnmgr.nextTurn();
     }
 
 }
@@ -81,7 +82,10 @@ void GameEngine::displayPlayers() const {
     std::cout << "=====================\n\n";
 }
 
-void GameEngine::executeCommand(const std::string& cmd) {
-    std::cout << "[INFO] Eksekusi perintah: " << cmd << "\n";
-    // TO-DO: mikir input tuh mau dimasukkin dimana
+void GameEngine::executeCommand(TurnContext& ctx) {
+    std::cout << "[INFO] Eksekusi perintah\n";
+
+    Command cmd;
+    cmd.promptInput();
+    cmd.dispatch(ctx);
 }
