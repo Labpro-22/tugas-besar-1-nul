@@ -49,7 +49,6 @@ public:
     std::string getUsername() const;
     PlayerStatus getStatus() const;
     int getBalance() const;
-    int getPosition() const;
     bool isInJail() const;
     int getDiscountRate() const;
     int getPosition() const;

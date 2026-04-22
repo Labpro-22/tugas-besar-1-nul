@@ -6,9 +6,12 @@
 
 using namespace std;
 
-PropertyTile::PropertyTile(int idx, string cd, string nm, string cat, Property* prop)
-    : Tile(idx, cd, nm, cat), property(prop) {}
-#include "core/TurnContext.hpp"
+// semua konstruktor
+PropertyTile::PropertyTile(int idx, Property *p) : Tile(idx, p->getCode(), p->getName()), property(p){};
+
+StreetTile::StreetTile(int idx, StreetProperty *prop) : PropertyTile(idx, prop){};
+RailroadTile::RailroadTile(int idx, RailroadProperty *prop) : PropertyTile(idx, prop){};
+UtilityTile::UtilityTile(int idx, UtilityProperty *prop) : PropertyTile(idx, prop){};
 
 Property* PropertyTile::getProperty(){
     return property;
@@ -20,12 +23,13 @@ void printOwner(Player* player){
 }
 
 void PropertyTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.currentPlayer;
+    Player* player = ctx.getCurrentPlayer();
     printOwner(player);
 };
 
+
 void StreetTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.currentPlayer;
+    Player* player = ctx.getCurrentPlayer();
     if (property->getStatus() == PropertyStatus::OWNED){
         if (property->getOwner() != player){
             triggerRentPayment(ctx);
@@ -37,7 +41,7 @@ void StreetTile::onLanded(TurnContext& ctx){
 };
 
 void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
-    Player* player = ctx.currentPlayer;
+    Player* player = ctx.getCurrentPlayer();
     cout << "Anda mendarat di [" << getName() << "].\n\n";
     getProperty()->printStatus(ctx);
     string ans;
@@ -59,14 +63,14 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
 };
 
 void StreetTile::triggerRentPayment(TurnContext& ctx){
-    Player* player = ctx.currentPlayer;
+    Player* player = ctx.getCurrentPlayer();
     cout << "Anda mendarat di [" << getProperty()->getName() << "] milik [" << getProperty()->getOwner()->getUsername() << "].\n\n";
     getProperty()->printStatus(ctx);
     cout << "Uang anda tersisa: <M" << player->getBalance() - getProperty()->getRent(ctx) << ">.\n\n"; //nanti implement dari player
 };
 
 void RailroadTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.currentPlayer;
+    Player* player = ctx.getCurrentPlayer();
     if (property->getStatus() == PropertyStatus::OWNED){
         if (property->getOwner() != player){
             autoAcquire(player);
@@ -95,7 +99,7 @@ void RailroadTile::autoAcquire(Player* player){
 };
 
 void UtilityTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.currentPlayer;
+    Player* player = ctx.getCurrentPlayer();
     cout << "onLanded milik UtilityTile!\n";
 }
 

@@ -6,17 +6,19 @@
 
 using namespace std;
 
-ActionTile::ActionTile(int idx, string cd, string nm, string cat)
-    : Tile(idx, cd, nm, cat) {}
+ActionTile::ActionTile(int idx, string cd, string nm)
+    : Tile(idx, cd, nm) {}
 
-void ActionTile::onLanded(Player* player, TurnContext& ctx){
+void ActionTile::onLanded(TurnContext& ctx){
+    Player* player = ctx.getCurrentPlayer();
     cout << "onLanded milik ActionTile!\n";
 };
 
-GoTile::GoTile(int idx, string cd, string nm, string cat)
-    : ActionTile(idx, cd, nm, cat) {}
+GoTile::GoTile(int idx, string cd, string nm)
+    : ActionTile(idx, cd, nm) {}
 
-void GoTile::onLanded(Player* player, TurnContext& ctx){
+void GoTile::onLanded(TurnContext& ctx){
+    Player* player = ctx.getCurrentPlayer();
     cout << "onLanded milik GoTile!\n";
 };
 
@@ -25,10 +27,11 @@ void GoTile::paySalary(Player* player, int amount){
     player->addCash(amount);
 };
 
-JailTile::JailTile(int idx, string cd, string nm, string cat)
-    : ActionTile(idx, cd, nm, cat) {}
+JailTile::JailTile(int idx, string cd, string nm)
+    : ActionTile(idx, cd, nm) {}
 
-void JailTile::onLanded(Player* player, TurnContext& ctx){
+void JailTile::onLanded(TurnContext& ctx){
+    Player* player = ctx.getCurrentPlayer();
     cout << "You are at jail brader\n";
 };
 
@@ -50,25 +53,28 @@ bool JailTile::isInmate(Player* player){
     return find(inmates.begin(), inmates.end(), player) != inmates.end();
 }
 
-FreeParkingTile::FreeParkingTile(int idx, string cd, string nm, string cat)
-    : ActionTile(idx, cd, nm, cat) {}
+FreeParkingTile::FreeParkingTile(int idx, string cd, string nm)
+    : ActionTile(idx, cd, nm) {}
 
-void FreeParkingTile::onLanded(Player* player, TurnContext& ctx){
+void FreeParkingTile::onLanded(TurnContext& ctx){
+    Player* player = ctx.getCurrentPlayer();
     cout << "Actually onLanded in FreeParkingTile does nothing\n";
 };
 
-GoToJailTile::GoToJailTile(int idx, string cd, string nm, string cat)
-    : ActionTile(idx, cd, nm, cat) {}
+GoToJailTile::GoToJailTile(int idx, string cd, string nm)
+    : ActionTile(idx, cd, nm) {}
 
-void GoToJailTile::onLanded(Player* player, TurnContext& ctx){
+void GoToJailTile::onLanded(TurnContext& ctx){
+    Player* player = ctx.getCurrentPlayer();
     cout << "what crime did u commit?\n";
     //addInmate(player); 
 };
 
-CardTile::CardTile(int idx, string cd, string nm, string cat, bool chance)
-    : ActionTile(idx, cd, nm, cat), isChance(chance) {}
+CardTile::CardTile(int idx, string cd, string nm, bool chance)
+    : ActionTile(idx, cd, nm), isChance(chance) {}
 
-void CardTile::onLanded(Player* player, TurnContext& ctx){
+void CardTile::onLanded(TurnContext& ctx){
+    Player* player = ctx.getCurrentPlayer();
     if (isChance) {
         cout << "Mengambil kartu Kesempatan!\n";
     } else {
@@ -76,10 +82,11 @@ void CardTile::onLanded(Player* player, TurnContext& ctx){
     }
 };
 
-FestivalTile::FestivalTile(int idx, string cd, string nm, string cat)
-    : ActionTile(idx, cd, nm, cat) {}
+FestivalTile::FestivalTile(int idx, string cd, string nm)
+    : ActionTile(idx, cd, nm) {}
 
-void FestivalTile::onLanded(Player* player, TurnContext& ctx){
+void FestivalTile::onLanded(TurnContext& ctx){
+    Player* player = ctx.getCurrentPlayer();
     cout << "u are in luck, if u have any property\n";
     // should do applyFestival after receiving which prop to apply
 };
@@ -88,10 +95,11 @@ void FestivalTile::applyFestival(Player* player, StreetProperty* prop){
     cout << "we be rich bro\n";
 }
 
-TaxTile::TaxTile(int idx, string cd, string nm, string cat, TaxType type)
-    : ActionTile(idx, cd, nm, cat), taxType(type) {}
+TaxTile::TaxTile(int idx, string cd, string nm, TaxType type)
+    : ActionTile(idx, cd, nm), taxType(type) {}
 
-void TaxTile::onLanded(Player* player, TurnContext& ctx){
+void TaxTile::onLanded(TurnContext& ctx){
+    Player* player = ctx.getCurrentPlayer();
     cout << "haha got taxed\n";
     if (taxType == TaxType::PPH){ //is PPH
         applyPPH(player);

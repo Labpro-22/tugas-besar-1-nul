@@ -10,6 +10,8 @@
 #include <algorithm>
 using namespace std;
 
+#include "tile/Tile.hpp"
+
 // Forward declarations
 class TileConfig;
 class StreetTile;

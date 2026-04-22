@@ -24,6 +24,7 @@ public:
     Player* getCurrentPlayer();
 
     int getCurrentTurn() const;
+    int getMaxTurn() const;
     int getActivePlayerIndex() const;
     const std::vector<Player*>& getTurnOrder() const;
 

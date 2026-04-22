@@ -10,7 +10,7 @@ private:
 public:
     MoveCard(int stp);
 
-    void apply(Player& player) override;
+    void apply(TurnContext& ctx) override;
 };
 
 #endif // MOVE_CARD_HPP

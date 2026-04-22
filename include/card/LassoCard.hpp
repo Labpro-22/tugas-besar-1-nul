@@ -7,7 +7,7 @@ class LassoCard : public SkillCard {
 public:
     LassoCard();
 
-    void apply(Player& player) override;
+    void apply(TurnContext& ctx) override;
 };
 
 #endif // LASSO_CARD_HPP

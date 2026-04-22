@@ -24,7 +24,7 @@ class Tile{
         string getCode();
         string getName();
         string getDisplay();
-        virtual void onLanded(TurnContext& ctx) = 0; //consider hapus player karena ctx sudah ada konteks player saat ini.
+        virtual void onLanded(TurnContext& ctx) = 0; 
 };
 
 #endif // TILE_HPP

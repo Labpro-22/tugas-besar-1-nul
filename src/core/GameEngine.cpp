@@ -2,20 +2,42 @@
 #include "core/TurnContext.hpp"
 
 void GameEngine::run() {
-    std::cout << "=== Welcome to Nimonspoli ===" << endl;
+    std::cout << "=== Welcome to Nimonspoli ===\n";
     this->startNewGame();
 
-    
-
-    while (!turnmgr.isGameOver()) {
-        turnmgr.nextTurn();
-        TurnContext ctx(turnmgr.getCurrentPlayer(), nullptr, &board, this);
-        Player* currentPlayer = turnmgr.getCurrentPlayer();
-        std::cout << "\n=== Giliran " << turnmgr.getCurrentTurn() << ": " << currentPlayer->getUsername() << " ===\n";
-        
-        // TO-DO: player decide action
+    // ==========================================
+    // 1. Ekstrak raw pointer Player (Lakukan SEKALI saja di luar loop)
+    // ==========================================
+    std::vector<Player*> rawPlayers;
+    for (const auto& p : this->players) { // Asumsi variabel penyimpan pemain bernama 'players'
+        rawPlayers.push_back(p.get());
     }
 
+    // ==========================================
+    // 2. Loop Utama Permainan
+    // ==========================================
+    while (!turnmgr.isGameOver()) {
+        Player* currentPlayer = turnmgr.getCurrentPlayer();
+        int currentTurn = turnmgr.getCurrentTurn();
+        int maxTurn = turnmgr.getMaxTurn();
+
+        // Buat konteks dengan parameter yang BENAR
+        TurnContext ctx(currentPlayer, &board, currentTurn, maxTurn, rawPlayers);
+
+        std::cout << "\n=== Giliran " << currentTurn << ": " << currentPlayer->getUsername() << " ===\n";
+        
+        // TO-DO: player decide action
+        // Contoh:
+        // gameDice.roll();
+        // currentPlayer->move(gameDice.getTotal(), ctx);
+        
+        // ==========================================
+        // 3. Pindah Giliran (Wajib di BAWAH setelah pemain selesai)
+        // ==========================================
+        turnmgr.nextTurn(); 
+    }
+    
+    std::cout << "\n=== Permainan Selesai! ===\n";
 }
 
 void GameEngine::loadGame(const std::string& file) {

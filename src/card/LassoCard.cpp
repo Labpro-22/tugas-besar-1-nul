@@ -11,9 +11,9 @@
 LassoCard::LassoCard() : SkillCard("LassoCard: Menarik pemain lawan", 0) {}
 
 void LassoCard::apply(TurnContext& ctx) {
-    Player& player = *ctx.currentPlayer;
+    Player& player = *ctx.getCurrentPlayer();
     const int currentPos = player.getPosition();
-    const int boardSize = ctx.board->getSize();
+    const int boardSize = ctx.getBoard()->getSize();
 
     std::cout << "[MENGGUNAKAN] LassoCard: Menarik pemain lawan ke posisi ini.\n";
 
@@ -21,7 +21,7 @@ void LassoCard::apply(TurnContext& ctx) {
     std::cout << "Pemain saat ini: " << player.getUsername() << " (posisi: " << currentPos << ")\n";
 
     std::vector<Player*> candidates;
-    const std::vector<Player*> allPlayers = ctx.gameEngine->getPlayers();
+    const std::vector<Player*> allPlayers = ctx.getAllPlayers();
     for (Player* other : allPlayers) {
         if (other == nullptr || other == &player) continue;
 
