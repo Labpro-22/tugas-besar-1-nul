@@ -3,10 +3,14 @@
 
 #pragma once
 
-#include "../board/Board.hpp"
 #include <iostream>
 #include <vector>
 using namespace std;
+
+// Forward declarations
+class Board;
+class Player;
+class TurnContext;
 
 class Tile{
     protected:
@@ -22,7 +26,7 @@ class Tile{
         string getName();
         string getDisplay();
         string getColorTag();
-        virtual void onLanded();
+        virtual void onLanded(Player* player, TurnContext& ctx);
 };
 
-#endif
+#endif // TILE_HPP

@@ -1,9 +1,10 @@
-#include "../../include/tile/Tile.hpp"
+#include "tile/Tile.hpp"
+#include "player/Player.h"
+#include "core/TurnContext.hpp"
 
 #include <iostream>
 #include <vector>
 using namespace std;
-
 
 Tile::Tile(int idx, string cd, string nm, string cat) : index(idx), code(cd), name(nm), codeCategory(cat){}
 
@@ -20,14 +21,14 @@ string Tile::getName(){
 };
 
 string Tile::getDisplay(){
-    // get display
+    return code + " - " + name;
 };
 
 string Tile::getColorTag(){
     return codeCategory;
 };
 
-// virtual void Tile::onLanded(){
-//     int x = 67;
-//     cout << "Player tiba di Tile " << x << "\n";
-// };
+void Tile::onLanded(Player* player, TurnContext& ctx){
+    // Default implementation - do nothing
+    // Subclasses will override this
+}
