@@ -2,6 +2,10 @@
 
 bool Dice::isDouble() const { return this->die1 == this->die2; }
 
+int Dice::getDie1() const { return this->die1; }
+
+int Dice::getDie2() const { return this->die2; }
+
 int Dice::getTotal() const { return this->die1 + this->die2; }
 
 void Dice::roll() {

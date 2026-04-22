@@ -12,6 +12,9 @@ public:
     explicit Dice() : die1(0), die2(0), doubleCount(0) {};
     ~Dice() = default;
 
+    int getDie1() const;
+    int getDie2() const;
+
     bool isDouble() const;
     int getTotal() const;
 
