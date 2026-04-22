@@ -1,6 +1,6 @@
 #include "core/TurnManager.hpp"
 
-#include "player/Player.h"
+#include "player/Player.hpp"
 
 TurnManager::TurnManager(int maxTurn)
     : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), turnOrder() {}
