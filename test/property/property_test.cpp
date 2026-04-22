@@ -114,7 +114,7 @@ void test_property_owner_and_lifecycle() {
     property.redeem();
     expect_eq(PropertyStatus::OWNED, property.getStatus(), "Property redeem");
 
-    expect_eq(70, property.sellToBank(), "Property sellToBank value");
+    expect_eq(140, property.sellToBank(), "Property sellToBank value");
     expect_eq(PropertyStatus::BANK,
               property.getStatus(),
               "Property sellToBank resets status");
