@@ -53,7 +53,8 @@ Tile* Board::getTileByCode(string cd){
     return nullptr; //null jika tidak ditemukan
 };
 
-int Board::getSize(){return size;};
+int Board::getSize() const { return size; };
+int& Board::getSizeRef() { return size; };
 
 vector<StreetTile*> Board::getColorGroup(string clr){
     //implement setelah streettile selesai

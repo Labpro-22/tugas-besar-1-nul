@@ -1,7 +1,6 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
 
-
 #pragma once
 #include "../tile/Tile.hpp"
 #include <iostream>
@@ -11,18 +10,9 @@
 #include <algorithm>
 using namespace std;
 
-// =================================== dummy classes =====================================
-class TileConfig{
-    //dummy data
-};
-
-class StreetTile{
-    //dummy data
-};
-
-// ======================================================================================
-
-
+// Forward declarations
+class TileConfig;
+class StreetTile;
 
 class Board{
     private:
@@ -35,7 +25,8 @@ class Board{
         Board(int s);
         Tile* getTile(int idx);
         Tile* getTileByCode(string cd);
-        int getSize();
+        int getSize() const;
+        int& getSizeRef();
         vector<StreetTile*> getColorGroup(string clr);
         void buildFromConfig(vector<TileConfig*> data);
 
