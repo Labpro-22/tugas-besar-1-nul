@@ -10,7 +10,7 @@ using namespace std;
 int main(){
     Dice d;
     Board b(20);
-    GameEngine ge;
+    GameEngine ge(20);
     cout << "============= NIMONSPOLI =============\n";
 
     //setup player
