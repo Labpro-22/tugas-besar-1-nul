@@ -225,6 +225,10 @@ void Player::decideAction(TurnContext& ctx) {
 
 }
 
+bool Player::isBot() const {
+    return false;
+}
+
 void Player::showHands() {
     std::cout << "=== Kartu di Tangan ===" << std::endl;
     if (hand.empty()) {
