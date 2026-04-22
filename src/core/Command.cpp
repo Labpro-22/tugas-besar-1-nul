@@ -1,6 +1,11 @@
 #include "core/Command.hpp"
-
+#include "core/Dice.hpp"
 #include "core/TurnContext.hpp"
+#include "board/Board.hpp"
+#include "player/Player.hpp"
+#include "tile/Tile.hpp"
+#include "exception/InvalidGameStateException.hpp"
+
 
 void Command::rebuildArgvCache() const {
 	argvCache.clear();
@@ -73,10 +78,21 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	const std::string commandName = argv(0);
 
 	if (commandName == "LEMPAR_DADU") {
-		out << "[INFO] Memproses perintah: LEMPAR_DADU\n";
+		out << "[PROCESS] Mengocok dadu...\n";
 		ctx.dice.roll();
 		ctx.diceTotal = ctx.dice.getTotal();
-		out << "[INFO] Total dadu: " << ctx.diceTotal << "\n";
+		out << "Hasil = " << std::to_string(ctx.dice.getDie1()) << "+"
+			<< std::to_string(ctx.dice.getDie2()) << " = " << ctx.diceTotal << "\n";
+		out << "Memajukan bidak " << ctx.currentPlayer.getUsername() << " sebanyak " << ctx.diceTotal << " langkah.\n";
+		int curPos = ctx.currentPlayer.move(ctx.diceTotal, ctx);
+		Tile *baseTile = ctx.board.getTile(curPos);
+		if (baseTile == nullptr) {
+			throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(curPos));
+		}
+
+		out << "Bidak " << ctx.currentPlayer.getUsername() << " mendarat di " << baseTile->getName() << ".\n";
+		baseTile->onLanded(&ctx.currentPlayer, ctx);
+
 		return true;
 	}
 
