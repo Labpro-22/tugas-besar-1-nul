@@ -49,6 +49,7 @@ public:
     std::string getUsername() const;
     PlayerStatus getStatus() const;
     int getBalance() const;
+    int getPosition() const;
     bool isInJail() const;
     int getDiscountRate() const;
     int getPosition() const;
@@ -62,7 +63,7 @@ public:
     bool operator<(const Player& other);
 
     // moving
-    void setBoardSizeSource(const int* sizeSource);
+    void setBoardSizeSource(int* sizeSource);
     void clearBoardSizeSource();
     void move(int steps);
     void moveForwardTo(int index);
@@ -73,6 +74,12 @@ public:
     void buy(Property* p);
     void sell(Property& p);
     void mortgage(Property* p);
+
+    // cash management and bankruptcy
+    void addCash(int amount);
+    void deductCash(int amount);
+    void setBankruptStatus();
+    bool checkBankruptcy(int requiredAmount);
 
     // hands or cards
     void drawSCard(SkillCard* deck);

@@ -3,39 +3,31 @@
 
 #pragma once
 
-#include "../board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
 #include "Tile.hpp"
 #include <iostream>
 #include <vector>
 
-
-// =================================== dummy classes =====================================
+// Forward declarations
 class Player;
-
 class TurnContext;
-
-class CardType{
-    //dummy data
-};
-
 class StreetProperty;
 
 enum class TaxType{
     PPH,
-    PPN
+    PBM
 };
-
-// ======================================================================================
 
 class ActionTile : public Tile{
     public:
+        ActionTile(int idx, string cd, string nm, string cat);
         virtual void onLanded(Player* player, TurnContext& ctx);
 };
 
 class GoTile : public ActionTile{
     public:
+        GoTile(int idx, string cd, string nm, string cat);
         void onLanded(Player* player, TurnContext& ctx) override;
-        void paySalary(Player* player);
+        void paySalary(Player* player, int amount);
 };
 
 class JailTile : public ActionTile{
@@ -43,6 +35,7 @@ class JailTile : public ActionTile{
         vector<Player*> inmates;
         vector<Player*> visitors;
     public:
+        JailTile(int idx, string cd, string nm, string cat);
         void onLanded(Player* player, TurnContext& ctx) override;
         void addInmate(Player* player);
         void removeInmate(Player* player);
@@ -51,23 +44,27 @@ class JailTile : public ActionTile{
 
 class FreeParkingTile : public ActionTile{
     public:
+        FreeParkingTile(int idx, string cd, string nm, string cat);
         void onLanded(Player* player, TurnContext& ctx) override;
 };
 
 class GoToJailTile : public ActionTile{
     public:
+        GoToJailTile(int idx, string cd, string nm, string cat);
         void onLanded(Player* player, TurnContext& ctx) override;
 };
 
 class CardTile : public ActionTile{
     private:
-        CardType type;
+        bool isChance; // true = Kesempatan, false = Dana Umum
     public:
+        CardTile(int idx, string cd, string nm, string cat, bool chance);
         void onLanded(Player* player, TurnContext& ctx) override;
 };
 
 class FestivalTile : public ActionTile{
     public:
+        FestivalTile(int idx, string cd, string nm, string cat);
         void onLanded(Player* player, TurnContext& ctx) override;
         void applyFestival(Player* player, StreetProperty* prop);
 };
@@ -76,10 +73,10 @@ class TaxTile : public ActionTile{
     private:
         TaxType taxType;
     public: 
+        TaxTile(int idx, string cd, string nm, string cat, TaxType type);
         void onLanded(Player* player, TurnContext& ctx) override;
         void applyPPH(Player* player);
-        void applyPPN(Player* player);
+        void applyPBM(Player* player);
 };
-
 
 #endif

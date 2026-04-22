@@ -3,25 +3,14 @@
 
 #pragma once
 
-#include "../board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
-#include "../property/Property.hpp"
-#include "property/StreetProperty.hpp"
-#include "../player/Player.h"
-#include "core/Dice.hpp"
 #include "Tile.hpp"
 #include <iostream>
 #include <vector>
 
-// =================================== dummy classes =====================================
-
-class Dice;
-
+// Forward declarations
+class Player;
 class TurnContext;
-
-class StreetProperty;
-
-
-// ======================================================================================
+class Property;
 
 class PropertyTile : public Tile{
     protected: 
@@ -31,8 +20,6 @@ class PropertyTile : public Tile{
         Property* getProperty();
         virtual void onLanded(TurnContext& ctx);
 };
-
-
 
 class StreetTile : public PropertyTile{
     // private:
@@ -46,18 +33,16 @@ class StreetTile : public PropertyTile{
 
 class RailroadTile : public PropertyTile{
     public:
-        void onLanded(TurnContext& ctx) override;
+        RailroadTile(int idx, string cd, string nm, string cat, Property* prop);
+        void onLanded(Player* player, TurnContext& ctx) override;
         void autoAcquire(Player* player);
 };
 
 class UtilityTile : public PropertyTile{
     public:
-        void onLanded(TurnContext& ctx) override;
+        UtilityTile(int idx, string cd, string nm, string cat, Property* prop);
+        void onLanded(Player* player, TurnContext& ctx) override;
         void autoAcquire(Player* player); 
 };
-
-//================================= HELPER ================================
-void printOwner(Player* player);
-
 
 #endif

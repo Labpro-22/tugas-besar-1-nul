@@ -1,4 +1,6 @@
-#include "../../include/tile/Tile.hpp"
+#include "tile/Tile.hpp"
+#include "player/Player.h"
+#include "core/TurnContext.hpp"
 
 #include <iostream>
 #include <vector>
@@ -20,5 +22,14 @@ string Tile::getName(){
 };
 
 string Tile::getDisplay(){
-    // get display
+    return code + " - " + name;
 };
+
+string Tile::getColorTag(){
+    return codeCategory;
+};
+
+void Tile::onLanded(Player* player, TurnContext& ctx){
+    // Default implementation - do nothing
+    // Subclasses will override this
+}

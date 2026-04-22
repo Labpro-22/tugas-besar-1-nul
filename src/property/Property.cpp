@@ -89,11 +89,13 @@ void Property::redeem() {
     status_ = PropertyStatus::OWNED;
 }
 
-// Returns cash value and resets ownership to bank.
 int Property::sellToBank() {
+    if (status_ != PropertyStatus::OWNED) {
+        throw InvalidGameStateException("Can only sell owned property to bank");
+    }
     owner_ = nullptr;
     status_ = PropertyStatus::BANK;
-    return mortgageValue_;
+    return buyPrice_;
 }
 
 // Compares properties by unique code identity.

@@ -1,4 +1,13 @@
 #include "tile/PropertyTile.hpp"
+#include "property/Property.hpp"
+#include "player/Player.h"
+#include "core/TurnContext.hpp"
+#include <iostream>
+
+using namespace std;
+
+PropertyTile::PropertyTile(int idx, string cd, string nm, string cat, Property* prop)
+    : Tile(idx, cd, nm, cat), property(prop) {}
 #include "core/TurnContext.hpp"
 
 Property* PropertyTile::getProperty(){

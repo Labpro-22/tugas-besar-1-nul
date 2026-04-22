@@ -1,3 +1,6 @@
+#ifndef SKILL_CARD_HPP
+#define SKILL_CARD_HPP
+
 #include "card.hpp"
 #pragma once
 class Player;
@@ -7,13 +10,15 @@ protected:
     int remainingDuration; 
 
 public:
-    SkillCard(std::string desc, int duration) ;
+    SkillCard(std::string desc, int duration);
 
-    int getDuration() const ;
+    int getDuration() const;
 
-    void decreaseDuration() ;
+    void decreaseDuration();
 
-    void execute(Player* player, TurnContext& ctx) override ;
+    void execute(Player* player, TurnContext& ctx) override;
 
-    virtual void apply(TurnContext& ctx) = 0;
+    virtual void apply(Player& player) = 0;
 };
+
+#endif // SKILL_CARD_HPP

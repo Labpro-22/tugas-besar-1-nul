@@ -1,6 +1,12 @@
+#ifndef DECK_CARD_HPP
+#define DECK_CARD_HPP
+
 #include "card.hpp"
-#pragma once
-template <typename T>
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <iostream>
+
 class CardDeck {
 private:
     std::vector<T*> deck;
@@ -49,3 +55,5 @@ public:
         return deck.size();
     }
 };
+
+#endif // DECK_CARD_HPP

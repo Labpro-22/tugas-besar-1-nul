@@ -19,4 +19,3 @@ void ChanceCard::execute(Player* player, TurnContext& ctx) {
             break;
     }
 }
-

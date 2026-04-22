@@ -47,6 +47,34 @@ int StreetProperty::getRent(const TurnContext& ctx) const {
     return baseRent * festivalMult_;
 }
 
+
+int StreetProperty::sellToBank() {
+    if (status_ != PropertyStatus::OWNED) {
+        throw InvalidGameStateException(
+            "Can only sell owned property to bank");
+    }
+
+    int buildingCost = 0;
+
+    if (buildingCount_ > 0) {
+        if (isHotel_) {
+            buildingCost = (4 * housePrice_) + hotelPrice_;
+        } else {
+            buildingCost = buildingCount_ * housePrice_;
+        }
+    }
+
+    // Demolish all buildings
+    buildingCount_ = 0;
+    isHotel_ = false;
+    monopolized_ = false;
+
+    owner_ = nullptr;
+    status_ = PropertyStatus::BANK;
+
+    return buyPrice_ + (buildingCost / 2);
+}
+
 // Returns color group used for monopoly/build validation.
 const std::string& StreetProperty::getColorGroup() const {
     return colorGroup_;
