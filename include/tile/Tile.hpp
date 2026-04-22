@@ -16,16 +16,14 @@ class Tile{
         int index;
         string code;
         string name;
-        string codeCategory;
 
     public:
-        Tile(int idx, string cd, string nm, string cat);
+        Tile(int idx, string cd, string nm);
         int getIndex();
         string getCode();
         string getName();
         string getDisplay();
-        string getColorTag();
-        virtual void onLanded(Player* player, TurnContext& ctx) = 0;
+        virtual void onLanded(TurnContext& ctx) = 0; //consider hapus player karena ctx sudah ada konteks player saat ini.
 };
 
 #endif

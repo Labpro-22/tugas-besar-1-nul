@@ -28,6 +28,8 @@ class StreetProperty : public Property {
     int getFestivalMultiplier() const;
     int getFestivalDuration() const;
 
+    const std::string getColor() const;
+
     const std::vector<int>& getRentTable() const;
 
     bool isMonopolized() const;

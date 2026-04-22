@@ -5,6 +5,7 @@
 
 #include "../board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
 #include "../property/Property.hpp"
+#include "property/StreetProperty.hpp"
 #include "../player/Player.h"
 #include "core/Dice.hpp"
 #include "Tile.hpp"
@@ -17,6 +18,8 @@ class Dice;
 
 class TurnContext;
 
+class StreetProperty;
+
 
 // ======================================================================================
 
@@ -24,34 +27,37 @@ class PropertyTile : public Tile{
     protected: 
         Property* property;
     public:
-        PropertyTile(int idx, string cd, string nm, string cat, Property* p) : Tile(idx, cd, nm, cat) , property(p){};
+        PropertyTile(int idx, Property *p) : Tile(idx, p->getCode(), p->getName()), property(p){};
         Property* getProperty();
-        virtual void onLanded(Player* player, TurnContext& ctx);
+        virtual void onLanded(TurnContext& ctx);
 };
 
 
 
 class StreetTile : public PropertyTile{
+    // private:
+    //     std::string colorCategory;
     public:
-        using PropertyTile::PropertyTile;
-        void onLanded(Player* player, TurnContext& ctx) override;
-        void triggerBuyOrAuction(Player* player, TurnContext& ctx);
-        void triggerRentPayment(Player* player, TurnContext& ctx);
+        StreetTile(int idx, StreetProperty *sp): PropertyTile(idx, sp){};
+        void onLanded(TurnContext& ctx) override;
+        void triggerBuyOrAuction(TurnContext& ctx);
+        void triggerRentPayment(TurnContext& ctx);
 };
 
 class RailroadTile : public PropertyTile{
     public:
-        void onLanded(Player* player, TurnContext& ctx) override;
+        void onLanded(TurnContext& ctx) override;
         void autoAcquire(Player* player);
 };
 
 class UtilityTile : public PropertyTile{
     public:
-        void onLanded(Player* player, TurnContext& ctx) override;
+        void onLanded(TurnContext& ctx) override;
         void autoAcquire(Player* player); 
 };
 
 //================================= HELPER ================================
 void printOwner(Player* player);
+
 
 #endif

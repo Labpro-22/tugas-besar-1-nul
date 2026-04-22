@@ -82,6 +82,10 @@ int StreetProperty::getFestivalDuration() const {
     return festivalDur_;
 }
 
+const std::string StreetProperty::getColor() const{
+    return colorGroup_;
+}
+
 // Returns whether full color-set ownership is satisfied.
 bool StreetProperty::isMonopolized() const {
     return monopolized_;
