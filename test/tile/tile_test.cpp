@@ -1,6 +1,7 @@
 #include "board/Board.hpp"
 #include "tile/PropertyTile.hpp"
 #include "property/StreetProperty.hpp"
+#include "property/RailroadProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
 
@@ -25,8 +26,10 @@ int main(){
     //mungkin bisa simplify konstruktor StreetTile biar pakai property aja? nanti dilihat dependencynya lagi
     StreetProperty prop2("BRM", "Birmingham", 300, 150, "GREEN", 300, 400, x);
     StreetTile st2(7, &prop2);
-
     TurnContext tc(&p, &d, &b, &ge); 
+
+    // RailroadProperty rprop2("GMBR", "Gambir", 0, 150, x);
+
 
     p2.buy(&prop);
     prop.setOwner(&p2); // ini harus dihandle di buy

@@ -18,15 +18,13 @@ void PropertyTile::onLanded(TurnContext& ctx){
 void StreetTile::onLanded(TurnContext& ctx){
     Player* player = ctx.currentPlayer;
     if (property->getStatus() == PropertyStatus::OWNED){
-        if (property->getOwner() == player){
-        } else{
+        if (property->getOwner() != player){
             triggerRentPayment(ctx);
         }
     } else if (property->getStatus() == PropertyStatus::BANK){
         triggerBuyOrAuction(ctx);
-    } else{
-        //kalau Mortgaged lewat aja sih
-    }
+    } //kalau Mortgaged lewat aja sih
+    
 };
 
 void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
@@ -60,11 +58,31 @@ void StreetTile::triggerRentPayment(TurnContext& ctx){
 
 void RailroadTile::onLanded(TurnContext& ctx){
     Player* player = ctx.currentPlayer;
-    cout << "onLanded milik RailroadTile!\n";
+    if (property->getStatus() == PropertyStatus::OWNED){
+        if (property->getOwner() != player){
+            autoAcquire(player);
+        }
+    } else if (property->getStatus() == PropertyStatus::BANK){
+        // harusnya diimplement dari player sih ini
+        Property* prop = getProperty();
+        cout << "Anda mendarat di [" << prop->getName() << "] milik [" << prop->getOwner()->getUsername() << "].\n\n";
+        prop->printStatus(ctx); //ini harusnya jadi 0 harga belinya
+        cout << "Uang anda tersisa: <M" << player->getBalance() - prop->getRent(ctx) << ">.\n\n"; //nanti implement dari player
+
+        
+    } else{
+        //kalau Mortgaged lewat aja sih
+    }    
+    // cout << "onLanded milik RailroadTile!\n";
 }
 
 void RailroadTile::autoAcquire(Player* player){
-    cout << "autoAcquire milik RailroadTile!\n";
+    // harusnya diimplement dari player sih ini
+    Property* prop = getProperty();
+    player->buy(prop);
+    prop->setOwner(player);
+    // cout << "autoAcquire milik RailroadTile!\n";
+
 };
 
 void UtilityTile::onLanded(TurnContext& ctx){
