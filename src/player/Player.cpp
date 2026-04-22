@@ -1,4 +1,4 @@
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include <iostream>
 
 #include "card/SkillCard.hpp"
@@ -6,6 +6,8 @@
 #include "exception/InsufficientFundsException.hpp" //nanti ganti ke yg general
 #include "exception/InvalidGameStateException.hpp"
 #include "property/Property.hpp"
+#include "core/TurnContext.hpp"
+#include "board/Board.hpp"
 
 /* === CTOR DTOR === */
 Player::Player(std::string username, int balance)
@@ -16,7 +18,6 @@ Player::Player(std::string username, int balance)
             jailTurns(0),
             usedSkillThisTurn(false),
             discountRate(0),
-            boardSizeSource(nullptr),
             properties({}),
             hand({}) {}
 
@@ -77,27 +78,20 @@ bool Player::operator<(const Player& other) {
 
 
 /* === MOVING === */
-void Player::setBoardSizeSource(const int* sizeSource) {
-    this->boardSizeSource = sizeSource;
+int Player::move(int steps, TurnContext& ctx) {
+    // if (ctx.board.getSize() == nullptr) { throw InvalidGameStateException("Board size source is not set for player movement.");}
+    if (ctx.board.getSize() <= 0) { throw InvalidGameStateException("Board size must be positive."); }
+    const int trueSteps = ((steps % ctx.board.getSize()) + ctx.board.getSize()) % ctx.board.getSize();
+    this->position = (this->position + trueSteps) % ctx.board.getSize();
+    return this->position;
 }
 
-void Player::clearBoardSizeSource() {
-    this->boardSizeSource = nullptr;
-}
-
-void Player::move(int steps) {
-    if (this->boardSizeSource == nullptr) { throw InvalidGameStateException("Board size source is not set for player movement.");}
-    if (*this->boardSizeSource <= 0) { throw InvalidGameStateException("Board size must be positive."); }
-    const int trueSteps = ((steps % *this->boardSizeSource) + *this->boardSizeSource) % *this->boardSizeSource;
-    this->position = (this->position + trueSteps) % *this->boardSizeSource;
-}
-
-void Player::moveForwardTo(int index) {
+void Player::moveForwardTo(int index, TurnContext& ctx) {
     this->position = index;
     // ni nanti implement ngapain tilenya, kalo start jg
 }
 
-void Player::moveBackwardTo(int index) {
+void Player::moveBackwardTo(int index, TurnContext& ctx) {
     this->position = index;
     // ni nanti implement ngapain tilenya
 }
