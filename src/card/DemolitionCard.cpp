@@ -9,8 +9,7 @@ DemolitionCard::DemolitionCard() : SkillCard("DemolitionCard: Menghancurkan prop
 void DemolitionCard::apply(Player& player) {
     std::cout << "[MENGGUNAKAN] DemolitionCard: Menghancurkan properti lawan.\n";
     
-    // TODO: Dalam implementasi lengkap, mendapatkan daftar pemain lain dari game context/TurnContext
-    // Untuk sekarang, gua  pake contoh dengan properti pemain saat ini
+
     
     std::cout << "\n=== Daftar Pemain Lain ===\n";
     std::cout << "Pemain: " << player.getUsername() << " (saat ini)\n";
