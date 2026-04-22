@@ -21,14 +21,18 @@ private:
     // CardDeck<CommunityCard> communityDeck;
     CardDeck<SkillCard> skillDeck;
 
-    // GameEngine owns all Player objects.
     std::vector<std::unique_ptr<Player>> players;
 
 public:
-    // ctor dtor lom ada
-    GameEngine() = default;
+    explicit GameEngine(int size)
+        : board(Board{size})
+        , turnmgr(TurnManager{})
+        , chanceDeck(CardDeck<ChanceCard>{})
+        , skillDeck(CardDeck<SkillCard>{})
+        , players{std::vector<std::unique_ptr<Player>>{}} {};
 
     void startNewGame();
+    void run();
     void loadGame(const std::string& file);
     void saveGame(const std::string& file);
     void executeCommand(const std::string& cmd);

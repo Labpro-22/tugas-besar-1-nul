@@ -13,7 +13,7 @@ private:
     std::vector<Player*> turnOrder;
 
 public:
-    explicit TurnManager(int maxTurn = 100);
+    explicit TurnManager(int maxTurn = -1);
     ~TurnManager() = default;
 
     void setTurnOrder(const std::vector<Player*>& players);
