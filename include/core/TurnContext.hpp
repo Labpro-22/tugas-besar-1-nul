@@ -1,8 +1,7 @@
 #pragma once
 
-#include "core/Dice.hpp"
-
 class Player;
+class Dice;
 class Board;
 class GameEngine;
 
