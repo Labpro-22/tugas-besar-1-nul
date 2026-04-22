@@ -1,6 +1,7 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
 
+#include "tile/Tile.hpp"
 
 #pragma once
 #include <memory>
@@ -32,12 +33,20 @@ class Board{
     public:
         Board(const map<string, int>& data, int s);
         Board(int s);
+
+        Board(Board&&) noexcept = default;            // Move Constructor
+        Board& operator=(Board&&) noexcept = default; // Move Assignment Operator
+
+        Board(const Board&) = delete;
+        Board& operator=(const Board&) = delete;
+        
         Tile* getTile(int idx);
         Tile* getTileByCode(string cd);
         int getSize();
         vector<StreetTile*> getColorGroup(string clr);
         void buildFromConfig(vector<TileConfig*> data);
 
+        ~Board();
 };
 
 #endif

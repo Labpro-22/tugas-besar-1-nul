@@ -1,5 +1,5 @@
-#include "../../include/board/Board.hpp"
-#include "../../include/tile/Tile.hpp"
+#include "board/Board.hpp"
+#include "tile/Tile.hpp"
 
 using namespace std;
 
@@ -55,3 +55,5 @@ vector<StreetTile*> Board::getColorGroup(string clr){
 void Board::buildFromConfig(vector<TileConfig*> data){
     //implement setelah tileconfig selesai
 };
+
+Board::~Board() = default;
