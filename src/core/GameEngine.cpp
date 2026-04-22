@@ -1,5 +1,17 @@
 #include "core/GameEngine.hpp"
-#include "core/Command.hpp"
+
+#include "TurnContext.hpp"
+#include "TurnManager.hpp"
+#include "Command.hpp"
+#include "Dice.hpp"
+
+#include "board/Board.hpp"
+#include "player/Player.hpp"
+#include "card/DeckCard.hpp"
+#include "card/ChanceCard.hpp"
+#include "exception/CommandException.hpp"
+#include "card/SkillCard.hpp"
+
 
 void GameEngine::run() {
     std::cout << "=== Welcome to Nimonspoli ===" << endl;
@@ -13,7 +25,11 @@ void GameEngine::run() {
         Player* currentPlayer = turnmgr.getCurrentPlayer();
         std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": " << currentPlayer->getUsername() << " ===\n";
         
-        this->executeCommand(ctx);
+        try {
+            this->executeCommand(ctx);
+        } catch (CommandException exc) {
+            std::cout << exc.what() << "\n";
+        }
         turnmgr.nextTurn();
     }
 

@@ -4,14 +4,15 @@
 #include <string>
 #include <vector>
 
-#include "board/Board.hpp"
-#include "player/Player.h"
-#include "card/DeckCard.hpp"
-#include "card/ChanceCard.hpp"
-// #include "card/CommunityCard.hpp"
-#include "card/SkillCard.hpp"
-#include "TurnContext.hpp"
-#include "TurnManager.hpp"
+class Board;
+class Player;
+class TurnManager;
+class TurnContext;
+
+template <typename T>
+class CardDeck;
+class ChanceCard;
+class SkillCard;
 
 class GameEngine {
 private:
