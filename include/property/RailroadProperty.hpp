@@ -10,7 +10,7 @@ class RailroadProperty : public Property {
   public:
     RailroadProperty(std::string code,
                      std::string name,
-                     int buyPrice,
+                     int buyPrice, //nanti dihapus
                      int mortgageValue,
                      std::map<int, int> rentTable);
 
@@ -20,6 +20,8 @@ class RailroadProperty : public Property {
 
     // Allows integration without hard-coupling this module to Player internals.
     void setOwnedRailroadCounter(std::function<int(const Player*)> counter);
+
+    void printStatus(TurnContext& ctx) override;
 
   private:
     std::map<int, int> rentTable_;

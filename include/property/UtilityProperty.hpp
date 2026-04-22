@@ -21,8 +21,8 @@ class UtilityProperty : public Property {
     // Integration hooks to avoid depending on full Player/TurnContext
     // implementation.
     void setOwnedUtilityCounter(std::function<int(const Player*)> counter);
-    void
-    setDiceTotalExtractor(std::function<int(const TurnContext&)> extractor);
+    void setDiceTotalExtractor(std::function<int(const TurnContext&)> extractor);
+    void printStatus(TurnContext& ctx) override;
 
   private:
     std::map<int, int> multiplierTable_;

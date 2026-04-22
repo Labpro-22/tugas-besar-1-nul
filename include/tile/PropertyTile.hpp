@@ -16,17 +16,19 @@ class PropertyTile : public Tile{
     protected: 
         Property* property;
     public:
-        PropertyTile(int idx, string cd, string nm, string cat, Property* prop);
+        PropertyTile(int idx, Property *p) : Tile(idx, p->getCode(), p->getName()), property(p){};
         Property* getProperty();
-        virtual void onLanded(Player* player, TurnContext& ctx);
+        virtual void onLanded(TurnContext& ctx);
 };
 
 class StreetTile : public PropertyTile{
+    // private:
+    //     std::string colorCategory;
     public:
-        StreetTile(int idx, string cd, string nm, string cat, Property* prop);
-        void onLanded(Player* player, TurnContext& ctx) override;
-        void triggerBuyOrAuction(Player* player);
-        void triggerRentPayment(Player* player);
+        StreetTile(int idx, StreetProperty *sp): PropertyTile(idx, sp){};
+        void onLanded(TurnContext& ctx) override;
+        void triggerBuyOrAuction(TurnContext& ctx);
+        void triggerRentPayment(TurnContext& ctx);
 };
 
 class RailroadTile : public PropertyTile{

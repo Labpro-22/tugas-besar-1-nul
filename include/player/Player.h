@@ -52,6 +52,7 @@ public:
     int getPosition() const;
     bool isInJail() const;
     int getDiscountRate() const;
+    int getPosition() const;
     int getPropertiesAmount() const;
     int getHandsAmount() const;
     int getWealth() const;

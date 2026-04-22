@@ -2,7 +2,7 @@
 #define BOARD_HPP
 
 #pragma once
-#include "../tile/Tile.hpp"
+#include <memory>
 #include <iostream>
 #include <vector>
 #include <map>
@@ -16,13 +16,20 @@ class StreetTile;
 
 class Board{
     private:
-        vector<Tile*> tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
+        vector<unique_ptr<Tile>> tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
         map<string, int> codeToIndex;
         int size;
     
     public:
         Board(const map<string, int>& data, int s);
         Board(int s);
+
+        Board(Board&&) noexcept = default;            // Move Constructor
+        Board& operator=(Board&&) noexcept = default; // Move Assignment Operator
+
+        Board(const Board&) = delete;
+        Board& operator=(const Board&) = delete;
+        
         Tile* getTile(int idx);
         Tile* getTileByCode(string cd);
         int getSize() const;
@@ -30,6 +37,7 @@ class Board{
         vector<StreetTile*> getColorGroup(string clr);
         void buildFromConfig(vector<TileConfig*> data);
 
+        ~Board();
 };
 
 #endif

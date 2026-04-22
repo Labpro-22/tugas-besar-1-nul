@@ -2,7 +2,7 @@
 #define CHANCE_CARD_HPP
 
 #include "card.hpp"
-
+#pragma once
 enum class ChanceType {
     GO_TO_NEAREST_STATION,
     MOVE_BACK_3,

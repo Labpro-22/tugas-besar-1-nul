@@ -9,8 +9,8 @@
 
 class CardDeck {
 private:
-    std::vector<Card*> deck;
-    std::vector<Card*> discard;
+    std::vector<T*> deck;
+    std::vector<T*> discard;
 
 public:
     CardDeck() = default;
@@ -20,16 +20,16 @@ public:
         for (auto card : discard) delete card;
     }
 
-    void addCard(Card * card) {
+    void addCard(T * card) {
         deck.push_back(card);
     }
 
-    Card* draw() {
+    T* draw() {
         if (deck.empty()) {
             if (discard.empty()) return nullptr;
         }
         
-        Card* drawnCard = deck.back();
+        T* drawnCard = deck.back();
         deck.pop_back();
         return drawnCard;
     }
@@ -40,7 +40,7 @@ public:
         std::shuffle(deck.begin(), deck.end(), g);
     }
 
-    void addToDiscard(Card* card) {
+    void addToDiscard(T* card) {
         discard.push_back(card);
     }
 

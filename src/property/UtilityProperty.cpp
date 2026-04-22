@@ -1,5 +1,6 @@
 #include "property/UtilityProperty.hpp"
 
+#include <iostream>
 #include <utility>
 
 #include "exception/InvalidGameStateException.hpp"
@@ -74,4 +75,12 @@ void UtilityProperty::setOwnedUtilityCounter(
 void UtilityProperty::setDiceTotalExtractor(
     std::function<int(const TurnContext&)> extractor) {
     diceTotalExtractor_ = std::move(extractor);
+}
+
+void UtilityProperty::printStatus(TurnContext& ctx){
+    std::cout << "+================================+\n";
+    std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\t\t|\n";
+    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t\t|\n";
+    std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\t\t|\n";
+    std::cout << "+================================+\n";
 }

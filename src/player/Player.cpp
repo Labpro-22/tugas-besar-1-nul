@@ -41,6 +41,8 @@ bool Player::isInJail() const { return this->getStatus()==PlayerStatus::JAILED; 
 
 int Player::getDiscountRate() const { return this->discountRate; }
 
+int Player::getPosition() const { return this->position; }
+
 int Player::getPropertiesAmount() const { return this->properties.size(); }
 
 int Player::getHandsAmount() const { return this->hand.size(); }
@@ -148,6 +150,7 @@ void Player::addProperty(Property* p) {
     }
     p->setOwner(this);
     this->properties.push_back(p);
+
 }
 
 //make sure lgi type p

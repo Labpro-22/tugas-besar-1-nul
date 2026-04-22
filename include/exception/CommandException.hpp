@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "exception/NimonspoliException.hpp"
+#include "NimonspoliException.hpp"
 
 class CommandException : public NimonspoliException {
   public:

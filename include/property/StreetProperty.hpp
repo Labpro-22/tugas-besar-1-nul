@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "property/Property.hpp"
+#include "../../include/property/Property.hpp"
 
 class StreetProperty : public Property {
   public:
@@ -29,6 +29,10 @@ class StreetProperty : public Property {
     int getFestivalMultiplier() const;
     int getFestivalDuration() const;
 
+    const std::string getColor() const;
+
+    const std::vector<int>& getRentTable() const;
+
     bool isMonopolized() const;
     void setMonopolized(bool monopolized);
 
@@ -39,6 +43,9 @@ class StreetProperty : public Property {
 
     void applyFestival();
     void decreaseFestivalDuration();
+
+    void printStatus(TurnContext& ctx) override;
+    void printRentTable();
 
   private:
     std::string colorGroup_;
