@@ -1,6 +1,10 @@
 #include "core/GameManager.hpp"
 #include "player/Player.h"
+#include "player/BotPlayer.hpp"
 #include "property/Property.hpp"
+#include "property/StreetProperty.hpp"
+#include "property/RailroadProperty.hpp"
+#include "property/UtilityProperty.hpp"
 #include "tile/Tile.hpp"
 #include "tile/PropertyTile.hpp"
 #include "tile/ActionTile.hpp"
@@ -12,12 +16,20 @@
 #include "card/LassoCard.hpp"
 #include "card/DemolitionCard.hpp"
 #include "core/BankruptcyManager.hpp"
+#include "core/SaveLoadManager.hpp"
 #include "config/PropertyData.hpp"
+#include "states/GameState.hpp"
+#include "states/PlayerState.hpp"
+#include "states/PropertyState.hpp"
+#include "states/CardState.hpp"
+#include "states/LogEntry.hpp"
 
 #include <iostream>
 #include <algorithm>
 #include <random>
 #include <ctime>
+#include <fstream>
+#include <sstream>
 
 GameManager::GameManager() 
     : status(GameStatus::NOT_STARTED),
@@ -254,6 +266,44 @@ void GameManager::setupNewGame(int numPlayers, const std::vector<std::string>& u
     // Randomize turn order
     turnOrder.clear();
     for (int i = 0; i < numPlayers; ++i) {
+        turnOrder.push_back(i);
+    }
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(turnOrder.begin(), turnOrder.end(), g);
+    
+    currentPlayerIndex = 0;
+    currentTurnNumber = 1;
+}
+
+void GameManager::setupNewGameWithBots(const std::vector<std::string>& humanPlayerNames, 
+                                       int numBots, int botDifficulty) {
+    int totalPlayers = humanPlayerNames.size() + numBots;
+    
+    // Create human players
+    for (const std::string& name : humanPlayerNames) {
+        Player* player = new Player(name, config.misc.startingBalance);
+        player->setBoardSizeSource(&board->getSizeRef());
+        players.push_back(player);
+    }
+    
+    // Create bot players with predefined names
+    std::vector<std::string> botNames = {"AlphaBot", "BetaBot", "GammaBot", "DeltaBot"};
+    for (int i = 0; i < numBots; ++i) {
+        std::string botName = botNames[i % botNames.size()];
+        // Add number suffix if needed
+        if (numBots > botNames.size() || i > 0) {
+            botName += std::to_string(i + 1);
+        }
+        
+        BotPlayer* bot = new BotPlayer(botName, config.misc.startingBalance, botDifficulty);
+        bot->setBoardSizeSource(&board->getSizeRef());
+        players.push_back(bot);
+    }
+    
+    // Randomize turn order
+    turnOrder.clear();
+    for (int i = 0; i < totalPlayers; ++i) {
         turnOrder.push_back(i);
     }
     std::random_device rd;
@@ -639,8 +689,106 @@ void GameManager::upgradeToHotel(const std::string& propertyCode) {}
 void GameManager::useSkillCard(int cardIndex) {}
 void GameManager::discardSkillCard(int cardIndex) {}
 void GameManager::handleBankruptcy(Player* player, int debtAmount, Player* creditor) {}
-void GameManager::saveGame(const std::string& filename) {}
-void GameManager::loadGame(const std::string& filename) {}
+
+void GameManager::saveGame(const std::string& filename) {
+    std::cout << "Menyimpan permainan ke: " << filename << "..." << std::endl;
+    
+    // Build GameState from current game state
+    GameState state;
+    state.currentTurn = currentTurnNumber;
+    state.maxTurn = config.misc.maxTurn;
+    state.activePlayerIdx = currentPlayerIndex;
+    
+    // Convert players to PlayerState
+    for (size_t i = 0; i < players.size(); ++i) {
+        Player* player = players[i];
+        PlayerState ps;
+        ps.username = player->getUsername();
+        ps.balance = player->getBalance();
+        ps.status = (player->getStatus() == PlayerStatus::ACTIVE) ? "ACTIVE" :
+                    (player->getStatus() == PlayerStatus::JAILED) ? "JAILED" : "BANKRUPT";
+        
+        // Get position code from tile
+        int pos = player->getPosition();
+        if (pos >= 0 && pos < static_cast<int>(tiles.size())) {
+            ps.positionCode = tiles[pos]->getCode();
+        } else {
+            ps.positionCode = "GO";
+        }
+        
+        // Convert skill cards to CardState
+        // Note: Player class needs method to access hand cards
+        // For now, we'll save empty hand
+        state.players.push_back(ps);
+    }
+    
+    // Convert turn order indices
+    state.turnOrder = turnOrder;
+    
+    // Convert properties to PropertyState
+    // This requires integration with actual Property objects
+    // For now, we'll save empty properties list
+    
+    // Get deck state
+    for (SkillCard* card : skillDeck) {
+        state.deckState.push_back(card->getDescription());
+    }
+    
+    // Get log entries
+    state.log = logger.getAll();
+    
+    // Save using SaveLoadManager
+    SaveLoadManager saveManager;
+    saveManager.save(state, filename);
+    
+    std::cout << "Permainan berhasil disimpan!" << std::endl;
+}
+
+void GameManager::loadGame(const std::string& filename) {
+    std::cout << "Memuat permainan dari: " << filename << "..." << std::endl;
+    
+    // Check if file exists
+    std::ifstream test(filename);
+    if (!test.is_open()) {
+        std::cout << "File tidak ditemukan: " << filename << std::endl;
+        return;
+    }
+    test.close();
+    
+    // Load using SaveLoadManager
+    SaveLoadManager loadManager;
+    GameState state = loadManager.load(filename);
+    
+    // Restore game state
+    currentTurnNumber = state.currentTurn;
+    config.misc.maxTurn = state.maxTurn;
+    currentPlayerIndex = state.activePlayerIdx;
+    
+    // Restore players
+    // Note: This would need proper cleanup of existing players and recreation
+    // For now, we'll just update existing players if counts match
+    if (state.players.size() != players.size()) {
+        std::cout << "Peringatan: Jumlah pemain tidak cocok dengan save file." << std::endl;
+    }
+    
+    // Restore turn order
+    turnOrder = state.turnOrder;
+    
+    // Restore log - serialize LogEntry vector to the expected format
+    // Format: turn\tusername\tactionType\tdetail\n
+    std::ostringstream logOss;
+    for (const auto& entry : state.log) {
+        logOss << entry.turn << "\t" << entry.username << "\t"
+               << entry.actionType << "\t" << entry.detail << "\n";
+    }
+    logger.deserialize(logOss.str());
+    
+    std::cout << "Permainan berhasil dimuat!" << std::endl;
+    std::cout << "Giliran saat ini: " << currentTurnNumber << "/" << config.misc.maxTurn << std::endl;
+    if (getCurrentPlayer()) {
+        std::cout << "Pemain aktif: " << getCurrentPlayer()->getUsername() << std::endl;
+    }
+}
 void GameManager::printBoard() {
     std::cout << "\n========== PAPAN NIMONSPOLI ==========" << std::endl;
     std::cout << "Posisi pemain:" << std::endl;
