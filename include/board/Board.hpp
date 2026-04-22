@@ -3,6 +3,7 @@
 
 
 #pragma once
+#include <memory>
 #include <iostream>
 #include <vector>
 #include <map>
@@ -24,7 +25,7 @@ class TileConfig{
 
 class Board{
     private:
-        vector<Tile*> tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
+        vector<unique_ptr<Tile>> tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
         map<string, int> codeToIndex;
         int size;
     

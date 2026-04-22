@@ -14,7 +14,8 @@
 
 class GameEngine {
 private:
-    Board board;
+    // Board board;
+    Board board{20};
     TurnManager turnmgr;
     CardDeck<ChanceCard> chanceDeck;
     // CardDeck<CommunityCard> communityDeck;

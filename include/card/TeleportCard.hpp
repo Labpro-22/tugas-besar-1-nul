@@ -1,4 +1,5 @@
 #include "SkillCard.hpp"
+#pragma once
 class TeleportCard : public SkillCard {
 private:
     int position;

@@ -10,21 +10,15 @@
 
 
 // =================================== dummy classes =====================================
-class Player{
-    //dummy data
-};
+class Player;
 
-class TurnContext{
-    //dummy data
-};
+class TurnContext;
 
 class CardType{
     //dummy data
 };
 
-class StreetProperty{
-    //dummy data
-};
+class StreetProperty;
 
 enum class TaxType{
     PPH,
