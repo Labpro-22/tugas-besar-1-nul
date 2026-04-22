@@ -1,8 +1,8 @@
 #include "SkillCard.hpp"
-
+#pragma once
 class ShieldCard : public SkillCard {
 public:
-    ShieldCard() : SkillCard("ShieldCard: Kebal tagihan/sanksi", 1) {}
+    ShieldCard();
 
-    void apply(Player& player) override ;
+    void apply(TurnContext& ctx) override ;
 };

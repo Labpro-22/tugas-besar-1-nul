@@ -1,4 +1,4 @@
-#include "SkillCard.hpp"
+#include "card/SkillCard.hpp"
 #include "player/Player.h"
 #include "exception/InvalidGameStateException.hpp"
 

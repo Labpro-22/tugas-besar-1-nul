@@ -1,8 +1,8 @@
 #include "SkillCard.hpp"
-
+#pragma once
 class DemolitionCard : public SkillCard {
 public:
     DemolitionCard() ;
 
-    void apply(Player& player) override ;
+    void apply(TurnContext& ctx) override ;
 };

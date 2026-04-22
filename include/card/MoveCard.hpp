@@ -1,5 +1,5 @@
 #include "SkillCard.hpp"
-
+#pragma once
 class MoveCard : public SkillCard {
 private:
     int steps;
@@ -7,5 +7,5 @@ private:
 public:
     MoveCard(int stp) ;
 
-    void apply(Player& player) override ;
+    void apply(TurnContext& ctx) override ;
 };

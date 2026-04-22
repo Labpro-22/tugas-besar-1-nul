@@ -3,7 +3,7 @@
 
 
 #pragma once
-#include "../tile/Tile.hpp"
+#include <memory>
 #include <iostream>
 #include <vector>
 #include <map>
@@ -11,12 +11,11 @@
 #include <algorithm>
 using namespace std;
 
+class Tile;
+class StreetTile;
+
 // =================================== dummy classes =====================================
 class TileConfig{
-    //dummy data
-};
-
-class StreetTile{
     //dummy data
 };
 
@@ -26,7 +25,7 @@ class StreetTile{
 
 class Board{
     private:
-        vector<Tile*> tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
+        vector<unique_ptr<Tile>> tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
         map<string, int> codeToIndex;
         int size;
     

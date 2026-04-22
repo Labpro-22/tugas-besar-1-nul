@@ -1,5 +1,5 @@
 #include "SkillCard.hpp"
-
+#pragma once
 class DiscountCard : public SkillCard {
 private:
     int discountPercent;
@@ -7,5 +7,5 @@ private:
 public:
     DiscountCard(int discount) ;
 
-    void apply(Player& player) override ;
+    void apply(TurnContext& ctx) override ;
 };

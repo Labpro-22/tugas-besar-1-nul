@@ -7,7 +7,7 @@
 class Player;
 class TurnContext; 
 
-
+#pragma once
 
 enum class CommunityType {
     BIRTHDAY,    

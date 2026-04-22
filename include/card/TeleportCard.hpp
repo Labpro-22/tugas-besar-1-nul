@@ -1,4 +1,5 @@
 #include "SkillCard.hpp"
+#pragma once
 class TeleportCard : public SkillCard {
 private:
     int position;
@@ -6,5 +7,5 @@ private:
 public:
     TeleportCard(int pos);
 
-    void apply(Player& player) override ;
+    void apply(TurnContext& ctx) override ;
 };

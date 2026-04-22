@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <iostream>
 
 #include "exception/InvalidGameStateException.hpp"
 
@@ -81,6 +82,10 @@ int StreetProperty::getFestivalDuration() const {
     return festivalDur_;
 }
 
+const std::string StreetProperty::getColor() const{
+    return colorGroup_;
+}
+
 // Returns whether full color-set ownership is satisfied.
 bool StreetProperty::isMonopolized() const {
     return monopolized_;
@@ -158,5 +163,32 @@ void StreetProperty::decreaseFestivalDuration() {
     --festivalDur_;
     if (festivalDur_ == 0) {
         festivalMult_ = 1;
+    }
+}
+
+void StreetProperty::printStatus(TurnContext& ctx){
+    //nanti perbaiki di trigger agar tunjukin kalau di daerah bukan sendiri
+    std::cout << "+=============================================+\n";
+    std::cout << "| [" << getColorGroup() << "] " << getName() << " (" << getCode() << ")\n";
+    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
+    printRentTable();
+    std::cout << "+=============================================+\n";
+    if (getStatus() == PropertyStatus::OWNED){
+        std::cout << "Harga saat ini : M" << getRent(ctx) << "\n";
+    }
+}
+
+const std::vector<int>& StreetProperty::getRentTable() const{
+    return rentTable_;
+}
+
+void StreetProperty::printRentTable(){
+    std::vector<int> rt = getRentTable();
+    for (int i = 0; i<rt.size(); i++){
+        if (i < rt.size()-1){
+            std::cout << "| Sewa dengan banyak rumah " << i << ": M" << rt[i] << "\n";
+        } else{
+            std::cout << "| Sewa dengan hotel: M" << rt[i] << "\n";
+        }
     }
 }
