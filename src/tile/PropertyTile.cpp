@@ -1,4 +1,7 @@
 #include "tile/PropertyTile.hpp"
+#include "core/TurnContext.hpp"
+#include "player/Player.hpp"
+#include "property/Property.hpp"
 
 Property* PropertyTile::getProperty(){
     return property;

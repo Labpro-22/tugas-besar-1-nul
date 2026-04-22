@@ -1,28 +1,16 @@
-#ifndef ACTION_TILE_HPP
-#define ACTION_TILE_HPP
-
 #pragma once
 
-#include "../board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
 #include "Tile.hpp"
 #include <iostream>
 #include <vector>
 
 
+class Player;
+class TurnContext;
+class StreetProperty;
+
 // =================================== dummy classes =====================================
-class Player{
-    //dummy data
-};
-
-class TurnContext{
-    //dummy data
-};
-
 class CardType{
-    //dummy data
-};
-
-class StreetProperty{
     //dummy data
 };
 
@@ -86,6 +74,3 @@ class TaxTile : public ActionTile{
         void applyPPH(Player* player);
         void applyPPN(Player* player);
 };
-
-
-#endif

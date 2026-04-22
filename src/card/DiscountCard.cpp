@@ -1,5 +1,5 @@
 #include "card/DiscountCard.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
 
 DiscountCard::DiscountCard(int discount) 

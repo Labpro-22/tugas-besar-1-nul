@@ -1,5 +1,5 @@
 #include "card/ShieldCard.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
 
 ShieldCard::ShieldCard() : SkillCard("ShieldCard: Kebal tagihan/sanksi", 1) {}

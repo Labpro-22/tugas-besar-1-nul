@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "board/Board.hpp"
 #include <iostream>
+#include <string>
 #include <vector>
 using namespace std;
 

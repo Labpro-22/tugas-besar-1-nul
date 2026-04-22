@@ -1,5 +1,5 @@
-#include "../../include/board/Board.hpp"
-#include "../../include/tile/Tile.hpp"
+#include "board/Board.hpp"
+#include "tile/Tile.hpp"
 
 using namespace std;
 

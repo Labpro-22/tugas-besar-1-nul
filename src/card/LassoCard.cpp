@@ -1,5 +1,5 @@
 #include "card/LassoCard.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
 #include "board/Board.hpp"
@@ -52,7 +52,7 @@ void LassoCard::apply(TurnContext& ctx) {
     }
 
     Player* target = candidates[choice - 1];
-    target->moveBackwardTo(currentPos);
+    target->moveBackwardTo(currentPos, ctx);
 
     std::cout << "\n[INFO] " << target->getUsername() << " berhasil ditarik ke posisi: "
               << currentPos << "\n";

@@ -1,4 +1,7 @@
-#include "../../include/tile/ActionTile.hpp"
+#include "tile/ActionTile.hpp"
+#include "core/TurnContext.hpp"
+#include "player/Player.hpp"
+#include "board/Board.hpp"
 
 void ActionTile::onLanded(Player* player, TurnContext& ctx){
     cout << "onLanded milik ActionTile!\n";

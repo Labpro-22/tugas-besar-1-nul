@@ -1,14 +1,12 @@
 #pragma once
 
-#include "core/TurnContext.hpp"
-#include "core/Dice.hpp"
-#include "board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
-#include "property/Property.hpp"
-#include "player/Player.h"
 #include "Tile.hpp"
 #include <iostream>
 #include <vector>
 
+class TurnContext;
+class Player;
+class Property;
 
 // ======================================================================================
 

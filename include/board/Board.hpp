@@ -1,7 +1,3 @@
-#ifndef BOARD_HPP
-#define BOARD_HPP
-
-
 #pragma once
 #include <iostream>
 #include <vector>
@@ -38,5 +34,3 @@ class Board{
         void buildFromConfig(vector<TileConfig*> data);
 
 };
-
-#endif

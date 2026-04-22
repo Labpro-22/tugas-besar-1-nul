@@ -1,5 +1,5 @@
 #include "card/DemolitionCard.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "property/StreetProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
