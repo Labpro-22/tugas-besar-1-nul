@@ -49,6 +49,7 @@ public:
     std::string getUsername() const;
     PlayerStatus getStatus() const;
     int getBalance() const;
+    int getPosition() const;
     bool isInJail() const;
     int getDiscountRate() const;
     int getPropertiesAmount() const;
@@ -61,7 +62,7 @@ public:
     bool operator<(const Player& other);
 
     // moving
-    void setBoardSizeSource(const int* sizeSource);
+    void setBoardSizeSource(int* sizeSource);
     void clearBoardSizeSource();
     void move(int steps);
     void moveForwardTo(int index);

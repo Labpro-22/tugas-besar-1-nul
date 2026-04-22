@@ -35,6 +35,8 @@ PlayerStatus Player::getStatus() const { return this->status; }
 
 int Player::getBalance() const { return this->balance; }
 
+int Player::getPosition() const { return this->position; }
+
 bool Player::isInJail() const { return this->getStatus()==PlayerStatus::JAILED; }
 
 int Player::getDiscountRate() const { return this->discountRate; }
@@ -78,7 +80,7 @@ bool Player::operator<(const Player& other) {
 
 
 /* === MOVING === */
-void Player::setBoardSizeSource(const int* sizeSource) {
+void Player::setBoardSizeSource(int* sizeSource) {
     this->boardSizeSource = sizeSource;
 }
 
@@ -223,6 +225,54 @@ void Player::decideAction(TurnContext& ctx) {
 
 }
 
+void Player::showHands() {
+    std::cout << "=== Kartu di Tangan ===" << std::endl;
+    if (hand.empty()) {
+        std::cout << "Tidak ada kartu." << std::endl;
+        return;
+    }
+    
+    for (size_t i = 0; i < hand.size(); ++i) {
+        std::cout << (i + 1) << ". " << hand[i]->getDescription() << std::endl;
+    }
+}
+
+void Player::profile() {
+    std::cout << "=== Profil Pemain ===" << std::endl;
+    std::cout << "Nama: " << username << std::endl;
+    std::cout << "Uang: M" << balance << std::endl;
+    std::cout << "Posisi: " << position << std::endl;
+    std::cout << "Status: " << (status == PlayerStatus::ACTIVE ? "Aktif" : 
+                               status == PlayerStatus::JAILED ? "Dipenjara" : "Bangkrut") << std::endl;
+    std::cout << "Jumlah Properti: " << properties.size() << std::endl;
+    std::cout << "Jumlah Kartu: " << hand.size() << std::endl;
+}
+
+void Player::showProperties() {
+    std::cout << "=== Properti Milik " << username << " ===" << std::endl;
+    if (properties.empty()) {
+        std::cout << "Tidak memiliki properti." << std::endl;
+        return;
+    }
+    
+    for (size_t i = 0; i < properties.size(); ++i) {
+        Property* prop = properties[i];
+        std::cout << (i + 1) << ". " << prop->getName() 
+                  << " (" << prop->getCode() << ") - ";
+        
+        switch (prop->getStatus()) {
+            case PropertyStatus::OWNED:
+                std::cout << "OWNED";
+                break;
+            case PropertyStatus::MORTGAGED:
+                std::cout << "MORTGAGED [M]";
+                break;
+            default:
+                std::cout << "UNKNOWN";
+        }
+        std::cout << std::endl;
+    }
+}
 
 void Player::addCash(int amount) {
     if (amount <= 0) {
