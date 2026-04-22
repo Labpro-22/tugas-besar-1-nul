@@ -14,6 +14,19 @@ private:
 
     void rebuildArgvCache() const;
 
+    void execRollDice(TurnContext& ctx, std::ostream& out) const;
+    void execSetDice(TurnContext& ctx, std::ostream& out) const;
+    void execPrintCert(TurnContext& ctx, std::ostream& out) const;
+    void execPrintProperty(TurnContext& ctx, std::ostream& out) const;
+    void execMortgage(TurnContext& ctx, std::ostream& out) const;
+    void execDismortgage(TurnContext& ctx, std::ostream& out) const;
+    void execUpgrade(TurnContext& ctx, std::ostream& out) const;
+    void execSave(TurnContext& ctx, std::ostream& out) const;
+    void execLoad(TurnContext& ctx, std::ostream& out) const;
+    void execPrintLog(TurnContext& ctx, std::ostream& out) const;
+    void execUseSkill(TurnContext& ctx, std::ostream& out) const;
+    void execHelp(std::ostream& out) const;
+
 public:
     Command() = default;
 
