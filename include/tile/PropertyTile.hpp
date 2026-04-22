@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Tile.hpp"
+#include "../include/property/StreetProperty.hpp"
+#include "../include/property/RailroadProperty.hpp"
+#include "../include/property/UtilityProperty.hpp"
 #include <iostream>
 #include <vector>
 
@@ -14,32 +17,34 @@ class PropertyTile : public Tile{
     protected: 
         Property* property;
     public:
-        PropertyTile(int idx, string cd, string nm, string cat, Property* p) : Tile(idx, cd, nm, cat) , property(p){};
+        PropertyTile(int idx, Property *p);
         Property* getProperty();
-        virtual void onLanded(Player* player, TurnContext& ctx);
+        virtual void onLanded(TurnContext& ctx);
 };
 
-
-
 class StreetTile : public PropertyTile{
+    // private:
+    //     std::string colorCategory;
     public:
-        using PropertyTile::PropertyTile;
-        void onLanded(Player* player, TurnContext& ctx) override;
-        void triggerBuyOrAuction(Player* player, TurnContext& ctx);
-        void triggerRentPayment(Player* player);
+        StreetTile(int idx, StreetProperty *prop);
+        void onLanded(TurnContext& ctx) override;
+        void triggerBuyOrAuction(TurnContext& ctx);
+        void triggerRentPayment(TurnContext& ctx);
 };
 
 class RailroadTile : public PropertyTile{
     public:
-        void onLanded(Player* player, TurnContext& ctx) override;
-        void autoAcquire(Player* player);
+        RailroadTile(int idx, RailroadProperty* prop);
+        void onLanded(TurnContext& ctx) override;
+        void autoAcquire(Player& player);
 };
 
 class UtilityTile : public PropertyTile{
     public:
-        void onLanded(Player* player, TurnContext& ctx) override;
-        void autoAcquire(Player* player); 
+        UtilityTile(int idx, UtilityProperty* prop);
+        void onLanded(TurnContext& ctx) override;
+        void autoAcquire(Player& player); 
 };
 
 //================================= HELPER ================================
-void printOwner(Player* player);
+void printOwner(Player& player);

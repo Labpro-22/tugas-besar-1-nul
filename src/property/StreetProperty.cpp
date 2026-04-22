@@ -47,6 +47,34 @@ int StreetProperty::getRent(const TurnContext& ctx) const {
     return baseRent * festivalMult_;
 }
 
+
+int StreetProperty::sellToBank() {
+    if (status_ != PropertyStatus::OWNED) {
+        throw InvalidGameStateException(
+            "Can only sell owned property to bank");
+    }
+
+    int buildingCost = 0;
+
+    if (buildingCount_ > 0) {
+        if (isHotel_) {
+            buildingCost = (4 * housePrice_) + hotelPrice_;
+        } else {
+            buildingCost = buildingCount_ * housePrice_;
+        }
+    }
+
+    // Demolish all buildings
+    buildingCount_ = 0;
+    isHotel_ = false;
+    monopolized_ = false;
+
+    owner_ = nullptr;
+    status_ = PropertyStatus::BANK;
+
+    return buyPrice_ + (buildingCost / 2);
+}
+
 // Returns color group used for monopoly/build validation.
 const std::string& StreetProperty::getColorGroup() const {
     return colorGroup_;
@@ -80,6 +108,10 @@ int StreetProperty::getFestivalMultiplier() const {
 // Returns remaining owner turns of festival effect.
 int StreetProperty::getFestivalDuration() const {
     return festivalDur_;
+}
+
+const std::string StreetProperty::getColor() const{
+    return colorGroup_;
 }
 
 // Returns whether full color-set ownership is satisfied.
@@ -163,9 +195,28 @@ void StreetProperty::decreaseFestivalDuration() {
 }
 
 void StreetProperty::printStatus(TurnContext& ctx){
-    std::cout << "+================================+\n";
-    std::cout << "| [" << getColorGroup() << "] " << getName() << " (" << getCode() << ")\t|\n";
-    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t|\n";
-    std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\t|\n";
-    std::cout << "+================================+\n";
+    //nanti perbaiki di trigger agar tunjukin kalau di daerah bukan sendiri
+    std::cout << "+=============================================+\n";
+    std::cout << "| [" << getColorGroup() << "] " << getName() << " (" << getCode() << ")\n";
+    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
+    printRentTable();
+    std::cout << "+=============================================+\n";
+    if (getStatus() == PropertyStatus::OWNED){
+        std::cout << "Harga saat ini : M" << getRent(ctx) << "\n";
+    }
+}
+
+const std::vector<int>& StreetProperty::getRentTable() const{
+    return rentTable_;
+}
+
+void StreetProperty::printRentTable(){
+    std::vector<int> rt = getRentTable();
+    for (int i = 0; i<rt.size(); i++){
+        if (i < rt.size()-1){
+            std::cout << "| Sewa dengan banyak rumah " << i << ": M" << rt[i] << "\n";
+        } else{
+            std::cout << "| Sewa dengan hotel: M" << rt[i] << "\n";
+        }
+    }
 }

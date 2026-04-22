@@ -1,36 +1,40 @@
 #pragma once
+#include <memory>
 #include <iostream>
 #include <vector>
 #include <map>
 #include <string>
 #include <algorithm>
-using namespace std;
+// using namespace std;
 
-class Tile;
+#include "tile/Tile.hpp"
+
+// Forward declarations
+class TileConfig;
 class StreetTile;
-
-// =================================== dummy classes =====================================
-class TileConfig{
-    //dummy data
-};
-
-// ======================================================================================
-
-
 
 class Board{
     private:
-        vector<Tile*> tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
-        map<string, int> codeToIndex;
+        std::vector<std::unique_ptr<Tile>> tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
+        std::map<std::string, int> codeToIndex; // masi error nnti cek lgi dah mo turu dl
         int size;
     
     public:
-        Board(const map<string, int>& data, int s);
+        Board(const std::map<std::string, int>& data, int s);
         Board(int s);
-        Tile* getTile(int idx);
-        Tile* getTileByCode(string cd);
-        int getSize();
-        vector<StreetTile*> getColorGroup(string clr);
-        void buildFromConfig(vector<TileConfig*> data);
 
+        Board(Board&&) noexcept = default;            // Move Constructor
+        Board& operator=(Board&&) noexcept = default; // Move Assignment Operator
+
+        Board(const Board&) = delete;
+        Board& operator=(const Board&) = delete;
+        
+        Tile* getTile(int idx);
+        Tile* getTileByCode(std::string cd);
+        int getSize() const;
+        int& getSizeRef();
+        std::vector<StreetTile*> getColorGroup(std::string clr);
+        void buildFromConfig(std::vector<TileConfig*> data);
+
+        ~Board();
 };

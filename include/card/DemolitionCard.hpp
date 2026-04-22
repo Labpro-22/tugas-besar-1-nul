@@ -2,9 +2,11 @@
 
 #include "SkillCard.hpp"
 
+class TurnContext;
+
 class DemolitionCard : public SkillCard {
 public:
-    DemolitionCard() ;
+    DemolitionCard();
 
-    void apply(TurnContext& ctx) override ;
+    void apply(TurnContext& ctx) override;
 };

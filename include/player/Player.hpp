@@ -72,6 +72,12 @@ public:
     void sell(Property& p);
     void mortgage(Property* p);
 
+    // cash management and bankruptcy
+    void addCash(int amount);
+    void deductCash(int amount);
+    void setBankruptStatus();
+    bool checkBankruptcy(int requiredAmount);
+
     // hands or cards
     void drawSCard(SkillCard* deck);
     void discardSCard(int idx);
@@ -84,7 +90,10 @@ public:
     void exitJail();
 
     // action
-    void decideAction(TurnContext& ctx);
+    virtual void decideAction(TurnContext& ctx);
+
+    // Check if player is a bot (for polymorphism)
+    virtual bool isBot() const;
 
     // printing
     void showProperties();

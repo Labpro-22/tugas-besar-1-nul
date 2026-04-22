@@ -2,7 +2,6 @@
 #include "player/Player.hpp"
 #include "core/TurnContext.hpp"
 
-ShieldCard::ShieldCard() : SkillCard("ShieldCard: Kebal tagihan/sanksi", 1) {}
 
 void ShieldCard::apply(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
@@ -10,5 +9,3 @@ void ShieldCard::apply(TurnContext& ctx) {
     
     player.activateShield();
 }
-
-

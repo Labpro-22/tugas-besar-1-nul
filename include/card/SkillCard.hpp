@@ -3,6 +3,7 @@
 #include "card.hpp"
 
 class Player;
+class TurnContext;
 
 class SkillCard : public Card {
 protected:
@@ -11,11 +12,12 @@ protected:
 public:
     SkillCard(std::string desc, int duration);
 
-    int getDuration() const ;
+    int getDuration() const;
 
-    void decreaseDuration() ;
+    void decreaseDuration();
 
-    void execute(Player* player, TurnContext& ctx) override ;
+    void execute(Player* player, TurnContext& ctx) override;
 
     virtual void apply(TurnContext& ctx) = 0;
 };
+

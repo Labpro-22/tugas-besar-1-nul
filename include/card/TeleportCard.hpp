@@ -2,6 +2,8 @@
 
 #include "SkillCard.hpp"
 
+class TurnContext;
+
 class TeleportCard : public SkillCard {
 private:
     int position;
@@ -9,5 +11,5 @@ private:
 public:
     TeleportCard(int pos);
 
-    void apply(TurnContext& ctx) override ;
+    void apply(TurnContext& ctx) override;
 };

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <iostream>
+#include <cstdlib>
+#include <ctime>
 
 class Dice {
 private:
@@ -20,4 +21,6 @@ public:
 
     void roll();
     void setManual(int x, int y);
+
+    void reset();
 };

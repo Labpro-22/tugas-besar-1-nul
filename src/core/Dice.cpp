@@ -26,3 +26,8 @@ void Dice::setManual(int x, int y) {
         this->doubleCount = 0;
     }
 }
+
+void Dice::reset() {
+    this->setManual(0, 0);
+    this->doubleCount = 0;
+}

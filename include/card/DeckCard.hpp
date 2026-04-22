@@ -1,6 +1,10 @@
 #pragma once
 
 #include "card.hpp"
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <iostream>
 
 template <typename T>
 class CardDeck {

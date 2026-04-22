@@ -17,6 +17,7 @@ class StreetProperty : public Property {
                    std::vector<int> rentTable);
 
     int getRent(const TurnContext& ctx) const override;
+    int sellToBank();
 
     const std::string& getColorGroup() const;
 
@@ -27,6 +28,10 @@ class StreetProperty : public Property {
 
     int getFestivalMultiplier() const;
     int getFestivalDuration() const;
+
+    const std::string getColor() const;
+
+    const std::vector<int>& getRentTable() const;
 
     bool isMonopolized() const;
     void setMonopolized(bool monopolized);
@@ -40,6 +45,7 @@ class StreetProperty : public Property {
     void decreaseFestivalDuration();
 
     void printStatus(TurnContext& ctx) override;
+    void printRentTable();
 
   private:
     std::string colorGroup_;

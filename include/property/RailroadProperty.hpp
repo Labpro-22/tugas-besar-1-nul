@@ -10,7 +10,7 @@ class RailroadProperty : public Property {
   public:
     RailroadProperty(std::string code,
                      std::string name,
-                     int buyPrice,
+                     int buyPrice, //nanti dihapus
                      int mortgageValue,
                      std::map<int, int> rentTable);
 

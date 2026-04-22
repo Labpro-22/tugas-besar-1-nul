@@ -2,12 +2,14 @@
 
 #include "SkillCard.hpp"
 
+class TurnContext;
+
 class DiscountCard : public SkillCard {
 private:
     int discountPercent;
 
 public:
-    DiscountCard(int discount) ;
+    DiscountCard(int discount);
 
-    void apply(TurnContext& ctx) override ;
+    void apply(TurnContext& ctx) override;
 };

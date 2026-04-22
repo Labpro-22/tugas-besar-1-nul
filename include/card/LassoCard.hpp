@@ -1,9 +1,12 @@
 #pragma once
 
 #include "SkillCard.hpp"
+
+class TurnContext;
+
 class LassoCard : public SkillCard {
 public:
-    LassoCard() ;
+    LassoCard();
 
-    void apply(TurnContext& ctx) override ;
+    void apply(TurnContext& ctx) override;
 };

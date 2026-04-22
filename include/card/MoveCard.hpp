@@ -2,12 +2,14 @@
 
 #include "SkillCard.hpp"
 
+class TurnContext;
+
 class MoveCard : public SkillCard {
 private:
     int steps;
 
 public:
-    MoveCard(int stp) ;
+    MoveCard(int stp);
 
-    void apply(TurnContext& ctx) override ;
+    void apply(TurnContext& ctx) override;
 };

@@ -2,9 +2,11 @@
 
 #include "SkillCard.hpp"
 
+class TurnContext;
+
 class ShieldCard : public SkillCard {
 public:
-    ShieldCard();
+    ShieldCard() : SkillCard("ShieldCard: Kebal tagihan/sanksi", 1) {}
 
-    void apply(TurnContext& ctx) override ;
+    void apply(TurnContext& ctx) override;
 };
