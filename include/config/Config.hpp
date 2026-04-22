@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "config/ActionTileData.hpp"
 #include "config/MiscConfig.hpp"
 #include "config/PropertyData.hpp"
 #include "config/RailroadConfig.hpp"
@@ -12,6 +13,7 @@
 class Config {
   public:
     std::vector<PropertyData> properties;
+    std::vector<ActionTileData> actionTiles;
     RailroadConfig railroad;
     UtilityConfig utility;
     TaxConfig tax;

@@ -92,7 +92,10 @@ public:
     void exitJail();
 
     // action
-    void decideAction(TurnContext& ctx);
+    virtual void decideAction(TurnContext& ctx);
+
+    // Check if player is a bot (for polymorphism)
+    virtual bool isBot() const;
 
     // printing
     void showProperties();
