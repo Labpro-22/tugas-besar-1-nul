@@ -3,6 +3,7 @@
 #include "property/StreetProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
+#include "core/Dice.hpp"
 
 using namespace std;
 #include <vector>
