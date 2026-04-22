@@ -1,17 +1,18 @@
 #include "core/GameEngine.hpp"
 
-#include "TurnContext.hpp"
-#include "TurnManager.hpp"
-#include "Command.hpp"
-#include "Dice.hpp"
+#include "core/TurnContext.hpp"
+#include "core/Command.hpp"
+#include "core/Dice.hpp"
 
-#include "board/Board.hpp"
 #include "player/Player.hpp"
-#include "card/DeckCard.hpp"
-#include "card/ChanceCard.hpp"
 #include "exception/CommandException.hpp"
-#include "card/SkillCard.hpp"
 
+GameEngine::GameEngine(int size)
+    : board(Board{size})
+        , turnmgr(TurnManager{})
+        , chanceDeck(CardDeck<ChanceCard>{})
+        , skillDeck(CardDeck<SkillCard>{})
+        , players{std::vector<std::unique_ptr<Player>>{}} {};
 
 void GameEngine::run() {
     std::cout << "=== Welcome to Nimonspoli ===" << endl;

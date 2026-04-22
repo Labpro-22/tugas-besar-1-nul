@@ -4,15 +4,14 @@
 #include <string>
 #include <vector>
 
-class Board;
-class Player;
-class TurnManager;
-class TurnContext;
+#include "board/Board.hpp"
+#include "core/TurnManager.hpp"
+#include "card/DeckCard.hpp"
+#include "card/ChanceCard.hpp"
+#include "card/SkillCard.hpp"
 
-template <typename T>
-class CardDeck;
-class ChanceCard;
-class SkillCard;
+class Player;
+class TurnContext;
 
 class GameEngine {
 private:
@@ -25,12 +24,7 @@ private:
     std::vector<std::unique_ptr<Player>> players;
 
 public:
-    explicit GameEngine(int size)
-        : board(Board{size})
-        , turnmgr(TurnManager{})
-        , chanceDeck(CardDeck<ChanceCard>{})
-        , skillDeck(CardDeck<SkillCard>{})
-        , players{std::vector<std::unique_ptr<Player>>{}} {};
+    explicit GameEngine(int size);
 
     void startNewGame();
     void run();
