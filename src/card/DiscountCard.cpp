@@ -1,4 +1,4 @@
-#include "DiscountCard.hpp"
+#include "card/DiscountCard.hpp"
 #include "player/Player.h"
 
 DiscountCard::DiscountCard(int discount) 

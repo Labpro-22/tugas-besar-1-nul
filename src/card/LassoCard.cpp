@@ -1,4 +1,4 @@
-#include "LassoCard.hpp"
+#include "card/LassoCard.hpp"
 #include "player/Player.h"
 #include <iostream>
 #include <limits>

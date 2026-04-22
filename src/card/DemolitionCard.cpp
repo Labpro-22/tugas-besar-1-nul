@@ -1,4 +1,4 @@
-#include "DemolitionCard.hpp"
+#include "card/DemolitionCard.hpp"
 #include "player/Player.h"
 #include "property/StreetProperty.hpp"
 #include <iostream>

@@ -1,4 +1,4 @@
-#include "TeleportCard.hpp"
+#include "card/TeleportCard.hpp"
 #include "player/Player.h"
 
 TeleportCard::TeleportCard(int pos) : SkillCard("TeleportCard: Pindah ke petak manapun", 0), position(pos) {}

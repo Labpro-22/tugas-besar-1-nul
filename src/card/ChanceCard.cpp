@@ -1,4 +1,4 @@
-#include "ChanceCard.hpp"
+#include "card/ChanceCard.hpp"
 
 ChanceCard::ChanceCard(std::string desc, ChanceType t) : Card(std::move(desc)), type(t) {}
 
@@ -19,4 +19,3 @@ void ChanceCard::execute(Player* player, TurnContext& ctx) {
             break;
     }
 }
-
