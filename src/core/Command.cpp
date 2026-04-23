@@ -1,6 +1,8 @@
 #include "core/Command.hpp"
 #include "core/Dice.hpp"
 #include "core/TurnContext.hpp"
+#include "core/GameEngine.hpp"
+#include "core/TurnManager.hpp"
 #include "board/Board.hpp"
 #include "player/Player.hpp"
 #include "tile/Tile.hpp"
@@ -14,6 +16,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <map>
+#include <sstream>
 #include <unordered_map>
 
 namespace {
@@ -51,6 +55,39 @@ std::string propertyStatusText(PropertyStatus status) {
 		return "OWNED";
 	}
 	return "BANK";
+}
+
+std::string padRight(const std::string& text, size_t width) {
+	if (text.size() >= width) {
+		return text;
+	}
+	return text + std::string(width - text.size(), ' ');
+}
+
+std::pair<std::string, std::string> tileColorCodeAndAnsi(Tile* tile) {
+	if (tile == nullptr) {
+		return {"DF", "\033[37m"};
+	}
+
+	if (dynamic_cast<UtilityTile*>(tile) != nullptr) {
+		return {"AB", "\033[96m"};
+	}
+
+	if (PropertyTile* propTile = dynamic_cast<PropertyTile*>(tile)) {
+		if (StreetProperty* street = dynamic_cast<StreetProperty*>(propTile->getProperty())) {
+			const std::string group = toUpperAscii(street->getColorGroup());
+			if (group == "COKLAT") return {"CK", "\033[33m"};
+			if (group == "BIRU MUDA") return {"BM", "\033[94m"};
+			if (group == "PINK") return {"PK", "\033[95m"};
+			if (group == "ORANGE") return {"OR", "\033[91m"};
+			if (group == "MERAH") return {"MR", "\033[31m"};
+			if (group == "KUNING") return {"KN", "\033[93m"};
+			if (group == "HIJAU") return {"HJ", "\033[32m"};
+			if (group == "BIRU TUA") return {"BT", "\033[34m"};
+		}
+	}
+
+	return {"DF", "\033[37m"};
 }
 }
 
@@ -128,6 +165,7 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	if (commandName == "END_TURN") return true;
 	else if (commandName == "ROLL_DICE") execRollDice(ctx, out);
 	else if (commandName == "SET_DICE") execSetDice(ctx, out);
+	else if (commandName == "PRINT_BOARD" || commandName == "CETAK_PAPAN") execPrintBoard(ctx, out);
 	else if (commandName == "PRINT_PROP_CERT") execPrintCert(ctx, out);
 	else if (commandName == "PRINT_PROPERTY") execPrintProperty(ctx, out);
 	else if (commandName == "HELP") execHelp(out);
@@ -140,7 +178,11 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 	out << "[COMMAND] Rolling dice...\n";
 
-	ctx.dice.roll();
+	bool validRoll = ctx.dice.roll();
+	if (!validRoll) {
+		out << "[WARN] You cannot roll the dice anymore this turn.\n";
+		return;
+	}
 	int diceTotal = ctx.dice.getTotal();
 
 	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
@@ -148,7 +190,6 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
 	
 	int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
-	cout << "debug: " << std::to_string(nextPos) << " " << std::to_string(ctx.getBoardSize())<< "\n";
 	Tile* baseTile = ctx.board.getTile(nextPos);
 	if (baseTile == nullptr) {
 		throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(nextPos));
@@ -329,16 +370,16 @@ void Command::execSave(TurnContext& ctx, std::ostream& out) const {
 
 }
 
-void Command::execLoad(TurnContext& ctx, std::ostream& out) const {
+// void Command::execLoad(TurnContext& ctx, std::ostream& out) const {
 
-}
+// }
 
 void Command::execPrintLog(TurnContext& ctx, std::ostream& out) const {
 
 }
 
 void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {
-
+	
 }
 
 void Command::execHelp(std::ostream& out) const {
@@ -366,4 +407,202 @@ void Command::execHelp(std::ostream& out) const {
     out << "║   - BUILD          : Bangun rumah/hotel                          ║\n";
     out << "║   - dan banyak lagi...                                           ║\n";
     out << "╚══════════════════════════════════════════════════════════════════╝\n";
+}
+
+void Command::execPrintBoard(TurnContext& ctx, std::ostream& out) const {
+	struct CellContent {
+		std::string line1Plain;
+		std::string line1Rendered;
+		std::string line2;
+	};
+
+	const std::vector<Player*> players = ctx.gameEngine.getPlayers();
+	std::unordered_map<const Player*, int> playerIndex;
+	for (size_t i = 0; i < players.size(); ++i) {
+		if (players[i] != nullptr) {
+			playerIndex[players[i]] = static_cast<int>(i) + 1;
+		}
+	}
+
+	std::map<int, std::vector<int>> pawnsByTile;
+	for (size_t i = 0; i < players.size(); ++i) {
+		Player* p = players[i];
+		if (p == nullptr) continue;
+		pawnsByTile[p->getPosition()].push_back(static_cast<int>(i) + 1);
+	}
+
+	auto ownerLineForTile = [&](Tile* tile) {
+		std::string ownerText;
+		if (PropertyTile* propTile = dynamic_cast<PropertyTile*>(tile)) {
+			Property* prop = propTile->getProperty();
+			if (prop != nullptr && prop->getOwner() != nullptr) {
+				auto ownerIt = playerIndex.find(prop->getOwner());
+				if (ownerIt != playerIndex.end()) {
+					ownerText = "P" + std::to_string(ownerIt->second);
+				}
+
+				if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
+					if (street->hasHotel()) {
+						ownerText += " *";
+					} else {
+						const int level = street->getBuildingCount();
+						if (level > 0) {
+							ownerText += " " + std::string(static_cast<size_t>(std::min(level, 4)), '^');
+							if (level > 4) {
+								ownerText += "+";
+							}
+						}
+					}
+				}
+
+				if (prop->getStatus() == PropertyStatus::MORTGAGED) {
+					if (!ownerText.empty()) ownerText += " ";
+					ownerText += "[M]";
+				}
+			}
+		}
+
+		auto pawnIt = pawnsByTile.find(tile != nullptr ? tile->getIndex() : -1);
+		if (pawnIt != pawnsByTile.end()) {
+			std::ostringstream pawnStream;
+			pawnStream << "(";
+			for (size_t i = 0; i < pawnIt->second.size(); ++i) {
+				if (i > 0) pawnStream << ",";
+				pawnStream << pawnIt->second[i];
+			}
+			pawnStream << ")";
+
+			if (!ownerText.empty()) ownerText += " ";
+			ownerText += pawnStream.str();
+		}
+
+		return ownerText;
+	};
+
+	auto cellForIndex = [&](int idx) {
+		Tile* tile = ctx.board.getTile(idx);
+		if (tile == nullptr) {
+			return CellContent{"[??] ---", "[??] ---", ""};
+		}
+
+		const auto codeAndAnsi = tileColorCodeAndAnsi(tile);
+		const std::string plain = "[" + codeAndAnsi.first + "] " + tile->getCode();
+		const std::string rendered = codeAndAnsi.second + plain + "\033[0m";
+		return CellContent{plain, rendered, ownerLineForTile(tile)};
+	};
+
+	std::vector<int> topRow;
+	for (int i = 20; i <= 30; ++i) topRow.push_back(i);
+	std::vector<int> bottomRow;
+	for (int i = 10; i >= 0; --i) bottomRow.push_back(i);
+	std::vector<int> leftCol;
+	for (int i = 19; i >= 11; --i) leftCol.push_back(i);
+	std::vector<int> rightCol;
+	for (int i = 31; i <= 39; ++i) rightCol.push_back(i);
+
+	std::vector<CellContent> perimeterCells;
+	for (int idx : topRow) perimeterCells.push_back(cellForIndex(idx));
+	for (int idx : bottomRow) perimeterCells.push_back(cellForIndex(idx));
+	for (int idx : leftCol) perimeterCells.push_back(cellForIndex(idx));
+	for (int idx : rightCol) perimeterCells.push_back(cellForIndex(idx));
+
+	size_t cellWidth = 10;
+	for (const CellContent& cell : perimeterCells) {
+		cellWidth = std::max(cellWidth, cell.line1Plain.size());
+		cellWidth = std::max(cellWidth, cell.line2.size());
+	}
+
+	const TurnManager& tm = ctx.gameEngine.getTurnManager();
+	const int currentTurnHuman = tm.getCurrentTurn() + 1;
+	const int maxTurn = tm.getMaxTurn();
+	const std::string turnText = maxTurn > 0
+		? ("TURN " + std::to_string(currentTurnHuman) + " / " + std::to_string(maxTurn))
+		: ("TURN " + std::to_string(currentTurnHuman) + " / INF");
+
+	std::vector<std::string> centerLines = {
+		"==================================",
+		"||          NIMONSPOLI          ||",
+		"==================================",
+		"",
+		turnText,
+		"",
+		"----------------------------------",
+		"LEGENDA KEPEMILIKAN & STATUS",
+		"P1-P4 : Properti milik pemain",
+		"^     : Rumah",
+		"*     : Hotel",
+		"(1)   : Bidak pemain",
+		"----------------------------------",
+		"KODE WARNA:",
+		"[CK]=Coklat  [MR]=Merah",
+		"[BM]=Biru Muda [KN]=Kuning",
+		"[PK]=Pink    [HJ]=Hijau",
+		"[OR]=Orange  [BT]=Biru Tua",
+		"[DF]=Aksi    [AB]=Utilitas"
+	};
+
+	size_t centerWidth = 34;
+	for (const std::string& line : centerLines) {
+		centerWidth = std::max(centerWidth, line.size());
+	}
+
+	// Keep middle rows aligned with the full top/bottom board width (11 cells).
+	// Top row width: 1 + 11 * (cellWidth + 3)
+	// Middle row width with left+center+right blocks: 2 * cellWidth + centerWidth + 10
+	// Solve for centerWidth to place the right block exactly at the board edge.
+	const size_t alignedCenterWidth = (9 * cellWidth) + 24;
+	centerWidth = std::max(centerWidth, alignedCenterWidth);
+
+	auto printRowBorder = [&](size_t cellCount) {
+		out << "+";
+		for (size_t i = 0; i < cellCount; ++i) {
+			out << std::string(cellWidth + 2, '-') << "+";
+		}
+		out << "\n";
+	};
+
+	auto printCellLine = [&](const std::vector<CellContent>& rowCells, int lineNo) {
+		out << "|";
+		for (const CellContent& cell : rowCells) {
+			const std::string& content = (lineNo == 1) ? cell.line1Rendered : cell.line2;
+			const std::string& plain = (lineNo == 1) ? cell.line1Plain : cell.line2;
+			out << " " << content << std::string(cellWidth - plain.size(), ' ') << " |";
+		}
+		out << "\n";
+	};
+
+	std::vector<CellContent> topCells;
+	for (int idx : topRow) topCells.push_back(cellForIndex(idx));
+	printRowBorder(topCells.size());
+	printCellLine(topCells, 1);
+	printCellLine(topCells, 2);
+	printRowBorder(topCells.size());
+
+	for (size_t r = 0; r < leftCol.size(); ++r) {
+		const CellContent leftCell = cellForIndex(leftCol[r]);
+		const CellContent rightCell = cellForIndex(rightCol[r]);
+		const std::string center = r < centerLines.size() ? centerLines[r] : "";
+
+		out << "| " << leftCell.line1Rendered
+			<< std::string(cellWidth - leftCell.line1Plain.size(), ' ') << " | "
+			<< padRight(center, centerWidth) << " | "
+			<< rightCell.line1Rendered
+			<< std::string(cellWidth - rightCell.line1Plain.size(), ' ') << " |\n";
+
+		out << "| " << leftCell.line2
+			<< std::string(cellWidth - leftCell.line2.size(), ' ') << " | "
+			<< std::string(centerWidth, ' ') << " | "
+			<< rightCell.line2
+			<< std::string(cellWidth - rightCell.line2.size(), ' ') << " |\n";
+
+		out << "+" << std::string(cellWidth + 2, '-') << "+"
+			<< std::string(centerWidth + 2, '-') << "+"
+			<< std::string(cellWidth + 2, '-') << "+\n";
+	}
+
+	std::vector<CellContent> bottomCells;
+	for (int idx : bottomRow) bottomCells.push_back(cellForIndex(idx));
+	printCellLine(bottomCells, 1);
+	printCellLine(bottomCells, 2);
+	printRowBorder(bottomCells.size());
 }
