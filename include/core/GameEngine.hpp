@@ -9,6 +9,7 @@
 #include "card/DeckCard.hpp"
 #include "card/ChanceCard.hpp"
 #include "card/SkillCard.hpp"
+#include "config/Config.hpp"
 
 class Player;
 class TurnContext;
@@ -28,6 +29,7 @@ private:
     // CardDeck<CommunityCard> communityDeck;
     CardDeck<SkillCard> skillDeck;
     GameStatus status;
+    Config activeConfig;
 
     std::vector<std::unique_ptr<Player>> players;
 
@@ -48,4 +50,8 @@ public:
     TurnManager& getTurnManager();
     void displayPlayers() const;
     std::vector<Player*> getPlayers() const;
+
+    int getGoSalary() const;
+    int getStartingBalance() const;
+    void giveRandomSkillCardTo(Player& player);
 };
