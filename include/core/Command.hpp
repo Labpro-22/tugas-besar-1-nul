@@ -18,6 +18,7 @@ private:
     void execSetDice(TurnContext& ctx, std::ostream& out) const;
     void execPrintCert(TurnContext& ctx, std::ostream& out) const;
     void execPrintProperty(TurnContext& ctx, std::ostream& out) const;
+    void execProfile(TurnContext& ctx, std::ostream& out) const;
     void execMortgage(TurnContext& ctx, std::ostream& out) const;
     void execDismortgage(TurnContext& ctx, std::ostream& out) const;
     void execUpgrade(TurnContext& ctx, std::ostream& out) const;
