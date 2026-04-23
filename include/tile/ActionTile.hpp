@@ -23,7 +23,6 @@ class GoTile : public ActionTile{
     public:
         GoTile(int idx, string cd, string nm);
         void onLanded(TurnContext& ctx) override;
-        void paySalary(Player& player, int amount);
 };
 
 class JailTile : public ActionTile{

@@ -11,7 +11,7 @@ ActionTile::ActionTile(int idx, string cd, string nm)
 
 void ActionTile::onLanded(TurnContext& ctx){
     Player* player = ctx.getCurrentPlayer();
-    cout << "onLanded milik ActionTile!\n";
+    // cout << "onLanded milik ActionTile!\n";
 }
 
 GoTile::GoTile(int idx, string cd, string nm)
@@ -19,12 +19,7 @@ GoTile::GoTile(int idx, string cd, string nm)
 
 void GoTile::onLanded(TurnContext& ctx){
     Player* player = ctx.getCurrentPlayer();
-    cout << "onLanded milik GoTile!\n";
-}
-
-void GoTile::paySalary(Player& player, int amount){
-    cout << "paySalary milik GoTile\n";
-    player.addCash(amount);
+    cout << "[" << player->getUsername() << "] landed on GoTile\n";
 }
 
 JailTile::JailTile(int idx, string cd, string nm)

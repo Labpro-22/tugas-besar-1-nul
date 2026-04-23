@@ -50,7 +50,6 @@ int main(){
     tc.nextTurn();
     st2.onLanded(tc);
     tc.nextTurn();
-    std::cout << "IM okay\n";
     rt.onLanded(tc);
     tc.nextTurn();
     rt2.onLanded(tc);
