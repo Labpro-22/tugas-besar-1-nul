@@ -14,51 +14,30 @@ GameEngine::GameEngine(int size)
         , skillDeck(CardDeck<SkillCard>{})
         , players{std::vector<std::unique_ptr<Player>>{}} {};
 
+GameEngine::~GameEngine() = default;
+
 void GameEngine::run() {
     std::cout << "=== Welcome to Nimonspoli ===\n";
     this->startNewGame();
 
-    // std::vector<Player*> rawPlayers;
-    // for (const auto& p : this->players) { // Asumsi variabel penyimpan pemain bernama 'players'
-    //     rawPlayers.push_back(p.get());
-    // }
-
-    // dice coba implement
-    // turnctx
+    Dice gameDice;
+    TurnContext ctx(*turnmgr.getCurrentPlayer(), gameDice, board, *this);
 
     while (!turnmgr.isGameOver()) {
-        Dice turnDice; // ni bagusan diluar deh
-        TurnContext ctx(*turnmgr.getCurrentPlayer(), turnDice, board, *this);
         Player* currentPlayer = turnmgr.getCurrentPlayer();
         std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": " << currentPlayer->getUsername() << " ===\n";
         
         try {
             this->executeCommand(ctx);
-        } catch (CommandException exc) {
+        } catch (const CommandException& exc) {
+            std::cout << exc.what() << "\n";
+        } catch (const std::exception& exc) {
             std::cout << exc.what() << "\n";
         }
-        // nextturn(ctx) coba implement
-        turnmgr.nextTurn();
+        
+        turnmgr.nextTurn(ctx);
     }
 
-    // while (!turnmgr.isGameOver()) {
-    //     Player* currentPlayer = turnmgr.getCurrentPlayer();
-    //     int currentTurn = turnmgr.getCurrentTurn();
-    //     int maxTurn = turnmgr.getMaxTurn();
-
-    //     // Buat konteks dengan parameter yang BENAR
-    //     TurnContext ctx(currentPlayer, &board, currentTurn, maxTurn, rawPlayers);
-
-    //     std::cout << "\n=== Giliran " << currentTurn << ": " << currentPlayer->getUsername() << " ===\n";
-        
-    //     // TO-DO: player decide action
-    //     // Contoh:
-    //     // gameDice.roll();
-    //     // currentPlayer->move(gameDice.getTotal(), ctx);
-        
-    //     turnmgr.nextTurn(); 
-    // }
-    
     std::cout << "\n=== Permainan Selesai! ===\n";
 }
 
@@ -91,6 +70,7 @@ void GameEngine::loadGame(const std::string& file) {
 }
 
 void GameEngine::startNewGame() {
+    printBanner();
     std::cout << "[INFO] Memulai permainan baru...\n";
     std::cout << "Masukkan name file config board (atau tekan Enter untuk default)\n" ;
     std::cout << "> ";
@@ -132,3 +112,25 @@ void GameEngine::executeCommand(TurnContext& ctx) {
     cmd.promptInput();
     cmd.dispatch(ctx);
 }
+
+void GameEngine::printBanner() {
+    cout << "\n";
+    cout << "  ╔══════════════════════════════════════════════════════════════╗\n";
+    cout << "  ║                                                              ║\n";
+    cout << "  ║     ███╗   ██╗██╗███╗   ███╗ ██████╗ ███╗   ██╗███████╗      ║\n";
+    cout << "  ║     ████╗  ██║██║████╗ ████║██╔═══██╗████╗  ██║██╔════╝      ║\n";
+    cout << "  ║     ██╔██╗ ██║██║██╔████╔██║██║   ██║██╔██╗ ██║███████╗      ║\n";
+    cout << "  ║     ██║╚██╗██║██║██║╚██╔╝██║██║   ██║██║╚██╗██║╚════██║      ║\n";
+    cout << "  ║     ██║ ╚████║██║██║ ╚═╝ ██║╚██████╔╝██║ ╚████║███████║      ║\n";
+    cout << "  ║     ╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝      ║\n";
+    cout << "  ║                                                              ║\n";
+    cout << "  ║              ██████╗  ██████╗ ██╗     ███████╗               ║\n";
+    cout << "  ║              ██╔══██╗██╔═══██╗██║     ╚═███╔═╝               ║\n";
+    cout << "  ║              ██████╔╝██║   ██║██║       ███║                 ║\n";
+    cout << "  ║              ██╔═══╝ ██║   ██║██║       ███║                 ║\n";
+    cout << "  ║              ██║     ╚██████╔╝███████╗███████╗               ║\n";
+    cout << "  ║              ╚═╝      ╚═════╝ ╚══════╝╚══════╝               ║\n";
+    cout << "  ║                                                              ║\n";
+    cout << "  ╚══════════════════════════════════════════════════════════════╝\n";
+}
+
