@@ -1,15 +1,32 @@
 #include "board/Board.hpp"
+#include "core/ConfigLoader.hpp"
 #include "tile/Tile.hpp"
 #include "tile/PropertyTile.hpp"
 #include "tile/ActionTile.hpp"
 
+#include "config/Config.hpp"
+#include "config/PropertyData.hpp"
+#include "config/ActionTileData.hpp"
 #include "property/StreetProperty.hpp"
 #include "property/RailroadProperty.hpp"
 #include "property/UtilityProperty.hpp"
 
+#include "exception/ConfigException.hpp"
+
 #include <cctype>
+#include <iostream>
+#include <stdexcept>
 
 using namespace std;
+
+namespace {
+std::string toUpperAscii(const std::string& input) {
+    std::string result = input;
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
+    return result;
+}
+}
 
 Board::Board(const map<string, int>& data, int s) : 
     tiles(static_cast<size_t>(s < 0 ? 0 : s)), codeToIndex(data), size(s < 0 ? 0 :s){}
@@ -106,9 +123,130 @@ vector<StreetTile*> Board::getColorGroup(string clr){
     return result;
 }
 
-void Board::buildFromConfig(vector<TileConfig*> data){
-    (void) data;
-    // implement setelah tileconfig selesai
+void Board::buildFromConfig(const Config& config){
+    if (size < 40) {
+        size = 40;
+    }
+
+    tiles.clear();
+    tiles.resize(static_cast<size_t>(size));
+    properties.clear();
+    codeToIndex.clear();
+
+    auto normalizeName = [](std::string text) {
+        std::replace(text.begin(), text.end(), '_', ' ');
+        return text;
+    };
+
+    auto normalizeColor = [](std::string color) {
+        std::replace(color.begin(), color.end(), '_', ' ');
+        return color;
+    };
+
+    auto addStreet = [this](int idx,
+                            const std::string& code,
+                            const std::string& name,
+                            int buyPrice,
+                            int mortgageValue,
+                            const std::string& color,
+                            int housePrice,
+                            int hotelPrice,
+                            const std::vector<int>& rentTable) {
+        auto prop = make_unique<StreetProperty>(
+            code, name, buyPrice, mortgageValue, color, housePrice, hotelPrice, rentTable);
+        StreetProperty& ref = *prop;
+        properties.push_back(std::move(prop));
+        setTileAt(idx, make_unique<StreetTile>(idx, ref));
+    };
+
+    auto addRailroad = [this, &config](int idx,
+                                       const std::string& code,
+                                       const std::string& name,
+                                       int buyPrice,
+                                       int mortgageValue) {
+        auto prop = make_unique<RailroadProperty>(
+            code, name, buyPrice, mortgageValue, config.railroad.rentTable);
+        RailroadProperty& ref = *prop;
+        properties.push_back(std::move(prop));
+        setTileAt(idx, make_unique<RailroadTile>(idx, ref));
+    };
+
+    auto addUtility = [this, &config](int idx,
+                                      const std::string& code,
+                                      const std::string& name,
+                                      int buyPrice,
+                                      int mortgageValue) {
+        auto prop = make_unique<UtilityProperty>(
+            code, name, buyPrice, mortgageValue, config.utility.multiplierTable);
+        UtilityProperty& ref = *prop;
+        properties.push_back(std::move(prop));
+        setTileAt(idx, make_unique<UtilityTile>(idx, ref));
+    };
+
+    for (const PropertyData& property : config.properties) {
+        const int idx = property.id - 1;
+        if (idx < 0 || idx >= size) {
+            continue;
+        }
+
+        const std::string name = normalizeName(property.name);
+        const std::string type = toUpperAscii(property.type);
+
+        if (type == "STREET") {
+            addStreet(idx,
+                      property.code,
+                      name,
+                      property.buyPrice,
+                      property.mortgageValue,
+                      normalizeColor(property.color),
+                      property.houseUpgrade,
+                      property.hotelUpgrade,
+                      property.rentTable);
+        } else if (type == "RAILROAD") {
+            addRailroad(idx,
+                        property.code,
+                        name,
+                        property.buyPrice,
+                        property.mortgageValue);
+        } else if (type == "UTILITY") {
+            addUtility(idx,
+                       property.code,
+                       name,
+                       property.buyPrice,
+                       property.mortgageValue);
+        }
+    }
+
+    for (const ActionTileData& action : config.actionTiles) {
+        const int idx = action.id - 1;
+        if (idx < 0 || idx >= size) {
+            continue;
+        }
+
+        const std::string actionName = normalizeName(action.name);
+
+        if (action.isFestival()) {
+            setTileAt(idx, make_unique<FestivalTile>(idx, action.code, actionName));
+        } else if (action.isTax()) {
+            const TaxType taxType = (action.code == "PPH") ? TaxType::PPH : TaxType::PBM;
+            setTileAt(idx, make_unique<TaxTile>(idx, action.code, actionName, taxType));
+        } else if (action.isChanceCard() || action.isCommunityChest()) {
+            const bool isChance = action.isChanceCard();
+            setTileAt(idx, make_unique<CardTile>(idx, action.code, actionName, isChance));
+        } else if (action.isSpecial()) {
+            if (action.code == "GO") {
+                setTileAt(idx, make_unique<GoTile>(idx, action.code, actionName));
+            } else if (action.code == "PEN") {
+                setTileAt(idx, make_unique<JailTile>(idx, action.code, actionName));
+            } else if (action.code == "BBP") {
+                setTileAt(idx, make_unique<FreeParkingTile>(idx, action.code, actionName));
+            } else if (action.code == "PPJ") {
+                setTileAt(idx, make_unique<GoToJailTile>(idx, action.code, actionName));
+            } else {
+                setTileAt(idx, make_unique<ActionTile>(idx, action.code, actionName));
+            }
+        }
+    }
 }
 
 void Board::generateDefaultBoard() {
@@ -203,5 +341,7 @@ void Board::generateDefaultBoard() {
     setTileAt(38, make_unique<TaxTile>(38, "PBM", "Pajak Barang Mewah", TaxType::PBM));
     addStreet(39, "IKN", "Ibu Kota Nusantara", 400, 200, "Biru Tua", 200, 200, {50, 200, 600, 1400, 1700, 2000});
 }
+
+
 
 Board::~Board() = default;
