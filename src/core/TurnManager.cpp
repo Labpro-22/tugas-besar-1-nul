@@ -2,7 +2,6 @@
 #include "core/TurnContext.hpp"
 #include "core/Dice.hpp"
 #include "player/Player.hpp"
-#include "core/GameEngine.hpp"
 
 TurnManager::TurnManager(int maxTurn)
     : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), turnOrder() {}
@@ -37,7 +36,7 @@ void TurnManager::nextTurn(TurnContext& ctx) {
     ctx.dice.reset();
     this->activePlayerIndex = (this->activePlayerIndex + 1) % this->turnOrder.size();
     this->currentTurn++;
-    ctx.currentPlayer = *this->turnOrder[this->activePlayerIndex];
+    // ctx.currentPlayer = *this->turnOrder[this->activePlayerIndex];
 }
 
 Player* TurnManager::getCurrentPlayer() {

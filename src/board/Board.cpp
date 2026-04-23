@@ -235,8 +235,7 @@ void Board::buildFromConfig(const Config& config){
             const TaxType taxType = (action.code == "PPH") ? TaxType::PPH : TaxType::PBM;
             setTileAt(idx, make_unique<TaxTile>(idx, action.code, actionName, taxType));
         } else if (action.isChanceCard() || action.isCommunityChest()) {
-            const bool isChance = action.isChanceCard();
-            setTileAt(idx, make_unique<CardTile>(idx, action.code, actionName, isChance));
+            setTileAt(idx, make_unique<CardTile>(idx, action.code, actionName));
         } else if (action.isSpecial()) {
             if (action.code == "GO") {
                 setTileAt(idx, make_unique<GoTile>(idx, action.code, actionName));
@@ -327,7 +326,6 @@ void Board::generateDefaultBoard() {
     setTileAt(20, make_unique<FreeParkingTile>(20, "BBP", "Bebas Parkir"));
     addStreet(21, "MKS", "Makassar", 220, 110, "Merah", 150, 150, {18, 90, 250, 700, 875, 1050});
     
-    // PERBAIKAN: Menghilangkan argumen `true` pada CardTile
     setTileAt(22, make_unique<CardTile>(22, "KSP", "Kesempatan"));
     
     addStreet(23, "BLP", "Balikpapan", 220, 110, "Merah", 150, 150, {18, 90, 250, 700, 875, 1050});

@@ -289,68 +289,90 @@ void Command::execPrintProperty(TurnContext& ctx, std::ostream& out) const {
 		return;
 	}
 
-	struct PropertyLine {
-		std::string name;
-		std::string code;
-		std::string buildingInfo;
-		std::string statusText;
-		int baseValue;
-	};
+	// struct PropertyLine {
+	// 	std::string name;
+	// 	std::string code;
+	// 	std::string buildingInfo;
+	// 	std::string statusText;
+	// 	int baseValue;
+	// };
 
-	std::unordered_map<std::string, std::vector<PropertyLine>> grouped;
-	std::vector<std::string> groupOrder;
-	int totalWealth = 0;
+	// std::unordered_map<std::string, std::vector<PropertyLine>> grouped;
+	// std::vector<std::string> groupOrder;
+	// int totalWealth = 0;
 
-	for (Property* prop : properties) {
-		if (prop == nullptr) {
-			continue;
-		}
+	// for (Property* prop : properties) {
+	// 	if (prop == nullptr) {
+	// 		continue;
+	// 	}
 
-		std::string groupName = "LAINNYA";
-		std::string buildingInfo;
+	// 	std::string groupName = "LAINNYA";
+	// 	std::string buildingInfo;
 
-		if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
-			groupName = toUpperAscii(street->getColorGroup());
-			if (street->hasHotel()) {
-				buildingInfo = "Hotel";
-			} else if (street->getBuildingCount() > 0) {
-				buildingInfo = std::to_string(street->getBuildingCount()) + " rumah";
-			}
-		} else if (dynamic_cast<RailroadProperty*>(prop) != nullptr) {
-			groupName = "STATION";
-		} else if (dynamic_cast<UtilityProperty*>(prop) != nullptr) {
-			groupName = "UTIL";
-		}
+	// 	if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
+	// 		groupName = toUpperAscii(street->getColorGroup());
+	// 		if (street->hasHotel()) {
+	// 			buildingInfo = "Hotel";
+	// 		} else if (street->getBuildingCount() > 0) {
+	// 			buildingInfo = std::to_string(street->getBuildingCount()) + " rumah";
+	// 		}
+	// 	} else if (dynamic_cast<RailroadProperty*>(prop) != nullptr) {
+	// 		groupName = "STATION";
+	// 	} else if (dynamic_cast<UtilityProperty*>(prop) != nullptr) {
+	// 		groupName = "UTIL";
+	// 	}
 
-		if (grouped.find(groupName) == grouped.end()) {
-			groupOrder.push_back(groupName);
-		}
+	// 	if (grouped.find(groupName) == grouped.end()) {
+	// 		groupOrder.push_back(groupName);
+	// 	}
 
-		grouped[groupName].push_back(PropertyLine{
-			prop->getName(),
-			prop->getCode(),
-			buildingInfo,
-			propertyStatusText(prop->getStatus()),
-			prop->getBuyPrice()
-		});
+	// 	grouped[groupName].push_back(PropertyLine{
+	// 		prop->getName(),
+	// 		prop->getCode(),
+	// 		buildingInfo,
+	// 		propertyStatusText(prop->getStatus()),
+	// 		prop->getBuyPrice()
+	// 	});
 
-		totalWealth += prop->getBuyPrice();
-	}
+	// 	totalWealth += prop->getBuyPrice();
+	// }
 
 	out << "=== Properties of: " << curPlayer.getUsername() << " ===\n";
-	for (const std::string& groupName : groupOrder) {
-		out << "\n[" << groupName << "]\n";
-		const auto& lines = grouped[groupName];
-		for (const PropertyLine& line : lines) {
-			out << "  - " << line.name << " (" << line.code << ")";
-			if (!line.buildingInfo.empty()) {
-				out << "  " << line.buildingInfo;
-			}
-			out << "  M" << line.baseValue << "  " << line.statusText << "\n";
+	// for (const std::string& groupName : groupOrder) {
+	// 	out << "\n[" << groupName << "]\n";
+	// 	const auto& lines = grouped[groupName];
+	// 	for (const PropertyLine& line : lines) {
+	// 		out << "  - " << line.name << " (" << line.code << ")";
+	// 		if (!line.buildingInfo.empty()) {
+	// 			out << "  " << line.buildingInfo;
+	// 		}
+	// 		out << "  M" << line.baseValue << "  " << line.statusText << "\n";
+	// 	}
+	// }
+
+	out << "\nStreet Properties\n";
+	for (Property* prop : properties){
+		if (prop->getOwner() == &ctx.currentPlayer && dynamic_cast<StreetProperty*> (prop) != nullptr){
+			prop->printStatus(ctx);
+			cout << "\n";
 		}
 	}
 
-	out << "\nTotal kekayaan properti: M" << formatMoneyId(totalWealth) << "\n";
+	out << "\nRailroad Properties\n";
+	for (Property* prop : properties){
+		if (prop->getOwner() == &ctx.currentPlayer && dynamic_cast<RailroadProperty*> (prop) != nullptr){
+			prop->printStatus(ctx);
+			cout << "\n";
+		}
+	}
+
+	out << "\nUtility Properties\n";
+	for (Property* prop : properties){
+		if (prop->getOwner() == &ctx.currentPlayer && dynamic_cast<UtilityProperty*> (prop) != nullptr){
+			prop->printStatus(ctx);
+			cout << "\n";
+		}
+	}
 
 }
 
