@@ -208,7 +208,16 @@ void Player::useSCard(int idx, TurnContext& ctx) {
     if (this->usedSkillThisTurn) {
         throw InvalidGameStateException("Skill card already used this turn");
     }
-    // TODO: Implement actual card usage logic
+    
+    SkillCard* card = this->hand[idx];
+    if (card == nullptr) {
+        throw InvalidGameStateException("Card at index " + std::to_string(idx) + " is null");
+    }
+    
+    card->apply(ctx);
+    
+    this->hand.erase(this->hand.begin() + idx);
+    
     this->usedSkillThisTurn = true;
 }
 
