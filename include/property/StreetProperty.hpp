@@ -14,7 +14,10 @@ class StreetProperty : public Property {
                    std::string colorGroup,
                    int housePrice,
                    int hotelPrice,
-                   std::vector<int> rentTable);
+                   std::vector<int> rentTable,
+                  PropertyStatus ps = PropertyStatus::BANK,
+                  int festivalMul = 1,
+                int festivalDur = 0);
 
     int getRent(const TurnContext& ctx) const override;
     int sellToBank();
@@ -25,9 +28,6 @@ class StreetProperty : public Property {
     bool hasHotel() const;
     int getHousePrice() const;
     int getHotelPrice() const;
-
-    int getFestivalMultiplier() const;
-    int getFestivalDuration() const;
 
     const std::string getColor() const;
 
@@ -41,8 +41,6 @@ class StreetProperty : public Property {
     void upgradeToHotel();
     void demolish();
 
-    void applyFestival();
-    void decreaseFestivalDuration();
 
     void printStatus(TurnContext& ctx) override;
     void printRentTable();
@@ -54,7 +52,5 @@ class StreetProperty : public Property {
     int housePrice_;
     int hotelPrice_;
     std::vector<int> rentTable_;
-    int festivalMult_;
-    int festivalDur_;
     bool monopolized_;
 };

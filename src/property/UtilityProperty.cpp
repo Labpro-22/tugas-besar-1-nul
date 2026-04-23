@@ -10,8 +10,11 @@ UtilityProperty::UtilityProperty(std::string code,
                                  std::string name,
                                  int buyPrice,
                                  int mortgageValue,
-                                 std::map<int, int> multiplierTable)
-    : Property(std::move(code), std::move(name), buyPrice, mortgageValue),
+                                 std::map<int, int> multiplierTable,
+                                PropertyStatus status,
+                                int festivalMult,
+                                int festivalDur)
+    : Property(std::move(code), std::move(name), buyPrice, mortgageValue, status, festivalMult, festivalDur),
       multiplierTable_(std::move(multiplierTable)) {
     if (multiplierTable_.empty()) {
         throw InvalidGameStateException(

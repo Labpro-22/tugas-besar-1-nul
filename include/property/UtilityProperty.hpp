@@ -12,7 +12,10 @@ class UtilityProperty : public Property {
                     std::string name,
                     int buyPrice,
                     int mortgageValue,
-                    std::map<int, int> multiplierTable);
+                    std::map<int, int> multiplierTable,
+                    PropertyStatus status = PropertyStatus::BANK,
+                    int festivalMult = 1,
+                    int festivalDur = 0);
 
     int getRent(const TurnContext& ctx) const override;
 

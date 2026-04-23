@@ -62,7 +62,11 @@ Tile* Board::getTileByCode(string cd){
     }
     
     return nullptr; //null jika tidak ditemukan
-};
+}
+
+std::vector<std::unique_ptr<Tile>>& Board::getAllTiles(){
+    return tiles;
+}
 
 void Board::setTileAt(int idx, unique_ptr<Tile> tile) {
     if (idx < 0 || idx >= size) {
@@ -302,7 +306,7 @@ void Board::generateDefaultBoard() {
 
     setTileAt(0, make_unique<GoTile>(0, "GO", "Petak Mulai"));
     addStreet(1, "GRT", "Garut", 60, 30, "Coklat", 50, 50, {2, 10, 30, 90, 160, 250});
-    setTileAt(2, make_unique<CardTile>(2, "DNU", "Dana Umum", false));
+    setTileAt(2, make_unique<CardTile>(2, "DNU", "Dana Umum"));
     addStreet(3, "TSK", "Tasikmalaya", 60, 30, "Coklat", 50, 50, {4, 20, 60, 180, 320, 450});
     setTileAt(4, make_unique<TaxTile>(4, "PPH", "Pajak Penghasilan", TaxType::PPH));
     addRailroad(5, "GBR", "Stasiun Gambir", 200, 100, {{1, 25}, {2, 50}, {3, 100}, {4, 200}});
@@ -317,12 +321,15 @@ void Board::generateDefaultBoard() {
     addStreet(14, "YOG", "Yogyakarta", 160, 80, "Pink", 100, 100, {12, 60, 180, 500, 700, 900});
     addRailroad(15, "STB", "Stasiun Bandung", 200, 100, {{1, 25}, {2, 50}, {3, 100}, {4, 200}});
     addStreet(16, "MAL", "Malang", 180, 90, "Orange", 100, 100, {14, 70, 200, 550, 750, 950});
-    setTileAt(17, make_unique<CardTile>(17, "DNU", "Dana Umum", false));
+    setTileAt(17, make_unique<CardTile>(17, "DNU", "Dana Umum"));
     addStreet(18, "SMG", "Semarang", 180, 90, "Orange", 100, 100, {14, 70, 200, 550, 750, 950});
     addStreet(19, "SBY", "Surabaya", 200, 100, "Orange", 100, 100, {16, 80, 220, 600, 800, 1000});
     setTileAt(20, make_unique<FreeParkingTile>(20, "BBP", "Bebas Parkir"));
     addStreet(21, "MKS", "Makassar", 220, 110, "Merah", 150, 150, {18, 90, 250, 700, 875, 1050});
-    setTileAt(22, make_unique<CardTile>(22, "KSP", "Kesempatan", true));
+    
+    // PERBAIKAN: Menghilangkan argumen `true` pada CardTile
+    setTileAt(22, make_unique<CardTile>(22, "KSP", "Kesempatan"));
+    
     addStreet(23, "BLP", "Balikpapan", 220, 110, "Merah", 150, 150, {18, 90, 250, 700, 875, 1050});
     addStreet(24, "MND", "Manado", 240, 120, "Merah", 150, 150, {20, 100, 300, 750, 925, 1100});
     addRailroad(25, "TUG", "Stasiun Tugu", 200, 100, {{1, 25}, {2, 50}, {3, 100}, {4, 200}});
@@ -336,7 +343,7 @@ void Board::generateDefaultBoard() {
     setTileAt(33, make_unique<FestivalTile>(33, "FES", "Festival"));
     addStreet(34, "MTR", "Mataram", 320, 160, "Hijau", 200, 200, {28, 150, 450, 1000, 1200, 1400});
     addRailroad(35, "GUB", "Stasiun Gubeng", 200, 100, {{1, 25}, {2, 50}, {3, 100}, {4, 200}});
-    setTileAt(36, make_unique<CardTile>(36, "KSP", "Kesempatan", true));
+    setTileAt(36, make_unique<CardTile>(36, "KSP", "Kesempatan"));
     addStreet(37, "JKT", "Jakarta", 350, 175, "Biru Tua", 200, 200, {35, 175, 500, 1100, 1300, 1500});
     setTileAt(38, make_unique<TaxTile>(38, "PBM", "Pajak Barang Mewah", TaxType::PBM));
     addStreet(39, "IKN", "Ibu Kota Nusantara", 400, 200, "Biru Tua", 200, 200, {50, 200, 600, 1400, 1700, 2000});

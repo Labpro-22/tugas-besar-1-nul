@@ -20,6 +20,4 @@ public:
     std::string getDescription() const;
 
     virtual void execute(Player* player, TurnContext& ctx) = 0;
-
-    
 };

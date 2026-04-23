@@ -14,11 +14,14 @@ StreetProperty::StreetProperty(std::string code,
                                std::string colorGroup,
                                int housePrice,
                                int hotelPrice,
-                               std::vector<int> rentTable)
-    : Property(std::move(code), std::move(name), buyPrice, mortgageValue),
+                               std::vector<int> rentTable,
+                               PropertyStatus ps,
+                               int festivalMult,
+                               int festivalDur)
+    : Property(std::move(code), std::move(name), buyPrice, mortgageValue, ps, festivalMult, festivalDur),
       colorGroup_(std::move(colorGroup)), buildingCount_(0), isHotel_(false),
       housePrice_(housePrice), hotelPrice_(hotelPrice),
-      rentTable_(std::move(rentTable)), festivalMult_(1), festivalDur_(0),
+      rentTable_(std::move(rentTable)), 
       monopolized_(false) {
     if (colorGroup_.empty()) {
         throw InvalidGameStateException(
@@ -99,17 +102,6 @@ int StreetProperty::getHousePrice() const {
 int StreetProperty::getHotelPrice() const {
     return hotelPrice_;
 }
-
-// Returns current festival rent multiplier.
-int StreetProperty::getFestivalMultiplier() const {
-    return festivalMult_;
-}
-
-// Returns remaining owner turns of festival effect.
-int StreetProperty::getFestivalDuration() const {
-    return festivalDur_;
-}
-
 const std::string StreetProperty::getColor() const{
     return colorGroup_;
 }
@@ -170,30 +162,6 @@ void StreetProperty::demolish() {
 
     --buildingCount_;
 }
-
-// Applies festival effect with capped stack and duration reset.
-void StreetProperty::applyFestival() {
-    if (status_ != PropertyStatus::OWNED) {
-        throw InvalidGameStateException(
-            "Festival can only be applied to owned street property");
-    }
-
-    festivalMult_ = std::min(festivalMult_ * 2, 8);
-    festivalDur_ = 3;
-}
-
-// Ticks festival duration each owner turn and clears effect when expired.
-void StreetProperty::decreaseFestivalDuration() {
-    if (festivalDur_ <= 0) {
-        return;
-    }
-
-    --festivalDur_;
-    if (festivalDur_ == 0) {
-        festivalMult_ = 1;
-    }
-}
-
 void StreetProperty::printStatus(TurnContext& ctx){
     //nanti perbaiki di trigger agar tunjukin kalau di daerah bukan sendiri
     std::cout << "+=============================================+\n";
