@@ -3,6 +3,8 @@
 #include "player/Player.hpp"
 #include "board/Board.hpp"
 #include "tile/PropertyTile.hpp"
+#include "card/ChanceCard.hpp"
+#include "card/CommunityChestCard.hpp"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -66,11 +68,48 @@ void GoToJailTile::onLanded(TurnContext& ctx){
 }
 
 CardTile::CardTile(int idx, string cd, string nm)
-    : ActionTile(idx, cd, nm){}
+    : ActionTile(idx, cd, nm), cardType(CardTileType::CHANCE) {
+    // Determine card type based on code
+    if (cd == "DNU") {
+        cardType = CardTileType::COMMUNITY_CHEST;
+    } else if (cd == "KSP") {
+        cardType = CardTileType::CHANCE;
+    }
+}
+
+CardTile::CardTile(int idx, string cd, string nm, CardTileType type)
+    : ActionTile(idx, cd, nm), cardType(type) {}
+
+void CardTile::setCardType(CardTileType type) {
+    cardType = type;
+}
+
+CardTileType CardTile::getCardType() const {
+    return cardType;
+}
 
 void CardTile::onLanded(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
-    card->execute(&player, ctx);
+    
+    if (cardType == CardTileType::CHANCE) {
+        std::cout << "[" << player.getUsername() << "] landed on Chance Tile. Drawing a card...\n";
+        ChanceCard* card = ctx.drawChanceCard();
+        if (card != nullptr) {
+            card->execute(&player, ctx);
+            ctx.returnChanceCard(card);
+        } else {
+            std::cout << "[INFO] No Chance cards available in the deck.\n";
+        }
+    } else {
+        std::cout << "[" << player.getUsername() << "] landed on Community Chest Tile. Drawing a card...\n";
+        CommunityChestCard* card = ctx.drawCommunityChestCard();
+        if (card != nullptr) {
+            card->execute(&player, ctx);
+            ctx.returnCommunityChestCard(card);
+        } else {
+            std::cout << "[INFO] No Community Chest cards available in the deck.\n";
+        }
+    }
 }
 
 FestivalTile::FestivalTile(int idx, string cd, string nm)
