@@ -10,6 +10,7 @@
 #include "property/Property.hpp"
 #include "core/TurnContext.hpp"
 #include "board/Board.hpp"
+#include "core/GameEngine.hpp"
 
 /* === CTOR DTOR === */
 Player::Player(std::string username, int balance)
@@ -20,8 +21,10 @@ Player::Player(std::string username, int balance)
             jailTurns(0),
             usedSkillThisTurn(false),
             discountRate(0),
+            hasShield(false),
             properties({}),
             hand({}) {}
+
 
 Player::~Player() {}
 
@@ -38,6 +41,8 @@ int Player::getBalance() const { return this->balance; }
 int Player::getPosition() const { return this->position; }
 
 bool Player::isInJail() const { return this->getStatus()==PlayerStatus::JAILED; }
+
+bool Player::isShieldActive() const { return this->hasShield; }
 
 int Player::getDiscountRate() const { return this->discountRate; }
 
@@ -84,8 +89,22 @@ bool Player::operator<(const Player& other) {
 int Player::move(int steps, TurnContext& ctx) {
     // if (ctx.board.getSize() == nullptr) { throw InvalidGameStateException("Board size source is not set for player movement.");}
     if (ctx.board.getSize() <= 0) { throw InvalidGameStateException("Board size must be positive."); }
-    const int trueSteps = ((steps % ctx.board.getSize()) + ctx.board.getSize()) % ctx.board.getSize();
-    this->position = (this->position + trueSteps) % ctx.board.getSize();
+    const int boardSize = ctx.board.getSize();
+    const int oldPosition = this->position;
+    const int trueSteps = ((steps % boardSize) + boardSize) % boardSize;
+    int nPassStart = 0;
+
+    if (steps > 0) {
+        nPassStart = (oldPosition + steps) / boardSize;
+    }
+
+    this->position = (oldPosition + trueSteps) % boardSize;
+
+    for (int i = 0; i < nPassStart; ++i) {
+        this->addCash(ctx.gameEngine.getGoSalary());
+        ctx.gameEngine.giveRandomSkillCardTo(*this);
+    }
+
     return this->position;
 }
 
@@ -128,9 +147,23 @@ void Player::mortgage(Property* p) {
     if (p == nullptr) {
         throw InvalidGameStateException("Cannot mortgage null property");
     }
+    if (p->getOwner() != this) {
+        throw InvalidGameStateException("Cannot mortgage property not owned by player");
+    }
+
+    const auto it = std::find(this->properties.begin(), this->properties.end(), p);
+    if (it == this->properties.end()) {
+        throw InvalidGameStateException("Cannot mortgage property not owned by player");
+    }
+
+    if (p->getStatus() == PropertyStatus::MORTGAGED) {
+        throw InvalidGameStateException("Property is already mortgaged");
+    }
+
     if (p->getStatus() != PropertyStatus::OWNED) {
         throw InvalidGameStateException("Can only mortgage owned properties");
     }
+
     p->mortgage();
     this->addCash(p->getMortgageValue());
 }
@@ -168,7 +201,7 @@ void Player::drawSCard(SkillCard* card) {
     }
 
     this->hand.push_back(card);
-    std::cout << "[MENDAPATKAN KEMAMPUAN] " << card->getDescription() << " ditambahkan ke tangan.\n";
+    std::cout << "[CARD] " << card->getDescription() << " ditambahkan ke tangan.\n";
 }
 
 void Player::discardSCard(int idx) {
@@ -182,16 +215,27 @@ void Player::discardSCard(int idx) {
 }
 
 void Player::useSCard(int idx, TurnContext& ctx) {
-    if (idx < 0) {
-        throw InvalidGameStateException("Card index cannot be negative, got: " + std::to_string(idx));
+    if (this->hand.empty()) {
+        throw InvalidGameStateException("No skill card available in hand.");
     }
-    if (idx >= static_cast<int>(this->hand.size())) {
+    if (idx <= 0) {
+        throw InvalidGameStateException("Card index must start from 1, got: " + std::to_string(idx));
+    }
+    if (idx > static_cast<int>(this->hand.size())) {
         throw InvalidGameStateException("Card index out of range: " + std::to_string(idx) + ", hand size: " + std::to_string(this->hand.size()));
     }
     if (this->usedSkillThisTurn) {
         throw InvalidGameStateException("Skill card already used this turn");
     }
-    // TODO: Implement actual card usage logic
+
+    const int internalIdx = idx - 1;
+    SkillCard* selectedCard = this->hand[static_cast<size_t>(internalIdx)];
+    if (selectedCard == nullptr) {
+        throw InvalidGameStateException("Selected skill card is invalid.");
+    }
+
+    selectedCard->apply(ctx);
+    this->hand.erase(this->hand.begin() + internalIdx);
     this->usedSkillThisTurn = true;
 }
 
@@ -206,10 +250,17 @@ void Player::setDiscountRate(int discount) {
 }
 
 void Player::activateShield() {
-    if (this->isShieldActive) {
+    if (this->hasShield) {
         throw InvalidGameStateException("Shield is already active for player " + this->username);
     }
-    this->isShieldActive = true;
+    this->hasShield = true;
+}
+
+void Player::deactivateShield() {
+    if (!this->hasShield) {
+        throw InvalidGameStateException("Shield is already inactive for player " + this->username);
+    }
+    this->hasShield = false;
 }
 
 void Player::enterJail() { this->status = PlayerStatus::JAILED; this->jailTurns = 3; }
@@ -225,14 +276,14 @@ bool Player::isBot() const {
 }
 
 void Player::showHands() {
-    std::cout << "=== Kartu di Tangan ===" << std::endl;
+    // std::cout << "=== Kartu di Tangan ===" << std::endl;
     if (hand.empty()) {
         std::cout << "Tidak ada kartu." << std::endl;
         return;
     }
     
     for (size_t i = 0; i < hand.size(); ++i) {
-        std::cout << (i + 1) << ". " << hand[i]->getDescription() << std::endl;
+        std::cout << "   " << (i + 1) << ". " << hand[i]->getDescription() << std::endl;
     }
 }
 
