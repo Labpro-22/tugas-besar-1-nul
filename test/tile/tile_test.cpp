@@ -62,9 +62,5 @@ int main() {
     assert(hijauGroup.size() == 2);
 
     std::cout << "[PASS] Board tile storage test passed.\n";
-
-    GameEngine ge(40);
-    ge.run();
-
     return 0;
 }
