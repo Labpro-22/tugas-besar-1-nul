@@ -3,6 +3,7 @@
 #include "property/StreetProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
+#include "exception/InvalidGameStateException.hpp"
 
 #include <iostream>
 #include <limits>
@@ -19,6 +20,7 @@ void DemolitionCard::apply(TurnContext& ctx) {
     
     for (Player* other : allPlayers) {
         if (other == nullptr || other == &player) continue;
+        if (other->getStatus() == PlayerStatus::BANKRUPT) continue;
         candidates.push_back(other);
     }
 

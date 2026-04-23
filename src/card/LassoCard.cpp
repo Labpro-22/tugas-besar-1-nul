@@ -3,6 +3,7 @@
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
 #include "board/Board.hpp"
+#include "exception/InvalidGameStateException.hpp"
 
 #include <iostream>
 #include <limits>
@@ -14,6 +15,10 @@ void LassoCard::apply(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     const int currentPos = player.getPosition();
     const int boardSize = ctx.getBoardSize();
+
+    if (boardSize <= 0) {
+        throw InvalidGameStateException("LassoCard: Invalid board size: " + std::to_string(boardSize));
+    }
 
     std::cout << "[MENGGUNAKAN] LassoCard: Menarik pemain lawan ke posisi ini.\n";
 
