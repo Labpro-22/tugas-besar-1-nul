@@ -41,7 +41,6 @@ bool Player::isInJail() const { return this->getStatus()==PlayerStatus::JAILED; 
 
 int Player::getDiscountRate() const { return this->discountRate; }
 
-int Player::getPosition() const { return this->position; }
 
 int Player::getPropertiesAmount() const { return this->properties.size(); }
 
@@ -226,6 +225,10 @@ void Player::exitJail() { this->status = PlayerStatus::ACTIVE; }
 
 void Player::decideAction(TurnContext& ctx) { 
 
+}
+
+bool Player::isBot() const {
+    return false;
 }
 
 void Player::showHands() {

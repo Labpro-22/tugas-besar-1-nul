@@ -4,6 +4,7 @@
 #include "property/RailroadProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
+#include "core/Dice.hpp"
 
 using namespace std;
 #include <vector>
@@ -17,24 +18,41 @@ int main(){
     //setup player
     Player p = Player("tensai", 30);
     Player p2 = Player("sakuragi", 2000);
+    vector<Player*> allPlayer;
+    allPlayer.push_back(&p);
+    allPlayer.push_back(&p2);
 
     //setup property
     vector<int> x = {100, 150, 200, 250, 300, 350, 400, 450};
 
     StreetProperty prop("LNDN", "Lundun", 300, 150, "GREEN", 300, 400, x);
-    StreetTile st(6, &prop);
+    StreetTile st(6, prop);
     //mungkin bisa simplify konstruktor StreetTile biar pakai property aja? nanti dilihat dependencynya lagi
     StreetProperty prop2("BRM", "Birmingham", 300, 150, "GREEN", 300, 400, x);
-    StreetTile st2(7, &prop2);
-    TurnContext tc(&p, &d, &b, &ge); 
+    StreetTile st2(7, prop2);
+    
+    TurnContext tc(&p, &b, 1, 100, allPlayer); 
 
-    // RailroadProperty rprop2("GMBR", "Gambir", 0, 150, x);
+    map<int, int> x_map = {{1, 40}, {2, 100}};
+
+    RailroadProperty rprop("GMBR", "Gambir", 0, 150, x_map);
+
+    RailroadProperty rprop2("GBNG", "Gubeng", 0, 200, x_map);
+
+    RailroadTile rt(8, rprop);
+    RailroadTile rt2(9, rprop2);
 
 
     p2.buy(&prop);
     prop.setOwner(&p2); // ini harus dihandle di buy
     st.onLanded(tc); 
-    TurnContext tc2(&p2, &d, &b, &ge); //gimana nanti modif turncontextnya yah
-    st2.onLanded(tc2);
+    // TurnContext tc2(&p2, &d, &b, &ge); //gimana nanti modif turncontextnya yah
+    tc.nextTurn();
+    st2.onLanded(tc);
+    tc.nextTurn();
+    std::cout << "IM okay\n";
+    rt.onLanded(tc);
+    tc.nextTurn();
+    rt2.onLanded(tc);
     return 0;
 }

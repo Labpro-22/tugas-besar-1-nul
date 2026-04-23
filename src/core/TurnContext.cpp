@@ -69,3 +69,21 @@ void TurnContext::setLogger(TransactionLogger* log) {
 TransactionLogger* TurnContext::getLogger() const {
     return logger;
 }
+
+void TurnContext::nextTurn() {
+    auto it = std::find(allPlayers.begin(), allPlayers.end(), currentPlayer);
+    
+    if (it != allPlayers.end()) { // next player
+        int currentIndex = std::distance(allPlayers.begin(), it);
+        int nextIndex = (currentIndex + 1) % allPlayers.size();
+        
+        currentPlayer = allPlayers[nextIndex];
+    }
+
+    currentTurn++; 
+
+    // reset semua status
+    doubleCount = 0;
+    skillUsed = false;
+    movedByCard = false;
+}

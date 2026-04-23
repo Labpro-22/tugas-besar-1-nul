@@ -10,7 +10,7 @@ private:
 public:
     TeleportCard(int pos);
 
-    void apply(Player& player) override;
+    void apply(TurnContext& ctx) override;
 };
 
 #endif // TELEPORT_CARD_HPP

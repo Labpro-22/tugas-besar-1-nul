@@ -24,12 +24,3 @@ string Tile::getName(){
 string Tile::getDisplay(){
     return code + " - " + name;
 };
-
-string Tile::getColorTag(){
-    return codeCategory;
-};
-
-void Tile::onLanded(Player* player, TurnContext& ctx){
-    // Default implementation - do nothing
-    // Subclasses will override this
-}

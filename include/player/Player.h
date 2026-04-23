@@ -35,12 +35,12 @@ protected:
     std::vector<Property*> properties;
     std::vector<SkillCard*> hand;
 
-private:
+public:
     // apakah mau diimplement ato jadi buysell aja as a whole
     void addProperty(Property* p);
     void removeProperty(Property& p); //make sure lgi type p
 
-public:
+// public:
     // ctor dtor
     Player(std::string username, int balance);
     ~Player();
@@ -49,7 +49,6 @@ public:
     std::string getUsername() const;
     PlayerStatus getStatus() const;
     int getBalance() const;
-    int getPosition() const;
     bool isInJail() const;
     int getDiscountRate() const;
     int getPosition() const;
@@ -68,7 +67,6 @@ public:
     void move(int steps);
     void moveForwardTo(int index);
     void moveBackwardTo(int index);
-    void onLanded(TurnContext& ctx);
 
     // properties
     void buy(Property* p);
@@ -93,7 +91,10 @@ public:
     void exitJail();
 
     // action
-    void decideAction(TurnContext& ctx);
+    virtual void decideAction(TurnContext& ctx);
+
+    // Check if player is a bot (for polymorphism)
+    virtual bool isBot() const;
 
     // printing
     void showProperties();

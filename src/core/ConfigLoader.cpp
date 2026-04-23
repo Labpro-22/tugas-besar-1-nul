@@ -1,4 +1,5 @@
 #include "core/ConfigLoader.hpp"
+#include "config/ActionTileData.hpp"
 #include "exception/ConfigException.hpp"
 #include "utils/ParseUtils.hpp"
 #include <cctype>
@@ -9,6 +10,7 @@
 Config ConfigLoader::loadAll(const std::string& path) const {
     Config config;
     config.properties = loadProperty(path + "/property.txt");
+    config.actionTiles = loadActionTiles(path + "/aksi.txt");
     config.railroad = loadRailroad(path + "/railroad.txt");
     config.utility = loadUtility(path + "/utility.txt");
     config.tax = loadTax(path + "/tax.txt");
@@ -274,4 +276,55 @@ MiscConfig ConfigLoader::loadMisc(const std::string& file) const {
         config.startingBalance = startingBalance;
         return config;
     }
+}
+
+std::vector<ActionTileData> ConfigLoader::loadActionTiles(const std::string& file) const {
+    std::ifstream in(file);
+    if (!in.is_open()) {
+        throw ConfigException("Failed to open action tiles config file: " + file);
+    }
+
+    std::vector<ActionTileData> result;
+    std::string line;
+    int lineNumber = 0;
+
+    while (std::getline(in, line)) {
+        ++lineNumber;
+
+        if (line.empty()) {
+            continue;
+        }
+
+        const std::vector<std::string> tokens = splitWhitespace(line);
+        if (tokens.empty() || tokens[0][0] == '#') {
+            continue;
+        }
+
+        // Format: ID KODE NAMA JENIS_PETAK WARNA
+        if (tokens.size() < 5) {
+            throw ConfigException("Invalid action tile row at line " +
+                                  std::to_string(lineNumber) +
+                                  ": expected at least 5 columns (ID KODE NAMA JENIS_PETAK WARNA)");
+        }
+
+        ActionTileData tile;
+
+        // Parse ID
+        if (!tryParseInt(tokens[0], tile.id)) {
+            if (tokens[0] == "ID") {
+                continue;  // Skip header row
+            }
+            throw ConfigException("Invalid action tile ID at line " +
+                                  std::to_string(lineNumber) + ": '" + tokens[0] + "'");
+        }
+
+        tile.code = tokens[1];
+        tile.name = tokens[2];
+        tile.type = tokens[3];
+        tile.color = tokens[4];
+
+        result.push_back(tile);
+    }
+
+    return result;
 }

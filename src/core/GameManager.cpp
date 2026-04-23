@@ -1,6 +1,10 @@
 #include "core/GameManager.hpp"
 #include "player/Player.h"
+#include "player/BotPlayer.hpp"
 #include "property/Property.hpp"
+#include "property/StreetProperty.hpp"
+#include "property/RailroadProperty.hpp"
+#include "property/UtilityProperty.hpp"
 #include "tile/Tile.hpp"
 #include "tile/PropertyTile.hpp"
 #include "tile/ActionTile.hpp"
@@ -12,12 +16,20 @@
 #include "card/LassoCard.hpp"
 #include "card/DemolitionCard.hpp"
 #include "core/BankruptcyManager.hpp"
+#include "core/SaveLoadManager.hpp"
 #include "config/PropertyData.hpp"
+#include "states/GameState.hpp"
+#include "states/PlayerState.hpp"
+#include "states/PropertyState.hpp"
+#include "states/CardState.hpp"
+#include "states/LogEntry.hpp"
 
 #include <iostream>
 #include <algorithm>
 #include <random>
 #include <ctime>
+#include <fstream>
+#include <sstream>
 
 GameManager::GameManager() 
     : status(GameStatus::NOT_STARTED),
@@ -73,124 +85,208 @@ void GameManager::buildTiles() {
     // Index 0-39 (0-based) corresponds to position 1-40 (1-based in spec)
     
     // Position 1: GO (index 0)
-    tiles.push_back(new GoTile(0, "GO", "Petak Mulai", "DF"));
+    tiles.push_back(new GoTile(0, "GO", "Petak Mulai"));
     
     // Position 2: GRT - Garut (Street - Coklat)
-    tiles.push_back(new StreetTile(1, "GRT", "Garut", "CK", nullptr));
+    tiles.push_back(new StreetTile(1, *new StreetProperty(
+        "GRT", "Garut", 60, 30, "Coklat", 50, 50, 
+        std::vector<int>{2, 10, 30, 90, 160, 250}
+    )));
     
     // Position 3: DNU - Dana Umum
-    tiles.push_back(new CardTile(2, "DNU", "Dana Umum", "DF", false));
+    tiles.push_back(new CardTile(2, "DNU", "Dana Umum", false));
     
     // Position 4: TSK - Tasikmalaya (Street - Coklat)
-    tiles.push_back(new StreetTile(3, "TSK", "Tasikmalaya", "CK", nullptr));
+    tiles.push_back(new StreetTile(3, *new StreetProperty(
+        "TSK", "Tasikmalaya", 60, 30, "Coklat", 50, 50, 
+        std::vector<int>{4, 20, 60, 180, 320, 450}
+    )));
     
     // Position 5: PPH - Pajak Penghasilan
-    tiles.push_back(new TaxTile(4, "PPH", "Pajak Penghasilan", "DF", TaxType::PPH));
+    tiles.push_back(new TaxTile(4, "PPH", "Pajak Penghasilan", TaxType::PPH));
     
     // Position 6: GBR - Stasiun Gambir (Railroad)
-    tiles.push_back(new RailroadTile(5, "GBR", "Stasiun Gambir", "DF", nullptr));
+    tiles.push_back(new RailroadTile(5, *new RailroadProperty(
+        "GBR", "Stasiun Gambir", 200, 100, 
+        std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
+    )));
     
     // Position 7: BGR - Bogor (Street - Biru Muda)
-    tiles.push_back(new StreetTile(6, "BGR", "Bogor", "BM", nullptr));
+    tiles.push_back(new StreetTile(6, *new StreetProperty(
+        "BGR", "Bogor", 100, 50, "Biru Muda", 50, 50, 
+        std::vector<int>{6, 30, 90, 270, 400, 550}
+    )));
     
     // Position 8: FES - Festival
-    tiles.push_back(new FestivalTile(7, "FES", "Festival", "DF"));
+    tiles.push_back(new FestivalTile(7, "FES", "Festival"));
     
     // Position 9: DPK - Depok (Street - Biru Muda)
-    tiles.push_back(new StreetTile(8, "DPK", "Depok", "BM", nullptr));
+    tiles.push_back(new StreetTile(8, *new StreetProperty(
+        "DPK", "Depok", 100, 50, "Biru Muda", 50, 50, 
+        std::vector<int>{6, 30, 90, 270, 400, 550}
+    )));
     
     // Position 10: BKS - Bekasi (Street - Biru Muda)
-    tiles.push_back(new StreetTile(9, "BKS", "Bekasi", "BM", nullptr));
+    tiles.push_back(new StreetTile(9, *new StreetProperty(
+        "BKS", "Bekasi", 120, 60, "Biru Muda", 50, 50, 
+        std::vector<int>{8, 40, 100, 300, 450, 600}
+    )));
     
     // Position 11: PEN - Penjara
-    tiles.push_back(new JailTile(10, "PEN", "Penjara", "DF"));
+    tiles.push_back(new JailTile(10, "PEN", "Penjara"));
     
     // Position 12: MGL - Magelang (Street - Pink)
-    tiles.push_back(new StreetTile(11, "MGL", "Magelang", "PK", nullptr));
+    tiles.push_back(new StreetTile(11, *new StreetProperty(
+        "MGL", "Magelang", 140, 70, "Pink", 100, 100, 
+        std::vector<int>{10, 50, 150, 450, 625, 750}
+    )));
     
     // Position 13: PLN - PLN (Utility)
-    tiles.push_back(new UtilityTile(12, "PLN", "PLN", "AB", nullptr));
+    tiles.push_back(new UtilityTile(12, *new UtilityProperty(
+        "PLN", "PLN", 150, 75, 
+        std::map<int, int>{{1, 4}, {2, 10}} // 1 utility = 4x dadu, 2 utility = 10x dadu
+    )));
     
     // Position 14: SOL - Solo (Street - Pink)
-    tiles.push_back(new StreetTile(13, "SOL", "Solo", "PK", nullptr));
+    tiles.push_back(new StreetTile(13, *new StreetProperty(
+        "SOL", "Solo", 140, 70, "Pink", 100, 100, 
+        std::vector<int>{10, 50, 150, 450, 625, 750}
+    )));
     
     // Position 15: YOG - Yogyakarta (Street - Pink)
-    tiles.push_back(new StreetTile(14, "YOG", "Yogyakarta", "PK", nullptr));
+    tiles.push_back(new StreetTile(14, *new StreetProperty(
+        "YOG", "Yogyakarta", 160, 80, "Pink", 100, 100, 
+        std::vector<int>{12, 60, 180, 500, 700, 900}
+    )));
     
     // Position 16: STB - Stasiun Bandung (Railroad)
-    tiles.push_back(new RailroadTile(15, "STB", "Stasiun Bandung", "DF", nullptr));
+    tiles.push_back(new RailroadTile(15, *new RailroadProperty(
+        "STB", "Stasiun Bandung", 200, 100, 
+        std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
+    )));
     
     // Position 17: MAL - Malang (Street - Orange)
-    tiles.push_back(new StreetTile(16, "MAL", "Malang", "OR", nullptr));
+    tiles.push_back(new StreetTile(16, *new StreetProperty(
+        "MAL", "Malang", 180, 90, "Orange", 100, 100, 
+        std::vector<int>{14, 70, 200, 550, 750, 950}
+    )));
     
     // Position 18: DNU - Dana Umum
-    tiles.push_back(new CardTile(17, "DNU", "Dana Umum", "DF", false));
+    tiles.push_back(new CardTile(17, "DNU", "Dana Umum", false));
     
     // Position 19: SMG - Semarang (Street - Orange)
-    tiles.push_back(new StreetTile(18, "SMG", "Semarang", "OR", nullptr));
+    tiles.push_back(new StreetTile(18, *new StreetProperty(
+        "SMG", "Semarang", 180, 90, "Orange", 100, 100, 
+        std::vector<int>{14, 70, 200, 550, 750, 950}
+    )));
     
     // Position 20: SBY - Surabaya (Street - Orange)
-    tiles.push_back(new StreetTile(19, "SBY", "Surabaya", "OR", nullptr));
+    tiles.push_back(new StreetTile(19, *new StreetProperty(
+        "SBY", "Surabaya", 200, 100, "Orange", 100, 100, 
+        std::vector<int>{16, 80, 220, 600, 800, 1000}
+    )));
     
     // Position 21: BBP - Bebas Parkir
-    tiles.push_back(new FreeParkingTile(20, "BBP", "Bebas Parkir", "DF"));
+    tiles.push_back(new FreeParkingTile(20, "BBP", "Bebas Parkir"));
     
     // Position 22: MKS - Makassar (Street - Merah)
-    tiles.push_back(new StreetTile(21, "MKS", "Makassar", "MR", nullptr));
+    tiles.push_back(new StreetTile(21, *new StreetProperty(
+        "MKS", "Makassar", 220, 110, "Merah", 150, 150, 
+        std::vector<int>{18, 90, 250, 700, 875, 1050}
+    )));
     
     // Position 23: KSP - Kesempatan
-    tiles.push_back(new CardTile(22, "KSP", "Kesempatan", "DF", true));
+    tiles.push_back(new CardTile(22, "KSP", "Kesempatan", true));
     
     // Position 24: BLP - Balikpapan (Street - Merah)
-    tiles.push_back(new StreetTile(23, "BLP", "Balikpapan", "MR", nullptr));
+    tiles.push_back(new StreetTile(23, *new StreetProperty(
+        "BLP", "Balikpapan", 220, 110, "Merah", 150, 150, 
+        std::vector<int>{18, 90, 250, 700, 875, 1050}
+    )));
     
     // Position 25: MND - Manado (Street - Merah)
-    tiles.push_back(new StreetTile(24, "MND", "Manado", "MR", nullptr));
+    tiles.push_back(new StreetTile(24, *new StreetProperty(
+        "MND", "Manado", 240, 120, "Merah", 150, 150, 
+        std::vector<int>{20, 100, 300, 750, 925, 1100}
+    )));
     
     // Position 26: TUG - Stasiun Tugu (Railroad)
-    tiles.push_back(new RailroadTile(25, "TUG", "Stasiun Tugu", "DF", nullptr));
+    tiles.push_back(new RailroadTile(25, *new RailroadProperty(
+        "TUG", "Stasiun Tugu", 200, 100, 
+        std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
+    )));
     
     // Position 27: PLB - Palembang (Street - Kuning)
-    tiles.push_back(new StreetTile(26, "PLB", "Palembang", "KN", nullptr));
+    tiles.push_back(new StreetTile(26, *new StreetProperty(
+        "PLB", "Palembang", 260, 130, "Kuning", 150, 150, 
+        std::vector<int>{22, 110, 330, 800, 975, 1150}
+    )));
     
     // Position 28: PKB - Pekanbaru (Street - Kuning)
-    tiles.push_back(new StreetTile(27, "PKB", "Pekanbaru", "KN", nullptr));
+    tiles.push_back(new StreetTile(27, *new StreetProperty(
+        "PKB", "Pekanbaru", 260, 130, "Kuning", 150, 150, 
+        std::vector<int>{22, 110, 330, 800, 975, 1150}
+    )));
     
     // Position 29: PAM - PAM (Utility)
-    tiles.push_back(new UtilityTile(28, "PAM", "PAM", "AB", nullptr));
+    tiles.push_back(new UtilityTile(28, *new UtilityProperty(
+        "PAM", "PAM", 150, 75, 
+        std::map<int, int>{{1, 4}, {2, 10}}
+    )));
     
     // Position 30: MED - Medan (Street - Kuning)
-    tiles.push_back(new StreetTile(29, "MED", "Medan", "KN", nullptr));
+    tiles.push_back(new StreetTile(29, *new StreetProperty(
+        "MED", "Medan", 280, 140, "Kuning", 150, 150, 
+        std::vector<int>{24, 120, 360, 850, 1025, 1200}
+    )));
     
     // Position 31: PPJ - Pergi ke Penjara
-    tiles.push_back(new GoToJailTile(30, "PPJ", "Pergi ke Penjara", "DF"));
+    tiles.push_back(new GoToJailTile(30, "PPJ", "Pergi ke Penjara"));
     
     // Position 32: BDG - Bandung (Street - Hijau)
-    tiles.push_back(new StreetTile(31, "BDG", "Bandung", "HJ", nullptr));
+    tiles.push_back(new StreetTile(31, *new StreetProperty(
+        "BDG", "Bandung", 300, 150, "Hijau", 200, 200, 
+        std::vector<int>{26, 130, 390, 900, 1100, 1275}
+    )));
     
     // Position 33: DEN - Denpasar (Street - Hijau)
-    tiles.push_back(new StreetTile(32, "DEN", "Denpasar", "HJ", nullptr));
+    tiles.push_back(new StreetTile(32, *new StreetProperty(
+        "DEN", "Denpasar", 300, 150, "Hijau", 200, 200, 
+        std::vector<int>{26, 130, 390, 900, 1100, 1275}
+    )));
     
     // Position 34: FES - Festival
-    tiles.push_back(new FestivalTile(33, "FES", "Festival", "DF"));
+    tiles.push_back(new FestivalTile(33, "FES", "Festival"));
     
     // Position 35: MTR - Mataram (Street - Hijau)
-    tiles.push_back(new StreetTile(34, "MTR", "Mataram", "HJ", nullptr));
+    tiles.push_back(new StreetTile(34, *new StreetProperty(
+        "MTR", "Mataram", 320, 160, "Hijau", 200, 200, 
+        std::vector<int>{28, 150, 450, 1000, 1200, 1400}
+    )));
     
     // Position 36: GUB - Stasiun Gubeng (Railroad)
-    tiles.push_back(new RailroadTile(35, "GUB", "Stasiun Gubeng", "DF", nullptr));
+    tiles.push_back(new RailroadTile(35, *new RailroadProperty(
+        "GUB", "Stasiun Gubeng", 200, 100, 
+        std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
+    )));
     
     // Position 37: KSP - Kesempatan
-    tiles.push_back(new CardTile(36, "KSP", "Kesempatan", "DF", true));
+    tiles.push_back(new CardTile(36, "KSP", "Kesempatan", true));
     
     // Position 38: JKT - Jakarta (Street - Biru Tua)
-    tiles.push_back(new StreetTile(37, "JKT", "Jakarta", "BT", nullptr));
+    tiles.push_back(new StreetTile(37, *new StreetProperty(
+        "JKT", "Jakarta", 350, 175, "Biru Tua", 200, 200, 
+        std::vector<int>{35, 175, 500, 1100, 1300, 1500}
+    )));
     
     // Position 39: PBM - Pajak Barang Mewah
-    tiles.push_back(new TaxTile(38, "PBM", "Pajak Barang Mewah", "DF", TaxType::PBM));
+    tiles.push_back(new TaxTile(38, "PBM", "Pajak Barang Mewah", TaxType::PBM));
     
     // Position 40: IKN - Ibu Kota Nusantara (Street - Biru Tua)
-    tiles.push_back(new StreetTile(39, "IKN", "Ibu Kota Nusantara", "BT", nullptr));
+    tiles.push_back(new StreetTile(39, *new StreetProperty(
+        "IKN", "Ibu Kota Nusantara", 400, 200, "Biru Tua", 200, 200, 
+        std::vector<int>{50, 200, 600, 1400, 1700, 2000}
+    )));
 }
 
 void GameManager::initializeSkillDeck() {
@@ -254,6 +350,44 @@ void GameManager::setupNewGame(int numPlayers, const std::vector<std::string>& u
     // Randomize turn order
     turnOrder.clear();
     for (int i = 0; i < numPlayers; ++i) {
+        turnOrder.push_back(i);
+    }
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(turnOrder.begin(), turnOrder.end(), g);
+    
+    currentPlayerIndex = 0;
+    currentTurnNumber = 1;
+}
+
+void GameManager::setupNewGameWithBots(const std::vector<std::string>& humanPlayerNames, 
+                                       int numBots, int botDifficulty) {
+    int totalPlayers = humanPlayerNames.size() + numBots;
+    
+    // Create human players
+    for (const std::string& name : humanPlayerNames) {
+        Player* player = new Player(name, config.misc.startingBalance);
+        player->setBoardSizeSource(&board->getSizeRef());
+        players.push_back(player);
+    }
+    
+    // Create bot players with predefined names
+    std::vector<std::string> botNames = {"AlphaBot", "BetaBot", "GammaBot", "DeltaBot"};
+    for (int i = 0; i < numBots; ++i) {
+        std::string botName = botNames[i % botNames.size()];
+        // Add number suffix if needed
+        if (numBots > botNames.size() || i > 0) {
+            botName += std::to_string(i + 1);
+        }
+        
+        BotPlayer* bot = new BotPlayer(botName, config.misc.startingBalance, botDifficulty);
+        bot->setBoardSizeSource(&board->getSizeRef());
+        players.push_back(bot);
+    }
+    
+    // Randomize turn order
+    turnOrder.clear();
+    for (int i = 0; i < totalPlayers; ++i) {
         turnOrder.push_back(i);
     }
     std::random_device rd;
@@ -411,7 +545,7 @@ void GameManager::moveCurrentPlayer(int steps) {
         Tile* tile = tiles[newPos];
         if (tile) {
             std::cout << "Mendarat di: " << tile->getName() << " (" << tile->getCode() << ")" << std::endl;
-            tile->onLanded(player, *currentContext);
+            tile->onLanded(*currentContext);
         }
     }
 }
@@ -639,8 +773,106 @@ void GameManager::upgradeToHotel(const std::string& propertyCode) {}
 void GameManager::useSkillCard(int cardIndex) {}
 void GameManager::discardSkillCard(int cardIndex) {}
 void GameManager::handleBankruptcy(Player* player, int debtAmount, Player* creditor) {}
-void GameManager::saveGame(const std::string& filename) {}
-void GameManager::loadGame(const std::string& filename) {}
+
+void GameManager::saveGame(const std::string& filename) {
+    std::cout << "Menyimpan permainan ke: " << filename << "..." << std::endl;
+    
+    // Build GameState from current game state
+    GameState state;
+    state.currentTurn = currentTurnNumber;
+    state.maxTurn = config.misc.maxTurn;
+    state.activePlayerIdx = currentPlayerIndex;
+    
+    // Convert players to PlayerState
+    for (size_t i = 0; i < players.size(); ++i) {
+        Player* player = players[i];
+        PlayerState ps;
+        ps.username = player->getUsername();
+        ps.balance = player->getBalance();
+        ps.status = (player->getStatus() == PlayerStatus::ACTIVE) ? "ACTIVE" :
+                    (player->getStatus() == PlayerStatus::JAILED) ? "JAILED" : "BANKRUPT";
+        
+        // Get position code from tile
+        int pos = player->getPosition();
+        if (pos >= 0 && pos < static_cast<int>(tiles.size())) {
+            ps.positionCode = tiles[pos]->getCode();
+        } else {
+            ps.positionCode = "GO";
+        }
+        
+        // Convert skill cards to CardState
+        // Note: Player class needs method to access hand cards
+        // For now, we'll save empty hand
+        state.players.push_back(ps);
+    }
+    
+    // Convert turn order indices
+    state.turnOrder = turnOrder;
+    
+    // Convert properties to PropertyState
+    // This requires integration with actual Property objects
+    // For now, we'll save empty properties list
+    
+    // Get deck state
+    for (SkillCard* card : skillDeck) {
+        state.deckState.push_back(card->getDescription());
+    }
+    
+    // Get log entries
+    state.log = logger.getAll();
+    
+    // Save using SaveLoadManager
+    SaveLoadManager saveManager;
+    saveManager.save(state, filename);
+    
+    std::cout << "Permainan berhasil disimpan!" << std::endl;
+}
+
+void GameManager::loadGame(const std::string& filename) {
+    std::cout << "Memuat permainan dari: " << filename << "..." << std::endl;
+    
+    // Check if file exists
+    std::ifstream test(filename);
+    if (!test.is_open()) {
+        std::cout << "File tidak ditemukan: " << filename << std::endl;
+        return;
+    }
+    test.close();
+    
+    // Load using SaveLoadManager
+    SaveLoadManager loadManager;
+    GameState state = loadManager.load(filename);
+    
+    // Restore game state
+    currentTurnNumber = state.currentTurn;
+    config.misc.maxTurn = state.maxTurn;
+    currentPlayerIndex = state.activePlayerIdx;
+    
+    // Restore players
+    // Note: This would need proper cleanup of existing players and recreation
+    // For now, we'll just update existing players if counts match
+    if (state.players.size() != players.size()) {
+        std::cout << "Peringatan: Jumlah pemain tidak cocok dengan save file." << std::endl;
+    }
+    
+    // Restore turn order
+    turnOrder = state.turnOrder;
+    
+    // Restore log - serialize LogEntry vector to the expected format
+    // Format: turn\tusername\tactionType\tdetail\n
+    std::ostringstream logOss;
+    for (const auto& entry : state.log) {
+        logOss << entry.turn << "\t" << entry.username << "\t"
+               << entry.actionType << "\t" << entry.detail << "\n";
+    }
+    logger.deserialize(logOss.str());
+    
+    std::cout << "Permainan berhasil dimuat!" << std::endl;
+    std::cout << "Giliran saat ini: " << currentTurnNumber << "/" << config.misc.maxTurn << std::endl;
+    if (getCurrentPlayer()) {
+        std::cout << "Pemain aktif: " << getCurrentPlayer()->getUsername() << std::endl;
+    }
+}
 void GameManager::printBoard() {
     std::cout << "\n========== PAPAN NIMONSPOLI ==========" << std::endl;
     std::cout << "Posisi pemain:" << std::endl;
@@ -658,7 +890,9 @@ void GameManager::printBoard() {
     std::cout << "\nDaftar petak:" << std::endl;
     for (size_t i = 0; i < tiles.size(); ++i) {
         Tile* tile = tiles[i];
-        std::cout << "  " << (i + 1) << ". [" << tile->getColorTag() << "] " 
+        std::cout << "  " << (i + 1) << ". [" << 
+                (dynamic_cast<StreetProperty*>((dynamic_cast<PropertyTile*>(tile))->getProperty()) == nullptr ? "No Color" : dynamic_cast<StreetProperty*>((dynamic_cast<PropertyTile*>(tile))->getProperty())->getColor()) 
+                << "] " 
                   << tile->getCode() << " - " << tile->getName() << std::endl;
     }
     std::cout << "======================================" << std::endl;
@@ -666,13 +900,30 @@ void GameManager::printBoard() {
 
 void GameManager::printProperty(const std::string& code) {
     for (Tile* tile : tiles) {
-        if (tile->getCode() == code) {
-            std::cout << "\n========== AKTA KEPMILIKAN ==========" << std::endl;
-            std::cout << "Nama: " << tile->getName() << " (" << tile->getCode() << ")" << std::endl;
-            std::cout << "Kategori: " << tile->getColorTag() << std::endl;
-            // TODO: Add more property details when Property is fully integrated
-            std::cout << "=====================================" << std::endl;
-            return;
+        // Mencoba 'mengubah' Tile biasa menjadi PropertyTile
+        PropertyTile* propTile = dynamic_cast<PropertyTile*>(tile); 
+        if (propTile != nullptr) {
+            if (propTile->getCode() == code) {
+                std::cout << "\n========== AKTA KEPEMILIKAN ==========" << std::endl;
+                std::cout << "Nama: " << propTile->getName() << " (" << propTile->getCode() << ")" << std::endl;
+                std::string cat;
+                StreetProperty* strProp = dynamic_cast<StreetProperty*>(propTile->getProperty());
+                if (strProp != nullptr){
+                    cat = "StreetProperty";
+                    std::cout << "Warna: " << strProp->getColorGroup() << std::endl;
+                } else{
+                    if (dynamic_cast<RailroadTile*>(propTile) != nullptr){
+                        // adalah railroadTile 
+                        cat = "RailroadTile";
+                    } else{
+                        cat = "UtilityTile";
+                    }
+                }
+                std::cout << "Kategori: " << cat << std::endl;
+                // TODO: Add more property details when Property is fully integrated
+                std::cout << "=====================================" << std::endl;
+                return;
+            }
         }
     }
     std::cout << "Properti dengan kode '" << code << "' tidak ditemukan." << std::endl;

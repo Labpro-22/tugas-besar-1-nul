@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iostream>
 
+template <typename T>
 class CardDeck {
 private:
     std::vector<T*> deck;

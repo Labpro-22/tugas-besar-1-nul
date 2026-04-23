@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
 
 class Player;
 class Board;
@@ -38,6 +39,9 @@ public:
     // Transaction logger
     void setLogger(TransactionLogger* logger);
     TransactionLogger* getLogger() const;
+
+    // Fungsi tambahan untuk menambahkan currentturn dan mengubah currentPlayer
+    void nextTurn();
 
 private:
     Player* currentPlayer;

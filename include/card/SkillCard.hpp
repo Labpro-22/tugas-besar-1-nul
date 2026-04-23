@@ -18,7 +18,7 @@ public:
 
     void execute(Player* player, TurnContext& ctx) override;
 
-    virtual void apply(Player& player) = 0;
+    virtual void apply(TurnContext& ctx) = 0;
 };
 
 #endif // SKILL_CARD_HPP

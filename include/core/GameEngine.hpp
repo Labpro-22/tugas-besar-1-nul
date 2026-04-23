@@ -24,14 +24,14 @@ private:
     std::vector<std::unique_ptr<Player>> players;
 
 public:
-    // explicit GameEngine(int size)
-    //     : board(Board{size})
-    //     , turnmgr(TurnManager{})
-    //     , chanceDeck(CardDeck<ChanceCard>{})
-    //     , skillDeck(CardDeck<SkillCard>{})
-    //     , players{std::vector<std::unique_ptr<Player>>{}} {};
+    explicit GameEngine(int size)
+        : board(size)
+        , turnmgr(TurnManager{})
+        , chanceDeck(CardDeck<ChanceCard>{})
+        , skillDeck(CardDeck<SkillCard>{})
+        , players{std::vector<std::unique_ptr<Player>>{}} {};
 
-    explicit GameEngine(int size) : board(size) {}
+    // explicit GameEngine(int size) : board(size) {}
 
     void startNewGame();
     void run();

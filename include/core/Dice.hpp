@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 #include <ctime>
-~~
+
 class Dice {
 private:
     int die1;

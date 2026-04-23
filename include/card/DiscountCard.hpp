@@ -10,7 +10,7 @@ private:
 public:
     DiscountCard(int discount);
 
-    void apply(Player& player) override;
+    void apply(TurnContext& ctx) override;
 };
 
 #endif // DISCOUNT_CARD_HPP

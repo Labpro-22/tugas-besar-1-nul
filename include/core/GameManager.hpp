@@ -71,6 +71,15 @@ public:
     // Initialization
     void initialize(Config cfg);
     void setupNewGame(int numPlayers, const std::vector<std::string>& usernames);
+    
+    /**
+     * Setup new game with bot players
+     * @param humanPlayerNames Names of human players
+     * @param numBots Number of bot players to add
+     * @param botDifficulty Difficulty level for bots (1=Easy, 2=Medium, 3=Hard)
+     */
+    void setupNewGameWithBots(const std::vector<std::string>& humanPlayerNames, 
+                              int numBots, int botDifficulty);
     void setupLoadedGame(const std::vector<std::string>& usernames, 
                          const std::vector<int>& balances,
                          const std::vector<int>& positions,

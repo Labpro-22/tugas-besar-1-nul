@@ -7,7 +7,7 @@ class DemolitionCard : public SkillCard {
 public:
     DemolitionCard();
 
-    void apply(Player& player) override;
+    void apply(TurnContext& ctx) override;
 };
 
 #endif // DEMOLITION_CARD_HPP

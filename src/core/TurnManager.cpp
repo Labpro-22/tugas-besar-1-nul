@@ -57,6 +57,8 @@ Player* TurnManager::getCurrentPlayer() {
 
 int TurnManager::getCurrentTurn() const { return this->currentTurn; }
 
+int TurnManager::getMaxTurn() const { return this->maxTurn; }
+
 int TurnManager::getActivePlayerIndex() const { return this->activePlayerIndex; }
 
 const std::vector<Player*>& TurnManager::getTurnOrder() const { return this->turnOrder; }
