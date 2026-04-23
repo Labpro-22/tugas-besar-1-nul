@@ -3,6 +3,7 @@
 #include <vector>
 
 class Player;
+class TurnContext;
 
 class TurnManager {
 private:
@@ -20,7 +21,7 @@ public:
     void addPlayerToOrder(Player* player);
     void resetTurns();
 
-    void nextTurn();
+    void nextTurn(TurnContext& ctx);
     Player* getCurrentPlayer();
 
     int getCurrentTurn() const;

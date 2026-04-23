@@ -4,7 +4,7 @@
 
 #include "exception/BankruptcyException.hpp"
 #include "exception/InvalidGameStateException.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "property/Property.hpp"
 #include "property/StreetProperty.hpp"
 

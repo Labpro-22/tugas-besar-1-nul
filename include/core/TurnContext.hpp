@@ -7,6 +7,7 @@ class Player;
 class Board;
 class TransactionLogger;
 class Tile;
+class Dice;
 
 // Forward declarations for card decks
 class SkillCard;

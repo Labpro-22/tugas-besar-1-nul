@@ -11,7 +11,7 @@
 
 #include "exception/CommandException.hpp"
 #include "exception/InsufficientFundsException.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "property/Property.hpp"
 
 namespace {
