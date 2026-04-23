@@ -132,3 +132,7 @@ void GameEngine::executeCommand(TurnContext& ctx) {
     cmd.promptInput();
     cmd.dispatch(ctx);
 }
+
+TurnManager& GameEngine::getTurnManager() {
+    return turnmgr;
+}

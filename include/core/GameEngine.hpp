@@ -33,6 +33,8 @@ public:
     void saveGame(const std::string& file);
     void executeCommand(TurnContext& ctx);
 
+    TurnManager& getTurnManager();
+
     void displayPlayers() const;
     std::vector<Player*> getPlayers() const;
 };

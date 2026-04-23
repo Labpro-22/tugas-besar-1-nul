@@ -103,10 +103,10 @@ void TaxTile::onLanded(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
     cout << "haha got taxed\n";
     if (taxType == TaxType::PPH){ //is PPH
-        applyPPH(*player);
+        applyPPH(player);
     }
     else if (taxType == TaxType::PBM){ //is PBM
-        applyPBM(*player);
+        applyPBM(player);
     }
 }
 

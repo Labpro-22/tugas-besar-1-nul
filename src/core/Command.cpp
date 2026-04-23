@@ -123,7 +123,7 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 	}
 
 	out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
-	baseTile->onLanded(&ctx.currentPlayer, ctx);
+	baseTile->onLanded(ctx);
 }
 
 void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {

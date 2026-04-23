@@ -18,20 +18,20 @@ Property* PropertyTile::getProperty(){
 };
 
 //helper
-void printOwner(Player* player){
-    cout << "Properti ini milik " << player->getUsername() << "\n";
+void printOwner(Player& player){
+    cout << "Properti ini milik " << player.getUsername() << "\n";
 }
 
 void PropertyTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     printOwner(player);
 }
 
 
 void StreetTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     if (property->getStatus() == PropertyStatus::OWNED){
-        if (property->getOwner() != player){
+        if (property->getOwner() != &player){
             triggerRentPayment(ctx);
         }
     } else if (property->getStatus() == PropertyStatus::BANK){
@@ -41,7 +41,7 @@ void StreetTile::onLanded(TurnContext& ctx){
 }
 
 void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     cout << "Anda mendarat di [" << getName() << "].\n\n";
     getProperty()->printStatus(ctx);
     string ans;
@@ -49,9 +49,9 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
         cout << "[Y/N] Apakah Anda mau beli " << getName() << "? (Harga: " << getProperty()->getBuyPrice() << ")\n\n";
         cin >> ans;
         if (ans == "Y" || ans == "y"){
-            player->buy(getProperty());
+            player.buy(getProperty());
             cout << "Anda baru saja membeli " << getName() << "\n";
-            cout << "Uang anda tersisa: " << player->getBalance() - getProperty()->getBuyPrice() << "\n\n"; //nanti implement dari player, biar bisa kurangi balance player
+            cout << "Uang anda tersisa: " << player.getBalance() - getProperty()->getBuyPrice() << "\n\n"; //nanti implement dari player, biar bisa kurangi balance player
             break;
         } else if (ans == "N" || ans == "n"){
             cout << "AUCTIONNNNNNNNN\n"; //nanti masukkan fungsi auction
@@ -63,23 +63,23 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
 }
 
 void StreetTile::triggerRentPayment(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     cout << "Anda mendarat di [" << getProperty()->getName() << "] milik [" << getProperty()->getOwner()->getUsername() << "].\n\n";
     getProperty()->printStatus(ctx);
-    cout << "Uang anda tersisa: <M" << player->getBalance() - getProperty()->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player
+    cout << "Uang anda tersisa: <M" << player.getBalance() - getProperty()->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player
 }
 
 void RailroadTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     if (property->getStatus() == PropertyStatus::BANK){
-        autoAcquire(*player);
+        autoAcquire(player);
     } else if (property->getStatus() == PropertyStatus::OWNED){
         
-        if (property->getOwner() != player){
+        if (property->getOwner() != &player){
             Property* prop = getProperty();
             cout << "Anda mendarat di [" << prop->getName() << "] milik [" << prop->getOwner()->getUsername() << "].\n\n";
             prop->printStatus(ctx); //ini harusnya jadi 0 harga belinya
-            cout << "Uang anda tersisa: <M" << player->getBalance() - prop->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player
+            cout << "Uang anda tersisa: <M" << player.getBalance() - prop->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player
         }
     } else{
         //kalau Mortgaged lewat aja sih
@@ -93,17 +93,17 @@ void RailroadTile::autoAcquire(Player& player){
 }
 
 void UtilityTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     if (property->getStatus() == PropertyStatus::BANK){
-        autoAcquire(*player);
+        autoAcquire(player);
         
     } else if (property->getStatus() == PropertyStatus::OWNED){
         
-        if (property->getOwner() != player){
+        if (property->getOwner() != &player){
             Property* prop = getProperty();
             cout << "Anda mendarat di [" << prop->getName() << "] milik [" << prop->getOwner()->getUsername() << "].\n\n";
             prop->printStatus(ctx); //ini harusnya jadi 0 harga belinya
-            cout << "Uang anda tersisa: <M" << player->getBalance() << ">.\n\n"; //nanti implement dari player
+            cout << "Uang anda tersisa: <M" << player.getBalance() << ">.\n\n"; //nanti implement dari player
         }
     } else{
         //kalau Mortgaged lewat aja sih
