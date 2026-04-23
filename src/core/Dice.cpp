@@ -1,4 +1,6 @@
 #include "core/Dice.hpp"
+#include <iostream>
+#include <random>
 
 bool Dice::isDouble() const { return this->die1 == this->die2; }
 
@@ -8,20 +10,26 @@ int Dice::getDie2() const { return this->die2; }
 
 int Dice::getTotal() const { return this->die1 + this->die2; }
 
-void Dice::roll() {
-    if (!canRoll) return;
+bool Dice::roll() {
+    if (!canRoll) return false;
 
     if (this->doubleCount > 2) {
         canRoll = false;
         // go jail
+        return true;
     }
-    this->die1 = (std::rand() % 6) + 1;
-    this->die2 = (std::rand() % 6) + 1;
+    
+    static std::mt19937 rng(std::random_device{}());  // seeded once automatically
+    std::uniform_int_distribution<int> dist(1, 6);
+    
+    this->die1 = dist(rng);
+    this->die2 = dist(rng);
 
     if (this->isDouble()) {
         this->doubleCount++;
     }
     else canRoll = false;
+    return true;
 }
 
 void Dice::setManual(int x, int y) {
