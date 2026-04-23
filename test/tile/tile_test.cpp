@@ -1,59 +1,70 @@
 #include "board/Board.hpp"
+#include "tile/ActionTile.hpp"
 #include "tile/PropertyTile.hpp"
 #include "property/StreetProperty.hpp"
 #include "property/RailroadProperty.hpp"
-#include "core/TurnContext.hpp"
+#include "property/UtilityProperty.hpp"
 #include "core/GameEngine.hpp"
-#include "core/Dice.hpp"
-#include "player/Player.hpp"
 
-using namespace std;
+#include <cassert>
+#include <iostream>
+#include <memory>
 #include <vector>
+#include <map>
 
-int main(){
-    Dice d;
-    Board b(20);
-    GameEngine ge(20);
-    // cout << "============= NIMONSPOLI =============\n";
+int main() {
+    Board board(20);
 
-    //setup player
-    Player p = Player("tensai", 3067);
-    Player p2 = Player("sakuragi", 2000);
-    vector<Player*> allPlayer;
-    allPlayer.push_back(&p);
-    allPlayer.push_back(&p2);
+    board.setTileAt(0, std::make_unique<GoTile>(0, "GO", "Petak Mulai"));
+    board.setTileAt(1, std::make_unique<ActionTile>(1, "A1", "Action 1"));
+    board.setTileAt(2, std::make_unique<CardTile>(2, "C1", "Kesempatan", true));
 
-    // //setup property
-    vector<int> x = {100, 150, 200, 250, 300, 350, 400, 450};
+    std::vector<int> rentTable{10, 20, 30, 40, 50, 60};
+    auto streetA = std::make_unique<StreetProperty>(
+        "S1", "Street One", 100, 50, "Hijau", 50, 100, rentTable);
+    auto streetB = std::make_unique<StreetProperty>(
+        "S2", "Street Two", 120, 60, "Hijau", 50, 100, rentTable);
 
-    StreetProperty prop("LNDN", "Lundun", 300, 150, "GREEN", 300, 400, x);
-    StreetTile st(6, prop);
-    //mungkin bisa simplify konstruktor StreetTile biar pakai property aja? nanti dilihat dependencynya lagi
-    StreetProperty prop2("BRM", "Birmingham", 300, 150, "GREEN", 300, 400, x);
-    StreetTile st2(7, prop2);
-    
-    TurnContext tc(p, d, b, ge); 
-    TurnManager tm = tc.getTurnMgr();
+    std::map<int, int> rrRent{{1, 25}, {2, 50}, {3, 100}, {4, 200}};
+    auto railroad = std::make_unique<RailroadProperty>(
+        "R1", "Railroad One", 200, 100, rrRent);
 
-    map<int, int> x_map = {{1, 40}, {2, 100}};
+    std::map<int, int> utilMult{{1, 4}, {2, 10}};
+    auto utility = std::make_unique<UtilityProperty>(
+        "U1", "Utility One", 150, 75, utilMult);
 
-    RailroadProperty rprop("GMBR", "Gambir", 0, 150, x_map);
+    board.setTileAt(3, std::make_unique<StreetTile>(3, *streetA));
+    board.setTileAt(4, std::make_unique<StreetTile>(4, *streetB));
+    board.setTileAt(5, std::make_unique<RailroadTile>(5, *railroad));
+    board.setTileAt(6, std::make_unique<UtilityTile>(6, *utility));
 
-    RailroadProperty rprop2("GBNG", "Gubeng", 0, 200, x_map);
+    for (int i = 7; i < board.getSize(); ++i) {
+        board.setTileAt(i, std::make_unique<ActionTile>(
+            i, "A" + std::to_string(i), "Action " + std::to_string(i)));
+    }
 
-    RailroadTile rt(8, rprop);
-    RailroadTile rt2(9, rprop2);
+    assert(board.getPlacedTileCount() == board.getSize());
 
+    for (int i = 0; i < board.getSize(); ++i) {
+        Tile* tile = board.getTile(i);
+        assert(tile != nullptr);
+        assert(tile->getIndex() == i);
+    }
 
-    p2.buy(&prop);
-    prop.setOwner(&p2); // ini harus dihandle di buy
-    st.onLanded(tc); 
-    // TurnContext tc2(&p2, &d, &b, &ge); //gimana nanti modif turncontextnya yah
-    tm.nextTurn(tc);
-    st2.onLanded(tc);
-    tm.nextTurn(tc);
-    rt.onLanded(tc);
-    tm.nextTurn(tc);
-    rt2.onLanded(tc);
+    assert(board.getTileByCode("GO") != nullptr);
+    assert(board.getTileByCode("S1") != nullptr);
+    assert(board.getTileByCode("S2") != nullptr);
+    assert(board.getTileByCode("R1") != nullptr);
+    assert(board.getTileByCode("U1") != nullptr);
+    assert(board.getTileByCode("DOES_NOT_EXIST") == nullptr);
+
+    const std::vector<StreetTile*> hijauGroup = board.getColorGroup("HIJAU");
+    assert(hijauGroup.size() == 2);
+
+    std::cout << "[PASS] Board tile storage test passed.\n";
+
+    GameEngine ge(40);
+    ge.run();
+
     return 0;
 }
