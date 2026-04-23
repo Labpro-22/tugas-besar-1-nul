@@ -8,6 +8,7 @@
 // using namespace std;
 
 #include "tile/Tile.hpp"
+#include "property/Property.hpp"
 
 // Forward declarations
 class TileConfig;
@@ -16,6 +17,7 @@ class StreetTile;
 class Board{
     private:
         std::vector<std::unique_ptr<Tile>> tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
+        std::vector<std::unique_ptr<Property>> properties; // owner for property instances used by PropertyTile
         std::map<std::string, int> codeToIndex; // masi error nnti cek lgi dah mo turu dl
         int size;
     
@@ -31,10 +33,14 @@ class Board{
         
         Tile* getTile(int idx);
         Tile* getTileByCode(std::string cd);
+        void setTileAt(int idx, std::unique_ptr<Tile> tile);
+        int getPlacedTileCount() const;
         int getSize() const;
         int& getSizeRef();
         std::vector<StreetTile*> getColorGroup(std::string clr);
         void buildFromConfig(std::vector<TileConfig*> data);
+
+        void generateDefaultBoard(); 
 
         ~Board();
 };
