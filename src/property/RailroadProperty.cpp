@@ -10,8 +10,11 @@ RailroadProperty::RailroadProperty(std::string code,
                                    std::string name,
                                    int buyPrice,
                                    int mortgageValue,
-                                   std::map<int, int> rentTable)
-    : Property(std::move(code), std::move(name), buyPrice, mortgageValue),
+                                   std::map<int, int> rentTable,
+                                    PropertyStatus status,
+                                    int festivalMult,
+                                    int festivalDur)
+    : Property(std::move(code), std::move(name), buyPrice, mortgageValue, status, festivalMult, festivalDur),
       rentTable_(std::move(rentTable)) {
     if (rentTable_.empty()) {
         throw InvalidGameStateException("Railroad rent table cannot be empty");

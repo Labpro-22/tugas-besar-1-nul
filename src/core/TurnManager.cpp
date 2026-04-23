@@ -36,6 +36,7 @@ void TurnManager::nextTurn(TurnContext& ctx) {
     ctx.dice.reset();
     this->activePlayerIndex = (this->activePlayerIndex + 1) % this->turnOrder.size();
     this->currentTurn++;
+    ctx.currentPlayer = *this->turnOrder[this->activePlayerIndex];
 }
 
 Player* TurnManager::getCurrentPlayer() {

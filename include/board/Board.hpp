@@ -35,6 +35,7 @@ class Board{
         Tile* getTileByCode(std::string cd);
         void setTileAt(int idx, std::unique_ptr<Tile> tile);
         int getPlacedTileCount() const;
+        std::vector<std::unique_ptr<Tile>>& getAllTiles();
         int getSize() const;
         int& getSizeRef();
         std::vector<StreetTile*> getColorGroup(std::string clr);

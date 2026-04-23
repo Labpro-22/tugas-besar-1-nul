@@ -1,17 +1,14 @@
 #pragma once
 
 #include "Tile.hpp"
+#include "card/card.hpp"
 #include <iostream>
 #include <vector>
 
 class Player;
 class TurnContext;
 class StreetProperty;
-
-// =================================== dummy classes =====================================
-class CardType{
-    //dummy data
-};
+class Property;
 
 enum class TaxType{
     PPH,
@@ -27,8 +24,6 @@ class ActionTile : public Tile{
 class GoTile : public ActionTile{
     public:
         GoTile(int idx, string cd, string nm);
-        void onLanded(TurnContext& ctx) override;
-        void paySalary(Player& player, int amount);
 };
 
 class JailTile : public ActionTile{
@@ -46,7 +41,6 @@ class JailTile : public ActionTile{
 class FreeParkingTile : public ActionTile{
     public:
         FreeParkingTile(int idx, string cd, string nm);
-        void onLanded(TurnContext& ctx) override;
 };
 
 class GoToJailTile : public ActionTile{
@@ -57,9 +51,9 @@ class GoToJailTile : public ActionTile{
 
 class CardTile : public ActionTile{
     private:
-        bool isChance; // true = Kesempatan, false = Dana Umum
+        Card* card;
     public:
-        CardTile(int idx, string cd, string nm, bool chance);
+        CardTile(int idx, string cd, string nm);
         void onLanded(TurnContext& ctx) override;
 };
 
@@ -67,7 +61,7 @@ class FestivalTile : public ActionTile{
     public:
         FestivalTile(int idx, string cd, string nm);
         void onLanded(TurnContext& ctx) override;
-        void applyFestival(Player& player, StreetProperty& prop);
+        void applyFestival(Player& player, Property& prop);
 };
 
 class TaxTile : public ActionTile{

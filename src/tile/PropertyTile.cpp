@@ -42,7 +42,7 @@ void StreetTile::onLanded(TurnContext& ctx){
 
 void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
-    cout << "Anda mendarat di [" << getName() << "].\n\n";
+    cout << "[" << player.getUsername() << "] mendarat di [" << getName() << "].\n\n";
     getProperty()->printStatus(ctx);
     string ans;
     while (true){
@@ -50,8 +50,8 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
         cin >> ans;
         if (ans == "Y" || ans == "y"){
             player.buy(getProperty());
-            cout << "Anda baru saja membeli " << getName() << "\n";
-            cout << "Uang anda tersisa: " << player.getBalance() - getProperty()->getBuyPrice() << "\n\n"; //nanti implement dari player, biar bisa kurangi balance player
+            cout << "[" << player.getUsername() << "] baru saja membeli " << getName() << "\n";
+            cout << "Uang [" << player.getUsername() << "] tersisa: " << player.getBalance() - getProperty()->getBuyPrice() << "\n\n"; //nanti implement dari player, biar bisa kurangi balance player
             break;
         } else if (ans == "N" || ans == "n"){
             cout << "AUCTIONNNNNNNNN\n"; //nanti masukkan fungsi auction
@@ -64,7 +64,7 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
 
 void StreetTile::triggerRentPayment(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
-    cout << "Anda mendarat di [" << getProperty()->getName() << "] milik [" << getProperty()->getOwner()->getUsername() << "].\n\n";
+    cout << "[" << player.getUsername() << "] mendarat di [" << getProperty()->getName() << "] milik [" << getProperty()->getOwner()->getUsername() << "].\n\n";
     getProperty()->printStatus(ctx);
     cout << "Uang anda tersisa: <M" << player.getBalance() - getProperty()->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player
 }
@@ -77,7 +77,7 @@ void RailroadTile::onLanded(TurnContext& ctx){
         
         if (property->getOwner() != &player){
             Property* prop = getProperty();
-            cout << "Anda mendarat di [" << prop->getName() << "] milik [" << prop->getOwner()->getUsername() << "].\n\n";
+            cout << "[" << player.getUsername() << "] mendarat di [" << prop->getName() << "] milik [" << prop->getOwner()->getUsername() << "].\n\n";
             prop->printStatus(ctx); //ini harusnya jadi 0 harga belinya
             cout << "Uang anda tersisa: <M" << player.getBalance() - prop->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player
         }
@@ -101,7 +101,7 @@ void UtilityTile::onLanded(TurnContext& ctx){
         
         if (property->getOwner() != &player){
             Property* prop = getProperty();
-            cout << "Anda mendarat di [" << prop->getName() << "] milik [" << prop->getOwner()->getUsername() << "].\n\n";
+            cout << "[" << player.getUsername() << "] mendarat di [" << prop->getName() << "] milik [" << prop->getOwner()->getUsername() << "].\n\n";
             prop->printStatus(ctx); //ini harusnya jadi 0 harga belinya
             cout << "Uang anda tersisa: <M" << player.getBalance() << ">.\n\n"; //nanti implement dari player
         }
