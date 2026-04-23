@@ -18,8 +18,8 @@ Property* PropertyTile::getProperty(){
 };
 
 //helper
-void printOwner(Player* player){
-    cout << "Properti ini milik " << player->getUsername() << "\n";
+void printOwner(Player& player){
+    cout << "Properti ini milik " << player.getUsername() << "\n";
 }
 
 void PropertyTile::onLanded(TurnContext& ctx){

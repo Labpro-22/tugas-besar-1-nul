@@ -1,5 +1,5 @@
 #include "tile/Tile.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
 
 #include <iostream>
