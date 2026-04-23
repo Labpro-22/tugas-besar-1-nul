@@ -12,7 +12,10 @@ class RailroadProperty : public Property {
                      std::string name,
                      int buyPrice, //nanti dihapus
                      int mortgageValue,
-                     std::map<int, int> rentTable);
+                     std::map<int, int> rentTable,
+                      PropertyStatus status = PropertyStatus::BANK,
+                      int festivalMult = 1,
+                      int festivalDur = 0);
 
     int getRent(const TurnContext& ctx) const override;
 
