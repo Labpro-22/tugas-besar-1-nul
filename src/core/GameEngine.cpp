@@ -113,7 +113,7 @@ void GameEngine::newGame() {
     int numPlayers;
     std::cout << "\n";
     std::cout << "[INFO] Querying players\n";
-    std::cout << "Enter player amount (2-6)\n";
+    std::cout << "Enter player amount (2-4)\n";
     std::cout << "> ";
     std::cin >> numPlayers;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');

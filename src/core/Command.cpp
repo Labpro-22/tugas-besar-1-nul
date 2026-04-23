@@ -252,31 +252,33 @@ void Command::execPrintCert(TurnContext& ctx, std::ostream& out) const {
 		out << "[WARN] Property data for code '" << propertyCode << "' is unavailable.\n";
 		return;
 	}
+	
+	property->printStatus(ctx);
 
-	out << "[INFO] Property Certificate\n";
-	out << "Code  : " << property->getCode() << "\n";
-	out << "Name  : " << property->getName() << "\n";
+	// out << "[INFO] Property Certificate\n";
+	// out << "Code  : " << property->getCode() << "\n";
+	// out << "Name  : " << property->getName() << "\n";
 
-	const PropertyStatus status = property->getStatus();
-	if (status == PropertyStatus::BANK) {
-		out << "Status: BANK\n";
-		out << "Owner : BANK\n";
-		return;
-	}
+	// const PropertyStatus status = property->getStatus();
+	// if (status == PropertyStatus::BANK) {
+	// 	out << "Status: BANK\n";
+	// 	out << "Owner : BANK\n";
+	// 	return;
+	// }
 
-	if (status == PropertyStatus::MORTGAGED) {
-		out << "Status: MORTGAGED\n";
-	} else {
-		out << "Status: OWNED\n";
-	}
+	// if (status == PropertyStatus::MORTGAGED) {
+	// 	out << "Status: MORTGAGED\n";
+	// } else {
+	// 	out << "Status: OWNED\n";
+	// }
 
-	Player* owner = property->getOwner();
-	if (owner == nullptr) {
-		out << "Owner : UNKNOWN\n";
-		return;
-	}
+	// Player* owner = property->getOwner();
+	// if (owner == nullptr) {
+	// 	out << "Owner : UNKNOWN\n";
+	// 	return;
+	// }
 
-	out << "Owner : " << owner->getUsername() << "\n";
+	// out << "Owner : " << owner->getUsername() << "\n";
 }
 
 void Command::execPrintProperty(TurnContext& ctx, std::ostream& out) const {

@@ -78,7 +78,7 @@ FestivalTile::FestivalTile(int idx, string cd, string nm)
 
 void FestivalTile::onLanded(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
-    cout << "[" << ctx.currentPlayer.getUsername() << "] landed on Festival Tile.\nChoose property to increase rent: \n";
+    cout << "\nChoose property to increase rent: \n";
     bool hasProp = false;
     std::vector<std::unique_ptr<Tile>>& allTiles = ctx.board.getAllTiles();
     PropertyTile* proptile = nullptr;
