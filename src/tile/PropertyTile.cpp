@@ -64,6 +64,11 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
 
 void StreetTile::triggerRentPayment(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
+    if (player.isShieldActive()) {
+        cout << "You have an active shield! No rent paid\n";
+        return;
+    }
+
     cout << "Anda mendarat di [" << getProperty()->getName() << "] milik [" << getProperty()->getOwner()->getUsername() << "].\n\n";
     getProperty()->printStatus(ctx);
     cout << "Uang anda tersisa: <M" << player.getBalance() - getProperty()->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player

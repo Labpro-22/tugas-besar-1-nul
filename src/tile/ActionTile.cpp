@@ -1,5 +1,6 @@
 #include "tile/ActionTile.hpp"
 #include "core/TurnContext.hpp"
+#include "core/GameEngine.hpp"
 #include "player/Player.hpp"
 #include "board/Board.hpp"
 #include <iostream>
