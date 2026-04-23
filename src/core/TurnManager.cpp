@@ -2,6 +2,7 @@
 #include "core/TurnContext.hpp"
 #include "core/Dice.hpp"
 #include "player/Player.hpp"
+#include "core/GameEngine.hpp"
 
 TurnManager::TurnManager(int maxTurn)
     : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), turnOrder() {}
