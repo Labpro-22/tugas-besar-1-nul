@@ -20,7 +20,7 @@ public:
     bool isDouble() const;
     int getTotal() const;
 
-    void roll();
+    bool roll();
     void setManual(int x, int y);
 
     void reset();

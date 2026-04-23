@@ -24,12 +24,17 @@ void GameEngine::run() {
     this->startMenu();
 
     Dice gameDice;
-    TurnContext ctx(*turnmgr.getCurrentPlayer(), gameDice, board, *this);
     Command cmd;
     bool goNext;
 
     while (!turnmgr.isGameOver()) {
         Player* currentPlayer = turnmgr.getCurrentPlayer();
+        if (currentPlayer == nullptr) {
+            std::cout << "[WARN] No active player found. Stopping game loop.\n";
+            break;
+        }
+
+        TurnContext ctx(*currentPlayer, gameDice, board, *this);
         std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": " << currentPlayer->getUsername() << " ===\n";
         
         goNext = false;

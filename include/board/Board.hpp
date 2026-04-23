@@ -13,6 +13,7 @@
 // Forward declarations
 class TileConfig;
 class StreetTile;
+class Config;
 
 class Board{
     private:
@@ -39,7 +40,7 @@ class Board{
         int getSize() const;
         int& getSizeRef();
         std::vector<StreetTile*> getColorGroup(std::string clr);
-        void buildFromConfig(std::vector<TileConfig*> data);
+        void buildFromConfig(const Config& config);
 
         void generateDefaultBoard(); 
 

@@ -26,6 +26,7 @@ private:
     void execPrintLog(TurnContext& ctx, std::ostream& out) const;
     void execUseSkill(TurnContext& ctx, std::ostream& out) const;
     void execHelp(std::ostream& out) const;
+    void execPrintBoard(TurnContext& ctx, std::ostream& out) const;
 
 public:
     Command() = default;
