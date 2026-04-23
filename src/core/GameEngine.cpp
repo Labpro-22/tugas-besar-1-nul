@@ -3,9 +3,12 @@
 #include "core/TurnContext.hpp"
 #include "core/Command.hpp"
 #include "core/Dice.hpp"
+#include "tile/ActionTile.hpp"
 
 #include "player/Player.hpp"
 #include "exception/CommandException.hpp"
+
+#include <limits>
 
 GameEngine::GameEngine(int size)
     : board(Board{size})
@@ -17,48 +20,69 @@ GameEngine::GameEngine(int size)
 GameEngine::~GameEngine() = default;
 
 void GameEngine::run() {
-    std::cout << "=== Welcome to Nimonspoli ===\n";
-    this->startNewGame();
+    this->printBanner();
+    this->startMenu();
 
     Dice gameDice;
     TurnContext ctx(*turnmgr.getCurrentPlayer(), gameDice, board, *this);
+    Command cmd;
+    bool goNext;
 
     while (!turnmgr.isGameOver()) {
         Player* currentPlayer = turnmgr.getCurrentPlayer();
         std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": " << currentPlayer->getUsername() << " ===\n";
         
+        goNext = false;
         try {
-            this->executeCommand(ctx);
+            cmd.promptInput();
+            goNext = cmd.dispatch(ctx);
         } catch (const CommandException& exc) {
             std::cout << exc.what() << "\n";
         } catch (const std::exception& exc) {
             std::cout << exc.what() << "\n";
         }
         
-        turnmgr.nextTurn(ctx);
+        if (goNext) {
+            turnmgr.nextTurn(ctx);
+        }
     }
 
     std::cout << "\n=== Permainan Selesai! ===\n";
 }
 
-void GameEngine::loadGame(const std::string& file) {
-    std::cout << "[INFO] Memuat konfigurasi board dari file: " << file << "\n";
-    this->board = Board(40); // coba default dulu
+void GameEngine::loadGame() {
+    std::cout << "[INFO] Loading Game...\n";
+    std::cout << "Input configuration filename\n" ;
+    std::cout << "> ";
+    std::string filename;
+    std::getline(std::cin, filename);
+    if (filename.empty()) {
+        this->board.generateDefaultBoard();
+        return;
+    }
+
+    std::cout << "\n";
+    std::cout << "[INFO] Memuat konfigurasi board dari file: " << filename << "\n";
+    this->board = Board(40); // temporary dummy board bootstrap
+    // load from file
+    this->board.generateDefaultBoard(); 
 
     int maxTurns;
+    std::cout << "\n";
     std::cout << "[INFO] Memuat giliran maksimal permainan\n";
     std::cout << "Masukkan batas jumlah giliran permainan (atau -1 untuk tanpa batas)\n";
     std::cout << "> ";
     std::cin >> maxTurns;
-    std::cin.ignore();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     this->turnmgr = TurnManager(maxTurns);
 
     int numPlayers;
+    std::cout << "\n";
     std::cout << "[INFO] Memuat pemain\n";
     std::cout << "Masukkan jumlah pemain (2-6)\n";
     std::cout << "> ";
     std::cin >> numPlayers;
-    std::cin.ignore();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     for (int i = 0; i < numPlayers; ++i) {
         std::string username;
         std::cout << "Masukkan nama pemain " << (i + 1) << ": ";
@@ -69,19 +93,32 @@ void GameEngine::loadGame(const std::string& file) {
 
 }
 
-void GameEngine::startNewGame() {
-    printBanner();
-    std::cout << "[INFO] Memulai permainan baru...\n";
-    std::cout << "Masukkan name file config board (atau tekan Enter untuk default)\n" ;
+void GameEngine::newGame() {
+    std::cout << "[INFO] Generating default map\n\n";
+    this->board.generateDefaultBoard();
+
+    int maxTurns;
+    std::cout << "[INFO] Querying max turns\n";
+    std::cout << "Enter max turn (-1 for unlimited turns)\n";
     std::cout << "> ";
-    std::cin.ignore();
-    std::string filename;
-    std::getline(std::cin, filename);
-    if (filename.empty()) {
-        this->loadGame("default_config.txt");
-    } else {
-        this->loadGame(filename);
+    std::cin >> maxTurns;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    this->turnmgr = TurnManager(maxTurns);
+
+    int numPlayers;
+    std::cout << "\n";
+    std::cout << "[INFO] Querying players\n";
+    std::cout << "Enter player amount (2-6)\n";
+    std::cout << "> ";
+    std::cin >> numPlayers;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    for (int i = 0; i < numPlayers; ++i) {
+        std::string username;
+        std::cout << "Enter player " << (i + 1) << "'s name: ";
+        std::getline(std::cin, username);
+        players.push_back(std::make_unique<Player>(username, 1500)); // saldo awal 1500
     }
+    turnmgr.setTurnOrder(this->getPlayers());
 }
 
 // ini pake pointer, tapi gameengine pake unique_ptr,
@@ -105,14 +142,6 @@ void GameEngine::displayPlayers() const {
     std::cout << "=====================\n\n";
 }
 
-void GameEngine::executeCommand(TurnContext& ctx) {
-    std::cout << "[INFO] Eksekusi perintah\n";
-
-    Command cmd;
-    cmd.promptInput();
-    cmd.dispatch(ctx);
-}
-
 void GameEngine::printBanner() {
     cout << "\n";
     cout << "  ╔══════════════════════════════════════════════════════════════╗\n";
@@ -134,6 +163,50 @@ void GameEngine::printBanner() {
     cout << "  ╚══════════════════════════════════════════════════════════════╝\n";
 }
 
+void GameEngine::startMenu() {
+    std::cout << "\n";
+    std::cout << "========================================\n";
+    std::cout << "             WELCOME TO\n";
+    std::cout << "         N I M O N S P O L I\n";
+    std::cout << "========================================\n";
+    std::cout << "Pick an option:\n";
+    std::cout << "  1. NEW GAME  - Start a new game\n";
+    std::cout << "  2. LOAD GAME - Load a game\n";
+    std::cout << "  3. HELP      - Show the help display\n";
+    std::cout << "  4. EXIT      - Exit the game\n";
+
+    while (true) {
+        std::cout << "Enter a choice (1-4): ";
+        std::string choiceLine;
+        std::getline(std::cin, choiceLine);
+
+        int choice = 0;
+        try {
+            choice = std::stoi(choiceLine);
+        } catch (const std::exception&) {
+            std::cout << "Input has to be 1-4. Please retry\n\n";
+            continue;
+        }
+
+        if (choice == 1) {
+            this->newGame();
+            break;
+        } else if (choice == 2) {
+            this->loadGame();
+            break;
+        } else if (choice == 3) {
+            break;
+        } else if (choice == 4) {
+            std::cout << "Thank you for playing!\n";
+            exit(0);
+            break;
+        } else {
+            std::cout << "Invalid choice. Please retry\n\n";
+        }
+    }
+}
+
 TurnManager& GameEngine::getTurnManager() {
     return turnmgr;
 }
+

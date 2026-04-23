@@ -22,7 +22,7 @@ enum class GameStatus {
 class GameEngine {
 private:
     // Board board;
-    Board board{20};
+    Board board;
     TurnManager turnmgr;
     CardDeck<ChanceCard> chanceDeck;
     // CardDeck<CommunityCard> communityDeck;
@@ -35,15 +35,17 @@ public:
     explicit GameEngine(int size);
     ~GameEngine();
 
-    void startNewGame();
+    void newGame();
+    void loadGame();
     void run();
     void loadGame(const std::string& file);
     void saveGame(const std::string& file);
     void executeCommand(TurnContext& ctx);
 
     void printBanner();
+    void startMenu();
+    
     TurnManager& getTurnManager();
-
     void displayPlayers() const;
     std::vector<Player*> getPlayers() const;
 };
