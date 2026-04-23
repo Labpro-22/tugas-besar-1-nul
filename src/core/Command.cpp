@@ -123,34 +123,15 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 		return false;
 	}
 
-	const std::string commandName = this->argv(0);
+	const std::string commandName = toUpperAscii(this->argv(0));
 
-	if (commandName == "ROLL_DICE") {
-		execRollDice(ctx, out);
-		return true;
-	}
-
-	if (commandName == "SET_DICE") {
-		execSetDice(ctx, out);
-		return true;
-	}
-
-	if (commandName == "PRINT_PROP_CERT") {
-		execPrintCert(ctx, out);
-		return true;
-	}
-
-	if (commandName == "PRINT_PROPERTY") {
-		execPrintProperty(ctx, out);
-		return true;
-	}
-
-	if (commandName == "HELP") {
-		execHelp(out);
-		return true;
-	}
-
-	out << "[WARN] Unrecognized command: " << commandName << "\n";
+	if (commandName == "END_TURN") return true;
+	else if (commandName == "ROLL_DICE") execRollDice(ctx, out);
+	else if (commandName == "SET_DICE") execSetDice(ctx, out);
+	else if (commandName == "PRINT_PROP_CERT") execPrintCert(ctx, out);
+	else if (commandName == "PRINT_PROPERTY") execPrintProperty(ctx, out);
+	else if (commandName == "HELP") execHelp(out);
+	else out << "[WARN] Unrecognized command: " << commandName << "\n";
 	return false;
 }
 
@@ -261,8 +242,7 @@ void Command::execPrintProperty(TurnContext& ctx, std::ostream& out) const {
 	Player &curPlayer = ctx.currentPlayer;
 	const auto& properties = curPlayer.getProperties();
 
-	out << "[COMMAND] Checking properties of...\n";
-	out << "==== " << curPlayer.getUsername() << " ====\n";
+	out << "[COMMAND] Checking properties...\n";
 	if (properties.empty()) {
 		out << "You don't have any properties.\n";
 		return;
