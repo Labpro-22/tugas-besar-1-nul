@@ -17,7 +17,7 @@ class PropertyTile : public Tile{
     protected: 
         Property* property;
     public:
-        PropertyTile(int idx, Property *p);
+        PropertyTile(int idx, Property &p);
         Property* getProperty();
         virtual void onLanded(TurnContext& ctx);
 };
@@ -26,7 +26,7 @@ class StreetTile : public PropertyTile{
     // private:
     //     std::string colorCategory;
     public:
-        StreetTile(int idx, StreetProperty *prop);
+        StreetTile(int idx, StreetProperty &prop);
         void onLanded(TurnContext& ctx) override;
         void triggerBuyOrAuction(TurnContext& ctx);
         void triggerRentPayment(TurnContext& ctx);
@@ -34,14 +34,14 @@ class StreetTile : public PropertyTile{
 
 class RailroadTile : public PropertyTile{
     public:
-        RailroadTile(int idx, RailroadProperty* prop);
+        RailroadTile(int idx, RailroadProperty& prop);
         void onLanded(TurnContext& ctx) override;
         void autoAcquire(Player& player);
 };
 
 class UtilityTile : public PropertyTile{
     public:
-        UtilityTile(int idx, UtilityProperty* prop);
+        UtilityTile(int idx, UtilityProperty& prop);
         void onLanded(TurnContext& ctx) override;
         void autoAcquire(Player& player); 
 };

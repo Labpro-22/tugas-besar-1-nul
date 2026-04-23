@@ -13,6 +13,10 @@ int TurnContext::getBoardSize() const {
     return this->board.getSize();
 }
 
+TurnManager& TurnContext::getTurnMgr() const {
+    return gameEngine.getTurnManager();
+}
+
 const std::vector<Player*>& TurnContext::getAllPlayers() const {
     return this->gameEngine.getPlayers();
 }

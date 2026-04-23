@@ -35,12 +35,12 @@ protected:
     std::vector<Property*> properties;
     std::vector<SkillCard*> hand;
 
-private:
+public:
     // apakah mau diimplement ato jadi buysell aja as a whole
     void addProperty(Property* p);
     void removeProperty(Property& p); //make sure lgi type p
 
-public:
+// public:
     // ctor dtor
     Player(std::string username, int balance);
     ~Player();

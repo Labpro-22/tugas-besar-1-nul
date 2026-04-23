@@ -13,6 +13,8 @@ class Dice;
 class SkillCard;
 class ChanceCard;
 class GameEngine;
+class TurnManager;
+
 
 class TurnContext {
 public:
@@ -27,6 +29,8 @@ public:
     
     Tile& getTile() const;
     int getBoardSize() const;
+
+    TurnManager& getTurnMgr() const;
     const std::vector<Player*>& getAllPlayers() const;
 
     // current/max turn num

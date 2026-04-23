@@ -156,19 +156,31 @@
 //     )));
     
 //     // Position 15: YOG - Yogyakarta (Street - Pink)
+
 //     tiles.push_back(new StreetTile(14, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(14, *new StreetProperty(
+
 //         "YOG", "Yogyakarta", 160, 80, "Pink", 100, 100, 
 //         std::vector<int>{12, 60, 180, 500, 700, 900}
 //     )));
     
 //     // Position 16: STB - Stasiun Bandung (Railroad)
+
 //     tiles.push_back(new RailroadTile(15, new RailroadProperty(
+
+//     tiles.push_back(new RailroadTile(15, *new RailroadProperty(
+
 //         "STB", "Stasiun Bandung", 200, 100, 
 //         std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
 //     )));
     
 //     // Position 17: MAL - Malang (Street - Orange)
+
 //     tiles.push_back(new StreetTile(16, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(16, *new StreetProperty(
+
 //         "MAL", "Malang", 180, 90, "Orange", 100, 100, 
 //         std::vector<int>{14, 70, 200, 550, 750, 950}
 //     )));
@@ -177,13 +189,21 @@
 //     tiles.push_back(new CardTile(17, "DNU", "Dana Umum", false));
     
 //     // Position 19: SMG - Semarang (Street - Orange)
+
 //     tiles.push_back(new StreetTile(18, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(18, *new StreetProperty(
+
 //         "SMG", "Semarang", 180, 90, "Orange", 100, 100, 
 //         std::vector<int>{14, 70, 200, 550, 750, 950}
 //     )));
     
 //     // Position 20: SBY - Surabaya (Street - Orange)
+
 //     tiles.push_back(new StreetTile(19, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(19, *new StreetProperty(
+
 //         "SBY", "Surabaya", 200, 100, "Orange", 100, 100, 
 //         std::vector<int>{16, 80, 220, 600, 800, 1000}
 //     )));
@@ -192,7 +212,11 @@
 //     tiles.push_back(new FreeParkingTile(20, "BBP", "Bebas Parkir"));
     
 //     // Position 22: MKS - Makassar (Street - Merah)
+
 //     tiles.push_back(new StreetTile(21, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(21, *new StreetProperty(
+
 //         "MKS", "Makassar", 220, 110, "Merah", 150, 150, 
 //         std::vector<int>{18, 90, 250, 700, 875, 1050}
 //     )));
@@ -201,43 +225,71 @@
 //     tiles.push_back(new CardTile(22, "KSP", "Kesempatan", true));
     
 //     // Position 24: BLP - Balikpapan (Street - Merah)
+
 //     tiles.push_back(new StreetTile(23, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(23, *new StreetProperty(
+
 //         "BLP", "Balikpapan", 220, 110, "Merah", 150, 150, 
 //         std::vector<int>{18, 90, 250, 700, 875, 1050}
 //     )));
     
 //     // Position 25: MND - Manado (Street - Merah)
+
 //     tiles.push_back(new StreetTile(24, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(24, *new StreetProperty(
+
 //         "MND", "Manado", 240, 120, "Merah", 150, 150, 
 //         std::vector<int>{20, 100, 300, 750, 925, 1100}
 //     )));
     
 //     // Position 26: TUG - Stasiun Tugu (Railroad)
+
 //     tiles.push_back(new RailroadTile(25, new RailroadProperty(
+
+//     tiles.push_back(new RailroadTile(25, *new RailroadProperty(
+
 //         "TUG", "Stasiun Tugu", 200, 100, 
 //         std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
 //     )));
     
 //     // Position 27: PLB - Palembang (Street - Kuning)
+
 //     tiles.push_back(new StreetTile(26, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(26, *new StreetProperty(
+
 //         "PLB", "Palembang", 260, 130, "Kuning", 150, 150, 
 //         std::vector<int>{22, 110, 330, 800, 975, 1150}
 //     )));
     
 //     // Position 28: PKB - Pekanbaru (Street - Kuning)
+
 //     tiles.push_back(new StreetTile(27, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(27, *new StreetProperty(
+
 //         "PKB", "Pekanbaru", 260, 130, "Kuning", 150, 150, 
 //         std::vector<int>{22, 110, 330, 800, 975, 1150}
 //     )));
     
 //     // Position 29: PAM - PAM (Utility)
+
 //     tiles.push_back(new UtilityTile(28, new UtilityProperty(
+
+//     tiles.push_back(new UtilityTile(28, *new UtilityProperty(
+
 //         "PAM", "PAM", 150, 75, 
 //         std::map<int, int>{{1, 4}, {2, 10}}
 //     )));
     
 //     // Position 30: MED - Medan (Street - Kuning)
+
 //     tiles.push_back(new StreetTile(29, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(29, *new StreetProperty(
+
 //         "MED", "Medan", 280, 140, "Kuning", 150, 150, 
 //         std::vector<int>{24, 120, 360, 850, 1025, 1200}
 //     )));
@@ -246,13 +298,21 @@
 //     tiles.push_back(new GoToJailTile(30, "PPJ", "Pergi ke Penjara"));
     
 //     // Position 32: BDG - Bandung (Street - Hijau)
+
 //     tiles.push_back(new StreetTile(31, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(31, *new StreetProperty(
+
 //         "BDG", "Bandung", 300, 150, "Hijau", 200, 200, 
 //         std::vector<int>{26, 130, 390, 900, 1100, 1275}
 //     )));
     
 //     // Position 33: DEN - Denpasar (Street - Hijau)
+
 //     tiles.push_back(new StreetTile(32, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(32, *new StreetProperty(
+
 //         "DEN", "Denpasar", 300, 150, "Hijau", 200, 200, 
 //         std::vector<int>{26, 130, 390, 900, 1100, 1275}
 //     )));
@@ -261,13 +321,21 @@
 //     tiles.push_back(new FestivalTile(33, "FES", "Festival"));
     
 //     // Position 35: MTR - Mataram (Street - Hijau)
+
 //     tiles.push_back(new StreetTile(34, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(34, *new StreetProperty(
+
 //         "MTR", "Mataram", 320, 160, "Hijau", 200, 200, 
 //         std::vector<int>{28, 150, 450, 1000, 1200, 1400}
 //     )));
     
 //     // Position 36: GUB - Stasiun Gubeng (Railroad)
+
 //     tiles.push_back(new RailroadTile(35, new RailroadProperty(
+
+//     tiles.push_back(new RailroadTile(35, *new RailroadProperty(
+
 //         "GUB", "Stasiun Gubeng", 200, 100, 
 //         std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
 //     )));
@@ -276,7 +344,11 @@
 //     tiles.push_back(new CardTile(36, "KSP", "Kesempatan", true));
     
 //     // Position 38: JKT - Jakarta (Street - Biru Tua)
+
 //     tiles.push_back(new StreetTile(37, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(37, *new StreetProperty(
+
 //         "JKT", "Jakarta", 350, 175, "Biru Tua", 200, 200, 
 //         std::vector<int>{35, 175, 500, 1100, 1300, 1500}
 //     )));
@@ -285,7 +357,11 @@
 //     tiles.push_back(new TaxTile(38, "PBM", "Pajak Barang Mewah", TaxType::PBM));
     
 //     // Position 40: IKN - Ibu Kota Nusantara (Street - Biru Tua)
+
 //     tiles.push_back(new StreetTile(39, new StreetProperty(
+
+//     tiles.push_back(new StreetTile(39, *new StreetProperty(
+
 //         "IKN", "Ibu Kota Nusantara", 400, 200, "Biru Tua", 200, 200, 
 //         std::vector<int>{50, 200, 600, 1400, 1700, 2000}
 //     )));
@@ -439,7 +515,7 @@
 //     for (size_t i = 0; i < turnOrder.size(); ++i) {
 //         std::cout << "  " << (i + 1) << ". " << players[turnOrder[i]]->getUsername() << std::endl;
 //     }
-//     std::cout << "=========================" << std::endl;
+//     std::cout << "====" << std::endl;
 // }
 
 // void GameManager::runGameLoop() {
@@ -458,8 +534,8 @@
 //         return;
 //     }
     
-//     std::cout << "\n========== TURN " << currentTurnNumber << " / " << config.misc.maxTurn 
-//               << " ==========" << std::endl;
+//     std::cout << "\n=== TURN " << currentTurnNumber << " / " << config.misc.maxTurn 
+//               << " ===" << std::endl;
 //     std::cout << "Giliran: " << currentPlayer->getUsername() << std::endl;
 //     std::cout << "Posisi: " << currentPlayer->getPosition() << std::endl;
 //     std::cout << "Uang: M" << currentPlayer->getBalance() << std::endl;
@@ -876,7 +952,7 @@
 //     }
 // }
 // void GameManager::printBoard() {
-//     std::cout << "\n========== PAPAN NIMONSPOLI ==========" << std::endl;
+//     std::cout << "\n=== PAPAN NIMONSPOLI ===" << std::endl;
 //     std::cout << "Posisi pemain:" << std::endl;
 //     for (Player* player : players) {
 //         if (player->getStatus() != PlayerStatus::BANKRUPT) {
@@ -897,7 +973,7 @@
 //                 << "] " 
 //                   << tile->getCode() << " - " << tile->getName() << std::endl;
 //     }
-//     std::cout << "======================================" << std::endl;
+//     std::cout << "===" << std::endl;
 // }
 
 // void GameManager::printProperty(const std::string& code) {
@@ -906,7 +982,7 @@
 //         PropertyTile* propTile = dynamic_cast<PropertyTile*>(tile); 
 //         if (propTile != nullptr) {
 //             if (propTile->getCode() == code) {
-//                 std::cout << "\n========== AKTA KEPEMILIKAN ==========" << std::endl;
+//                 std::cout << "\n=== AKTA KEPEMILIKAN ===" << std::endl;
 //                 std::cout << "Nama: " << propTile->getName() << " (" << propTile->getCode() << ")" << std::endl;
 //                 std::string cat;
 //                 StreetProperty* strProp = dynamic_cast<StreetProperty*>(propTile->getProperty());
@@ -923,7 +999,7 @@
 //                 }
 //                 std::cout << "Kategori: " << cat << std::endl;
 //                 // TODO: Add more property details when Property is fully integrated
-//                 std::cout << "=====================================" << std::endl;
+//                 std::cout << "==" << std::endl;
 //                 return;
 //             }
 //         }
@@ -938,20 +1014,20 @@
 //         return;
 //     }
     
-//     std::cout << "\n========== PROPERTI MILIK " << player->getUsername() << " ==========" << std::endl;
+//     std::cout << "\n=== PROPERTI MILIK " << player->getUsername() << " ===" << std::endl;
 //     player->showProperties();
-//     std::cout << "==========================================" << std::endl;
+//     std::cout << "" << std::endl;
 // }
 
 // void GameManager::printLog(int count) {
-//     std::cout << "\n========== LOG TRANSAKSI ==========" << std::endl;
+//     std::cout << "\n=== LOG TRANSAKSI ===" << std::endl;
 //     if (count > 0) {
 //         std::cout << "Menampilkan " << count << " entri terakhir..." << std::endl;
 //     } else {
 //         std::cout << "Menampilkan semua log..." << std::endl;
 //     }
 //     // TODO: Implement actual log display when TransactionLogger is fully implemented
-//     std::cout << "===================================" << std::endl;
+//     std::cout << "" << std::endl;
 // }
 // void GameManager::distributeSkillCards() {}
 // void GameManager::movePlayerToTile(int tileIndex) {}

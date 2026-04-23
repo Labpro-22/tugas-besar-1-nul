@@ -134,3 +134,6 @@ void GameEngine::printBanner() {
     cout << "  ╚══════════════════════════════════════════════════════════════╝\n";
 }
 
+TurnManager& GameEngine::getTurnManager() {
+    return turnmgr;
+}

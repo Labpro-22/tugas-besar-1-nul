@@ -42,6 +42,8 @@ public:
     void executeCommand(TurnContext& ctx);
 
     void printBanner();
+    TurnManager& getTurnManager();
+
     void displayPlayers() const;
     std::vector<Player*> getPlayers() const;
 };
