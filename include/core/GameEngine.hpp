@@ -5,12 +5,13 @@
 #include <vector>
 
 #include "board/Board.hpp"
-#include "player/Player.h"
+#include "core/TurnManager.hpp"
 #include "card/DeckCard.hpp"
 #include "card/ChanceCard.hpp"
-// #include "card/CommunityCard.hpp"
 #include "card/SkillCard.hpp"
-#include "TurnManager.hpp"
+
+class Player;
+class TurnContext;
 
 class GameEngine {
 private:
@@ -24,20 +25,13 @@ private:
     std::vector<std::unique_ptr<Player>> players;
 
 public:
-    explicit GameEngine(int size)
-        : board(size)
-        , turnmgr(TurnManager{})
-        , chanceDeck(CardDeck<ChanceCard>{})
-        , skillDeck(CardDeck<SkillCard>{})
-        , players{std::vector<std::unique_ptr<Player>>{}} {};
-
-    // explicit GameEngine(int size) : board(size) {}
+    explicit GameEngine(int size);
 
     void startNewGame();
     void run();
     void loadGame(const std::string& file);
     void saveGame(const std::string& file);
-    void executeCommand(const std::string& cmd);
+    void executeCommand(TurnContext& ctx);
 
     void displayPlayers() const;
     std::vector<Player*> getPlayers() const;

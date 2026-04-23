@@ -6,52 +6,28 @@
 class Player;
 class Board;
 class TransactionLogger;
+class Tile;
 
 // Forward declarations for card decks
 class SkillCard;
 class ChanceCard;
+class GameEngine;
 
 class TurnContext {
 public:
-    TurnContext(Player* player, Board* board, int currentTurn, int maxTurn, 
-                std::vector<Player*>& allPlayers);
-    
-    // Getters
-    Player* getCurrentPlayer() const;
-    Board* getBoard() const;
-    int getCurrentTurn() const;
-    int getMaxTurn() const;
-    std::vector<Player*>& getAllPlayers();
-    
-    // Double handling
-    void incrementDoubleCount();
-    int getDoubleCount() const;
-    void resetDoubleCount();
-    
-    // Skill card usage
-    void setSkillUsed(bool used);
-    bool isSkillUsed() const;
-    
-    // Movement tracking
-    void setMovedByCard(bool moved);
-    bool isMovedByCard() const;
-    
-    // Transaction logger
-    void setLogger(TransactionLogger* logger);
-    TransactionLogger* getLogger() const;
+    Player& currentPlayer;
+    Dice& dice;
+    Board& board;
+    GameEngine& gameEngine;
 
-    // Fungsi tambahan untuk menambahkan currentturn dan mengubah currentPlayer
-    void nextTurn();
+    TurnContext(Player& player, Dice& dice, Board& board, GameEngine& gameEngine)
+        : currentPlayer(player), dice(dice), board(board), gameEngine(gameEngine) {}
 
-private:
-    Player* currentPlayer;
-    Board* board;
-    int currentTurn;
-    int maxTurn;
-    std::vector<Player*>& allPlayers;
     
-    int doubleCount;
-    bool skillUsed;
-    bool movedByCard;
-    TransactionLogger* logger;
+    Tile& getTile() const;
+    int getBoardSize() const;
+    const std::vector<Player*>& getAllPlayers() const;
+
+    // current/max turn num
+    // skillused, movedbycard, doublecount <- turncontext
 };

@@ -1,5 +1,4 @@
-#ifndef DECK_CARD_HPP
-#define DECK_CARD_HPP
+#pragma once
 
 #include "card.hpp"
 #include <vector>
@@ -56,5 +55,3 @@ public:
         return deck.size();
     }
 };
-
-#endif // DECK_CARD_HPP

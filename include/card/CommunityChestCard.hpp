@@ -1,7 +1,9 @@
-#ifndef COMMUNITY_CHEST_CARD_HPP
-#define COMMUNITY_CHEST_CARD_HPP
+#pragma once
 
 #include "card.hpp"
+
+class Player;
+class TurnContext;
 
 enum class CommunityChestType {
     BIRTHDAY,      // Get M100 from each player
@@ -21,5 +23,3 @@ public:
     CommunityChestType getType() const;
     int getAmount() const;
 };
-
-#endif // COMMUNITY_CHEST_CARD_HPP

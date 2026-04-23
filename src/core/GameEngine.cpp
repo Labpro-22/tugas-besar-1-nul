@@ -1,41 +1,63 @@
 #include "core/GameEngine.hpp"
+
 #include "core/TurnContext.hpp"
+#include "core/Command.hpp"
+#include "core/Dice.hpp"
+
+#include "player/Player.hpp"
+#include "exception/CommandException.hpp"
+
+GameEngine::GameEngine(int size)
+    : board(Board{size})
+        , turnmgr(TurnManager{})
+        , chanceDeck(CardDeck<ChanceCard>{})
+        , skillDeck(CardDeck<SkillCard>{})
+        , players{std::vector<std::unique_ptr<Player>>{}} {};
 
 void GameEngine::run() {
     std::cout << "=== Welcome to Nimonspoli ===\n";
     this->startNewGame();
 
-    // ==========================================
-    // 1. Ekstrak raw pointer Player (Lakukan SEKALI saja di luar loop)
-    // ==========================================
-    std::vector<Player*> rawPlayers;
-    for (const auto& p : this->players) { // Asumsi variabel penyimpan pemain bernama 'players'
-        rawPlayers.push_back(p.get());
-    }
+    // std::vector<Player*> rawPlayers;
+    // for (const auto& p : this->players) { // Asumsi variabel penyimpan pemain bernama 'players'
+    //     rawPlayers.push_back(p.get());
+    // }
 
-    // ==========================================
-    // 2. Loop Utama Permainan
-    // ==========================================
+    // dice coba implement
+    // turnctx
+
     while (!turnmgr.isGameOver()) {
+        Dice turnDice; // ni bagusan diluar deh
+        TurnContext ctx(*turnmgr.getCurrentPlayer(), turnDice, board, *this);
         Player* currentPlayer = turnmgr.getCurrentPlayer();
-        int currentTurn = turnmgr.getCurrentTurn();
-        int maxTurn = turnmgr.getMaxTurn();
-
-        // Buat konteks dengan parameter yang BENAR
-        TurnContext ctx(currentPlayer, &board, currentTurn, maxTurn, rawPlayers);
-
-        std::cout << "\n=== Giliran " << currentTurn << ": " << currentPlayer->getUsername() << " ===\n";
+        std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": " << currentPlayer->getUsername() << " ===\n";
         
-        // TO-DO: player decide action
-        // Contoh:
-        // gameDice.roll();
-        // currentPlayer->move(gameDice.getTotal(), ctx);
-        
-        // ==========================================
-        // 3. Pindah Giliran (Wajib di BAWAH setelah pemain selesai)
-        // ==========================================
-        turnmgr.nextTurn(); 
+        try {
+            this->executeCommand(ctx);
+        } catch (CommandException exc) {
+            std::cout << exc.what() << "\n";
+        }
+        // nextturn(ctx) coba implement
+        turnmgr.nextTurn();
     }
+
+    // while (!turnmgr.isGameOver()) {
+    //     Player* currentPlayer = turnmgr.getCurrentPlayer();
+    //     int currentTurn = turnmgr.getCurrentTurn();
+    //     int maxTurn = turnmgr.getMaxTurn();
+
+    //     // Buat konteks dengan parameter yang BENAR
+    //     TurnContext ctx(currentPlayer, &board, currentTurn, maxTurn, rawPlayers);
+
+    //     std::cout << "\n=== Giliran " << currentTurn << ": " << currentPlayer->getUsername() << " ===\n";
+        
+    //     // TO-DO: player decide action
+    //     // Contoh:
+    //     // gameDice.roll();
+    //     // currentPlayer->move(gameDice.getTotal(), ctx);
+        
+    //     turnmgr.nextTurn(); 
+    // }
     
     std::cout << "\n=== Permainan Selesai! ===\n";
 }
@@ -103,7 +125,10 @@ void GameEngine::displayPlayers() const {
     std::cout << "=====================\n\n";
 }
 
-void GameEngine::executeCommand(const std::string& cmd) {
-    std::cout << "[INFO] Eksekusi perintah: " << cmd << "\n";
-    // TO-DO: mikir input tuh mau dimasukkin dimana
+void GameEngine::executeCommand(TurnContext& ctx) {
+    std::cout << "[INFO] Eksekusi perintah\n";
+
+    Command cmd;
+    cmd.promptInput();
+    cmd.dispatch(ctx);
 }

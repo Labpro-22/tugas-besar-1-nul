@@ -3,10 +3,15 @@
 #include <vector>
 #include <memory>
 
+<<<<<<< HEAD
+// #include "config/ConfigDriver.hpp"
+#include "core/GameEngine.hpp"
+=======
 #include "config/ConfigDriver.hpp"
 #include "config/Config.hpp"
 #include "core/GameManager.hpp"
 #include "core/CommandHandler.hpp"
+>>>>>>> testing-kurt
 
 using namespace std;
 
@@ -216,6 +221,21 @@ void runLoadGame(Config& config) {
 }
 
 int main(int argc, char* argv[]) {
+<<<<<<< HEAD
+    // const string basePath = (argc >= 2) ? argv[1] : "config";
+
+    // try {
+    //     runConfigLoaderDriver(basePath);
+    // } catch (const exception& ex) {
+    //     cerr << "[CONFIG DRIVER] Failed: " << ex.what() << endl;
+    //     cerr << "Usage: ./game [config_base_path]" << endl;
+    //     return 1;
+    // }
+
+    // return 0;
+    GameEngine ge(10);
+    ge.run();
+=======
     const string basePath = (argc >= 2) ? argv[1] : "config";
     
     displayBanner();
@@ -266,4 +286,5 @@ int main(int argc, char* argv[]) {
     cout << "Sampai jumpa!\n\n";
     
     return 0;
+>>>>>>> testing-kurt
 }

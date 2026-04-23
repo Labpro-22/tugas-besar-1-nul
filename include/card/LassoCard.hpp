@@ -1,7 +1,8 @@
-#ifndef LASSO_CARD_HPP
-#define LASSO_CARD_HPP
+#pragma once
 
 #include "SkillCard.hpp"
+
+class TurnContext;
 
 class LassoCard : public SkillCard {
 public:
@@ -9,5 +10,3 @@ public:
 
     void apply(TurnContext& ctx) override;
 };
-
-#endif // LASSO_CARD_HPP

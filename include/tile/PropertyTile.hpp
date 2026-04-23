@@ -1,6 +1,3 @@
-#ifndef PROPERTY_TILE_HPP
-#define PROPERTY_TILE_HPP
-
 #pragma once
 
 #include "Tile.hpp"
@@ -10,10 +7,11 @@
 #include <iostream>
 #include <vector>
 
-// Forward declarations
-class Player;
 class TurnContext;
+class Player;
 class Property;
+
+// ======================================================================================
 
 class PropertyTile : public Tile{
     protected: 
@@ -48,4 +46,5 @@ class UtilityTile : public PropertyTile{
         void autoAcquire(Player& player); 
 };
 
-#endif
+//================================= HELPER ================================
+void printOwner(Player& player);

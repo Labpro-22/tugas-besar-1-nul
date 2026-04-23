@@ -1,5 +1,5 @@
 #include "card/DemolitionCard.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "property/StreetProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
@@ -11,11 +11,12 @@
 DemolitionCard::DemolitionCard() : SkillCard("DemolitionCard: Menghancurkan properti lawan", 0) {}
 
 void DemolitionCard::apply(TurnContext& ctx) {
-    Player& player = *ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     std::cout << "[MENGGUNAKAN] DemolitionCard: Menghancurkan properti lawan.\n";
 
     std::vector<Player*> candidates;
     const std::vector<Player*> allPlayers = ctx.getAllPlayers();
+    
     for (Player* other : allPlayers) {
         if (other == nullptr || other == &player) continue;
         candidates.push_back(other);

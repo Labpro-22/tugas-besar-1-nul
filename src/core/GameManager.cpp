@@ -1,5 +1,7 @@
+// ini gada bedanya sm gameengine brok, nnt gw pindah ke ge dah
+
 #include "core/GameManager.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "player/BotPlayer.hpp"
 #include "property/Property.hpp"
 #include "property/StreetProperty.hpp"

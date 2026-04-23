@@ -4,9 +4,11 @@
 using namespace std;
 
 Board::Board(const map<string, int>& data, int s) : 
-    tiles(s < 0 ? 0 : s), codeToIndex(data), size(s < 0 ? 0 :s){
-            //can either throw exception or cap size minimum at 0
-    }
+    tiles(s < 0 ? 0 : s), codeToIndex(data), size(s < 0 ? 0 :s){}
+
+Board::Board(int s) : tiles(s, nullptr), size(s < 0 ? 0 : s){
+    codeToIndex["initializer"] = -1; //untuk inisialisasi codeToIndex
+}
 
 Board::Board(int s) : tiles(s < 0 ? 0 : s), size(s < 0 ? 0 : s){
         //can either throw exception or cap size minimum at 0

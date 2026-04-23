@@ -46,7 +46,7 @@ class Property {
     std::string code_;
     std::string name_;
     PropertyStatus status_;
-    Player* owner_;
+    Player* owner_; // ni hrs pointer gbs ref krn harus bisa null
     int buyPrice_;
     int mortgageValue_;
 };

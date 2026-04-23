@@ -8,6 +8,11 @@ class Player;
 class TurnContext;
 class StreetProperty;
 
+// =================================== dummy classes =====================================
+class CardType{
+    //dummy data
+};
+
 enum class TaxType{
     PPH,
     PBM

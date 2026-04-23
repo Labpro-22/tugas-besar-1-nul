@@ -1,8 +1,10 @@
-#ifndef CHANCE_CARD_HPP
-#define CHANCE_CARD_HPP
+#pragma once
 
 #include "card.hpp"
-#pragma once
+
+class Player;
+class TurnContext;
+
 enum class ChanceType {
     GO_TO_NEAREST_STATION,
     MOVE_BACK_3,
@@ -18,5 +20,3 @@ public:
 
     void execute(Player* player, TurnContext& ctx) override;
 };
-
-#endif // CHANCE_CARD_HPP

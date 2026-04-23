@@ -1,6 +1,8 @@
+// ini mo diapus dah pake command aja, lagian jg sama
+
 #include "core/CommandHandler.hpp"
 #include "core/GameManager.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "property/Property.hpp"
 #include "property/StreetProperty.hpp"
 #include "config/Config.hpp"

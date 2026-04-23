@@ -1,9 +1,9 @@
-#ifndef SKILL_CARD_HPP
-#define SKILL_CARD_HPP
+#pragma once
 
 #include "card.hpp"
-#pragma once
+
 class Player;
+class TurnContext;
 
 class SkillCard : public Card {
 protected:
@@ -21,4 +21,3 @@ public:
     virtual void apply(TurnContext& ctx) = 0;
 };
 
-#endif // SKILL_CARD_HPP

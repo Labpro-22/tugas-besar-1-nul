@@ -17,7 +17,7 @@ enum class PlayerStatus {
 class Player {
 protected:
     /* misc */
-    const int* boardSizeSource; // non-owning pointer (ngikut RAII krn ga manage lgsg)
+    // const int* boardSizeSource; // non-owning pointer (ngikut RAII krn ga manage lgsg)
 
     /* general */
     std::string username;
@@ -62,11 +62,10 @@ public:
     bool operator<(const Player& other);
 
     // moving
-    void setBoardSizeSource(int* sizeSource);
-    void clearBoardSizeSource();
-    void move(int steps);
-    void moveForwardTo(int index);
-    void moveBackwardTo(int index);
+    int move(int steps, TurnContext& ctx);
+    void moveForwardTo(int index, TurnContext& ctx);
+    void moveBackwardTo(int index, TurnContext& ctx);
+    // void onLanded(TurnContext& ctx);
 
     // properties
     void buy(Property* p);

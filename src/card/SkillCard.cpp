@@ -1,5 +1,5 @@
 #include "card/SkillCard.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "exception/InvalidGameStateException.hpp"
 
 SkillCard::SkillCard(std::string desc, int duration) : Card(std::move(desc)), remainingDuration(duration) {}

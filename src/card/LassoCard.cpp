@@ -1,5 +1,5 @@
 #include "card/LassoCard.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
 #include "board/Board.hpp"
@@ -11,9 +11,9 @@
 LassoCard::LassoCard() : SkillCard("LassoCard: Menarik pemain lawan", 0) {}
 
 void LassoCard::apply(TurnContext& ctx) {
-    Player& player = *ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     const int currentPos = player.getPosition();
-    const int boardSize = ctx.getBoard()->getSize();
+    const int boardSize = ctx.getBoardSize();
 
     std::cout << "[MENGGUNAKAN] LassoCard: Menarik pemain lawan ke posisi ini.\n";
 
@@ -52,7 +52,7 @@ void LassoCard::apply(TurnContext& ctx) {
     }
 
     Player* target = candidates[choice - 1];
-    target->moveBackwardTo(currentPos);
+    target->moveBackwardTo(currentPos, ctx);
 
     std::cout << "\n[INFO] " << target->getUsername() << " berhasil ditarik ke posisi: "
               << currentPos << "\n";

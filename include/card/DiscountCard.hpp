@@ -1,8 +1,9 @@
-#ifndef DISCOUNT_CARD_HPP
-#define DISCOUNT_CARD_HPP
+#pragma once
 
 #include "SkillCard.hpp"
-#pragma once
+
+class TurnContext;
+
 class DiscountCard : public SkillCard {
 private:
     int discountPercent;
@@ -12,5 +13,3 @@ public:
 
     void apply(TurnContext& ctx) override;
 };
-
-#endif // DISCOUNT_CARD_HPP

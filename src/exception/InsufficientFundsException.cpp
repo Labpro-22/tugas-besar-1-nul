@@ -2,4 +2,4 @@
 
 InsufficientFundsException::InsufficientFundsException(
     const std::string& message)
-    : NimonspoliException(message) {}
+    : NimonspoliException("[FUND ERR]", message) {}

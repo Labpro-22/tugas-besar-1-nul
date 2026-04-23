@@ -1,5 +1,5 @@
 #include "card/DiscountCard.hpp"
-#include "player/Player.h"
+#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
 
 DiscountCard::DiscountCard(int discount) 
@@ -7,8 +7,8 @@ DiscountCard::DiscountCard(int discount)
           discountPercent(discount) {}
 
 void DiscountCard::apply(TurnContext& ctx) {
-    Player& player = *ctx.getCurrentPlayer();
-    std::cout << "[MENGGUNAKAN] DiscountCard: Diskon " << discountPercent << "% aktif untuk 1 giliran.\n";
+  Player& player = ctx.currentPlayer;
+  std::cout << "[MENGGUNAKAN] DiscountCard: Diskon " << discountPercent << "% aktif untuk 1 giliran.\n";
     
-    player.setDiscountRate(discountPercent);
+  player.setDiscountRate(discountPercent);
 }

@@ -1,9 +1,7 @@
-#ifndef TILE_HPP
-#define TILE_HPP
-
 #pragma once
 
 #include <iostream>
+#include <string>
 #include <vector>
 using namespace std;
 
@@ -26,5 +24,3 @@ class Tile{
         string getDisplay();
         virtual void onLanded(TurnContext& ctx) = 0; 
 };
-
-#endif // TILE_HPP

@@ -1,6 +1,7 @@
 #include "tile/ActionTile.hpp"
-#include "player/Player.h"
 #include "core/TurnContext.hpp"
+#include "player/Player.hpp"
+#include "board/Board.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -10,7 +11,7 @@ ActionTile::ActionTile(int idx, string cd, string nm)
     : Tile(idx, cd, nm) {}
 
 void ActionTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     cout << "onLanded milik ActionTile!\n";
 }
 
@@ -18,7 +19,7 @@ GoTile::GoTile(int idx, string cd, string nm)
     : ActionTile(idx, cd, nm) {}
 
 void GoTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     cout << "onLanded milik GoTile!\n";
 }
 
@@ -31,7 +32,7 @@ JailTile::JailTile(int idx, string cd, string nm)
     : ActionTile(idx, cd, nm) {}
 
 void JailTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     cout << "You are at jail brader\n";
 }
 
@@ -57,7 +58,7 @@ FreeParkingTile::FreeParkingTile(int idx, string cd, string nm)
     : ActionTile(idx, cd, nm) {}
 
 void FreeParkingTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     cout << "Actually onLanded in FreeParkingTile does nothing\n";
 }
 
@@ -65,7 +66,7 @@ GoToJailTile::GoToJailTile(int idx, string cd, string nm)
     : ActionTile(idx, cd, nm) {}
 
 void GoToJailTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     cout << "what crime did u commit?\n";
     //addInmate(player); 
 }
@@ -74,7 +75,7 @@ CardTile::CardTile(int idx, string cd, string nm, bool chance)
     : ActionTile(idx, cd, nm), isChance(chance) {}
 
 void CardTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     if (isChance) {
         cout << "Mengambil kartu Kesempatan!\n";
     } else {
@@ -86,7 +87,7 @@ FestivalTile::FestivalTile(int idx, string cd, string nm)
     : ActionTile(idx, cd, nm) {}
 
 void FestivalTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     cout << "u are in luck, if u have any property\n";
     // should do applyFestival after receiving which prop to apply
 }
@@ -99,7 +100,7 @@ TaxTile::TaxTile(int idx, string cd, string nm, TaxType type)
     : ActionTile(idx, cd, nm), taxType(type) {}
 
 void TaxTile::onLanded(TurnContext& ctx){
-    Player* player = ctx.getCurrentPlayer();
+    Player& player = ctx.currentPlayer;
     cout << "haha got taxed\n";
     if (taxType == TaxType::PPH){ //is PPH
         applyPPH(*player);

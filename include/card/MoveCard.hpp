@@ -1,8 +1,9 @@
-#ifndef MOVE_CARD_HPP
-#define MOVE_CARD_HPP
+#pragma once
 
 #include "SkillCard.hpp"
-#pragma once
+
+class TurnContext;
+
 class MoveCard : public SkillCard {
 private:
     int steps;
@@ -12,5 +13,3 @@ public:
 
     void apply(TurnContext& ctx) override;
 };
-
-#endif // MOVE_CARD_HPP

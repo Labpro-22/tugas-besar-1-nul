@@ -1,7 +1,8 @@
-#ifndef TELEPORT_CARD_HPP
-#define TELEPORT_CARD_HPP
+#pragma once
 
 #include "SkillCard.hpp"
+
+class TurnContext;
 
 class TeleportCard : public SkillCard {
 private:
@@ -12,5 +13,3 @@ public:
 
     void apply(TurnContext& ctx) override;
 };
-
-#endif // TELEPORT_CARD_HPP
