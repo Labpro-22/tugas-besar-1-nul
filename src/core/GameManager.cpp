@@ -88,7 +88,7 @@ void GameManager::buildTiles() {
     tiles.push_back(new GoTile(0, "GO", "Petak Mulai"));
     
     // Position 2: GRT - Garut (Street - Coklat)
-    tiles.push_back(new StreetTile(1, new StreetProperty(
+    tiles.push_back(new StreetTile(1, *new StreetProperty(
         "GRT", "Garut", 60, 30, "Coklat", 50, 50, 
         std::vector<int>{2, 10, 30, 90, 160, 250}
     )));
@@ -97,7 +97,7 @@ void GameManager::buildTiles() {
     tiles.push_back(new CardTile(2, "DNU", "Dana Umum", false));
     
     // Position 4: TSK - Tasikmalaya (Street - Coklat)
-    tiles.push_back(new StreetTile(3, new StreetProperty(
+    tiles.push_back(new StreetTile(3, *new StreetProperty(
         "TSK", "Tasikmalaya", 60, 30, "Coklat", 50, 50, 
         std::vector<int>{4, 20, 60, 180, 320, 450}
     )));
@@ -106,13 +106,13 @@ void GameManager::buildTiles() {
     tiles.push_back(new TaxTile(4, "PPH", "Pajak Penghasilan", TaxType::PPH));
     
     // Position 6: GBR - Stasiun Gambir (Railroad)
-    tiles.push_back(new RailroadTile(5, new RailroadProperty(
+    tiles.push_back(new RailroadTile(5, *new RailroadProperty(
         "GBR", "Stasiun Gambir", 200, 100, 
         std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
     )));
     
     // Position 7: BGR - Bogor (Street - Biru Muda)
-    tiles.push_back(new StreetTile(6, new StreetProperty(
+    tiles.push_back(new StreetTile(6, *new StreetProperty(
         "BGR", "Bogor", 100, 50, "Biru Muda", 50, 50, 
         std::vector<int>{6, 30, 90, 270, 400, 550}
     )));
@@ -121,13 +121,13 @@ void GameManager::buildTiles() {
     tiles.push_back(new FestivalTile(7, "FES", "Festival"));
     
     // Position 9: DPK - Depok (Street - Biru Muda)
-    tiles.push_back(new StreetTile(8, new StreetProperty(
+    tiles.push_back(new StreetTile(8, *new StreetProperty(
         "DPK", "Depok", 100, 50, "Biru Muda", 50, 50, 
         std::vector<int>{6, 30, 90, 270, 400, 550}
     )));
     
     // Position 10: BKS - Bekasi (Street - Biru Muda)
-    tiles.push_back(new StreetTile(9, new StreetProperty(
+    tiles.push_back(new StreetTile(9, *new StreetProperty(
         "BKS", "Bekasi", 120, 60, "Biru Muda", 50, 50, 
         std::vector<int>{8, 40, 100, 300, 450, 600}
     )));
@@ -136,37 +136,37 @@ void GameManager::buildTiles() {
     tiles.push_back(new JailTile(10, "PEN", "Penjara"));
     
     // Position 12: MGL - Magelang (Street - Pink)
-    tiles.push_back(new StreetTile(11, new StreetProperty(
+    tiles.push_back(new StreetTile(11, *new StreetProperty(
         "MGL", "Magelang", 140, 70, "Pink", 100, 100, 
         std::vector<int>{10, 50, 150, 450, 625, 750}
     )));
     
     // Position 13: PLN - PLN (Utility)
-    tiles.push_back(new UtilityTile(12, new UtilityProperty(
+    tiles.push_back(new UtilityTile(12, *new UtilityProperty(
         "PLN", "PLN", 150, 75, 
         std::map<int, int>{{1, 4}, {2, 10}} // 1 utility = 4x dadu, 2 utility = 10x dadu
     )));
     
     // Position 14: SOL - Solo (Street - Pink)
-    tiles.push_back(new StreetTile(13, new StreetProperty(
+    tiles.push_back(new StreetTile(13, *new StreetProperty(
         "SOL", "Solo", 140, 70, "Pink", 100, 100, 
         std::vector<int>{10, 50, 150, 450, 625, 750}
     )));
     
     // Position 15: YOG - Yogyakarta (Street - Pink)
-    tiles.push_back(new StreetTile(14, new StreetProperty(
+    tiles.push_back(new StreetTile(14, *new StreetProperty(
         "YOG", "Yogyakarta", 160, 80, "Pink", 100, 100, 
         std::vector<int>{12, 60, 180, 500, 700, 900}
     )));
     
     // Position 16: STB - Stasiun Bandung (Railroad)
-    tiles.push_back(new RailroadTile(15, new RailroadProperty(
+    tiles.push_back(new RailroadTile(15, *new RailroadProperty(
         "STB", "Stasiun Bandung", 200, 100, 
         std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
     )));
     
     // Position 17: MAL - Malang (Street - Orange)
-    tiles.push_back(new StreetTile(16, new StreetProperty(
+    tiles.push_back(new StreetTile(16, *new StreetProperty(
         "MAL", "Malang", 180, 90, "Orange", 100, 100, 
         std::vector<int>{14, 70, 200, 550, 750, 950}
     )));
@@ -175,13 +175,13 @@ void GameManager::buildTiles() {
     tiles.push_back(new CardTile(17, "DNU", "Dana Umum", false));
     
     // Position 19: SMG - Semarang (Street - Orange)
-    tiles.push_back(new StreetTile(18, new StreetProperty(
+    tiles.push_back(new StreetTile(18, *new StreetProperty(
         "SMG", "Semarang", 180, 90, "Orange", 100, 100, 
         std::vector<int>{14, 70, 200, 550, 750, 950}
     )));
     
     // Position 20: SBY - Surabaya (Street - Orange)
-    tiles.push_back(new StreetTile(19, new StreetProperty(
+    tiles.push_back(new StreetTile(19, *new StreetProperty(
         "SBY", "Surabaya", 200, 100, "Orange", 100, 100, 
         std::vector<int>{16, 80, 220, 600, 800, 1000}
     )));
@@ -190,7 +190,7 @@ void GameManager::buildTiles() {
     tiles.push_back(new FreeParkingTile(20, "BBP", "Bebas Parkir"));
     
     // Position 22: MKS - Makassar (Street - Merah)
-    tiles.push_back(new StreetTile(21, new StreetProperty(
+    tiles.push_back(new StreetTile(21, *new StreetProperty(
         "MKS", "Makassar", 220, 110, "Merah", 150, 150, 
         std::vector<int>{18, 90, 250, 700, 875, 1050}
     )));
@@ -199,43 +199,43 @@ void GameManager::buildTiles() {
     tiles.push_back(new CardTile(22, "KSP", "Kesempatan", true));
     
     // Position 24: BLP - Balikpapan (Street - Merah)
-    tiles.push_back(new StreetTile(23, new StreetProperty(
+    tiles.push_back(new StreetTile(23, *new StreetProperty(
         "BLP", "Balikpapan", 220, 110, "Merah", 150, 150, 
         std::vector<int>{18, 90, 250, 700, 875, 1050}
     )));
     
     // Position 25: MND - Manado (Street - Merah)
-    tiles.push_back(new StreetTile(24, new StreetProperty(
+    tiles.push_back(new StreetTile(24, *new StreetProperty(
         "MND", "Manado", 240, 120, "Merah", 150, 150, 
         std::vector<int>{20, 100, 300, 750, 925, 1100}
     )));
     
     // Position 26: TUG - Stasiun Tugu (Railroad)
-    tiles.push_back(new RailroadTile(25, new RailroadProperty(
+    tiles.push_back(new RailroadTile(25, *new RailroadProperty(
         "TUG", "Stasiun Tugu", 200, 100, 
         std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
     )));
     
     // Position 27: PLB - Palembang (Street - Kuning)
-    tiles.push_back(new StreetTile(26, new StreetProperty(
+    tiles.push_back(new StreetTile(26, *new StreetProperty(
         "PLB", "Palembang", 260, 130, "Kuning", 150, 150, 
         std::vector<int>{22, 110, 330, 800, 975, 1150}
     )));
     
     // Position 28: PKB - Pekanbaru (Street - Kuning)
-    tiles.push_back(new StreetTile(27, new StreetProperty(
+    tiles.push_back(new StreetTile(27, *new StreetProperty(
         "PKB", "Pekanbaru", 260, 130, "Kuning", 150, 150, 
         std::vector<int>{22, 110, 330, 800, 975, 1150}
     )));
     
     // Position 29: PAM - PAM (Utility)
-    tiles.push_back(new UtilityTile(28, new UtilityProperty(
+    tiles.push_back(new UtilityTile(28, *new UtilityProperty(
         "PAM", "PAM", 150, 75, 
         std::map<int, int>{{1, 4}, {2, 10}}
     )));
     
     // Position 30: MED - Medan (Street - Kuning)
-    tiles.push_back(new StreetTile(29, new StreetProperty(
+    tiles.push_back(new StreetTile(29, *new StreetProperty(
         "MED", "Medan", 280, 140, "Kuning", 150, 150, 
         std::vector<int>{24, 120, 360, 850, 1025, 1200}
     )));
@@ -244,13 +244,13 @@ void GameManager::buildTiles() {
     tiles.push_back(new GoToJailTile(30, "PPJ", "Pergi ke Penjara"));
     
     // Position 32: BDG - Bandung (Street - Hijau)
-    tiles.push_back(new StreetTile(31, new StreetProperty(
+    tiles.push_back(new StreetTile(31, *new StreetProperty(
         "BDG", "Bandung", 300, 150, "Hijau", 200, 200, 
         std::vector<int>{26, 130, 390, 900, 1100, 1275}
     )));
     
     // Position 33: DEN - Denpasar (Street - Hijau)
-    tiles.push_back(new StreetTile(32, new StreetProperty(
+    tiles.push_back(new StreetTile(32, *new StreetProperty(
         "DEN", "Denpasar", 300, 150, "Hijau", 200, 200, 
         std::vector<int>{26, 130, 390, 900, 1100, 1275}
     )));
@@ -259,13 +259,13 @@ void GameManager::buildTiles() {
     tiles.push_back(new FestivalTile(33, "FES", "Festival"));
     
     // Position 35: MTR - Mataram (Street - Hijau)
-    tiles.push_back(new StreetTile(34, new StreetProperty(
+    tiles.push_back(new StreetTile(34, *new StreetProperty(
         "MTR", "Mataram", 320, 160, "Hijau", 200, 200, 
         std::vector<int>{28, 150, 450, 1000, 1200, 1400}
     )));
     
     // Position 36: GUB - Stasiun Gubeng (Railroad)
-    tiles.push_back(new RailroadTile(35, new RailroadProperty(
+    tiles.push_back(new RailroadTile(35, *new RailroadProperty(
         "GUB", "Stasiun Gubeng", 200, 100, 
         std::map<int, int>{{1, 25}, {2, 50}, {3, 100}, {4, 200}}
     )));
@@ -274,7 +274,7 @@ void GameManager::buildTiles() {
     tiles.push_back(new CardTile(36, "KSP", "Kesempatan", true));
     
     // Position 38: JKT - Jakarta (Street - Biru Tua)
-    tiles.push_back(new StreetTile(37, new StreetProperty(
+    tiles.push_back(new StreetTile(37, *new StreetProperty(
         "JKT", "Jakarta", 350, 175, "Biru Tua", 200, 200, 
         std::vector<int>{35, 175, 500, 1100, 1300, 1500}
     )));
@@ -283,7 +283,7 @@ void GameManager::buildTiles() {
     tiles.push_back(new TaxTile(38, "PBM", "Pajak Barang Mewah", TaxType::PBM));
     
     // Position 40: IKN - Ibu Kota Nusantara (Street - Biru Tua)
-    tiles.push_back(new StreetTile(39, new StreetProperty(
+    tiles.push_back(new StreetTile(39, *new StreetProperty(
         "IKN", "Ibu Kota Nusantara", 400, 200, "Biru Tua", 200, 200, 
         std::vector<int>{50, 200, 600, 1400, 1700, 2000}
     )));

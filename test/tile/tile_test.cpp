@@ -26,14 +26,21 @@ int main(){
     vector<int> x = {100, 150, 200, 250, 300, 350, 400, 450};
 
     StreetProperty prop("LNDN", "Lundun", 300, 150, "GREEN", 300, 400, x);
-    StreetTile st(6, &prop);
+    StreetTile st(6, prop);
     //mungkin bisa simplify konstruktor StreetTile biar pakai property aja? nanti dilihat dependencynya lagi
     StreetProperty prop2("BRM", "Birmingham", 300, 150, "GREEN", 300, 400, x);
-    StreetTile st2(7, &prop2);
+    StreetTile st2(7, prop2);
     
     TurnContext tc(&p, &b, 1, 100, allPlayer); 
 
-    // RailroadProperty rprop2("GMBR", "Gambir", 0, 150, x);
+    map<int, int> x_map = {{1, 40}, {2, 100}};
+
+    RailroadProperty rprop("GMBR", "Gambir", 0, 150, x_map);
+
+    RailroadProperty rprop2("GBNG", "Gubeng", 0, 200, x_map);
+
+    RailroadTile rt(8, rprop);
+    RailroadTile rt2(9, rprop2);
 
 
     p2.buy(&prop);
@@ -42,5 +49,10 @@ int main(){
     // TurnContext tc2(&p2, &d, &b, &ge); //gimana nanti modif turncontextnya yah
     tc.nextTurn();
     st2.onLanded(tc);
+    tc.nextTurn();
+    std::cout << "IM okay\n";
+    rt.onLanded(tc);
+    tc.nextTurn();
+    rt2.onLanded(tc);
     return 0;
 }

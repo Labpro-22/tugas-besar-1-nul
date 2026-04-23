@@ -1,13 +1,9 @@
-#ifndef ACTION_TILE_HPP
-#define ACTION_TILE_HPP
-
 #pragma once
 
 #include "Tile.hpp"
 #include <iostream>
 #include <vector>
 
-// Forward declarations
 class Player;
 class TurnContext;
 class StreetProperty;
@@ -27,7 +23,7 @@ class GoTile : public ActionTile{
     public:
         GoTile(int idx, string cd, string nm);
         void onLanded(TurnContext& ctx) override;
-        void paySalary(Player* player, int amount);
+        void paySalary(Player& player, int amount);
 };
 
 class JailTile : public ActionTile{
@@ -37,9 +33,9 @@ class JailTile : public ActionTile{
     public:
         JailTile(int idx, string cd, string nm);
         void onLanded(TurnContext& ctx) override;
-        void addInmate(Player* player);
-        void removeInmate(Player* player);
-        bool isInmate(Player* player);
+        void addInmate(Player& player);
+        void removeInmate(Player& player);
+        bool isInmate(Player& player);
 };
 
 class FreeParkingTile : public ActionTile{
@@ -66,7 +62,7 @@ class FestivalTile : public ActionTile{
     public:
         FestivalTile(int idx, string cd, string nm);
         void onLanded(TurnContext& ctx) override;
-        void applyFestival(Player* player, StreetProperty* prop);
+        void applyFestival(Player& player, StreetProperty& prop);
 };
 
 class TaxTile : public ActionTile{
@@ -75,8 +71,6 @@ class TaxTile : public ActionTile{
     public: 
         TaxTile(int idx, string cd, string nm, TaxType type);
         void onLanded(TurnContext& ctx) override;
-        void applyPPH(Player* player);
-        void applyPBM(Player* player);
+        void applyPPH(Player& player);
+        void applyPBM(Player& player);
 };
-
-#endif
