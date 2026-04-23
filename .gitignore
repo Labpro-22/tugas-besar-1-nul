@@ -9,7 +9,7 @@
 build/
 obj/
 bin/
-
+data/
 
 # Precompiled Headers
 *.gch
