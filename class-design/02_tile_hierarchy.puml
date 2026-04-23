@@ -16,6 +16,7 @@ skinparam shadowing false
 skinparam nodesep 35
 skinparam ranksep 45
 skinparam ArrowThickness 1.2
+top to bottom direction
 
 ' ============================================================
 ' CONTEXT (referenced, not defined here)
@@ -161,17 +162,28 @@ package "Exceptions" #FDEFF3 {
 Tile <|-- PropertyTile
 Tile <|-- ActionTile
 
-PropertyTile <|-- StreetTile
-PropertyTile <|-- RailroadTile
-PropertyTile <|-- UtilityTile
+PropertyTile <|--down- StreetTile
+PropertyTile <|--down- RailroadTile
+PropertyTile <|--down- UtilityTile
 
-ActionTile <|-- GoTile
-ActionTile <|-- JailTile
-ActionTile <|-- FreeParkingTile
-ActionTile <|-- GoToJailTile
-ActionTile <|-- CardTile
-ActionTile <|-- FestivalTile
-ActionTile <|-- TaxTile
+ActionTile <|--down- GoTile
+ActionTile <|--down- JailTile
+ActionTile <|--down- FreeParkingTile
+ActionTile <|--down- GoToJailTile
+ActionTile <|--down- CardTile
+ActionTile <|--down- FestivalTile
+ActionTile <|--down- TaxTile
+
+' Hidden links to keep sibling subclasses stacked vertically (avoid wide row)
+StreetTile -[hidden]down-> RailroadTile
+RailroadTile -[hidden]down-> UtilityTile
+
+GoTile -[hidden]down-> JailTile
+JailTile -[hidden]down-> FreeParkingTile
+FreeParkingTile -[hidden]down-> GoToJailTile
+GoToJailTile -[hidden]down-> CardTile
+CardTile -[hidden]down-> FestivalTile
+FestivalTile -[hidden]down-> TaxTile
 
 ' Composition
 Board "1" o-- "20..60" Tile : holds
