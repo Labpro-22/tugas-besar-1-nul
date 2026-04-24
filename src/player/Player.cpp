@@ -102,6 +102,7 @@ int Player::move(int steps, TurnContext& ctx) {
     this->position = (oldPosition + trueSteps) % boardSize;
 
     for (int i = 0; i < nPassStart; ++i) {
+        std::cout << "start\n";
         this->addCash(ctx.gameEngine.getGoSalary());
         ctx.gameEngine.giveRandomSkillCardTo(*this);
     }
@@ -379,8 +380,15 @@ bool Player::checkBankruptcy(int requiredAmount) {
         return false;  
     }
 
-    if (!BankruptcyManager::canCoverDebt(this, requiredAmount)) {
-        BankruptcyManager::declareBankrupt(this);
+    int liquidationFunds = 0;
+    for (Property* property : this->properties) {
+        if (property != nullptr && property->getStatus() == PropertyStatus::OWNED) {
+            liquidationFunds += property->getMortgageValue();
+        }
+    }
+
+    if (this->balance + liquidationFunds < requiredAmount) {
+        this->setBankruptStatus();
         return true;
     }
 
