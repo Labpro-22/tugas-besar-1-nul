@@ -17,7 +17,7 @@ TurnManager& TurnContext::getTurnMgr() const {
     return gameEngine.getTurnManager();
 }
 
-const std::vector<Player*>& TurnContext::getAllPlayers() const {
+const std::vector<Player*> TurnContext::getAllPlayers() const {
     return this->gameEngine.getPlayers();
 }
 

@@ -32,7 +32,7 @@ public:
     int getBoardSize() const;
 
     TurnManager& getTurnMgr() const;
-    const std::vector<Player*>& getAllPlayers() const;
+    const std::vector<Player*> getAllPlayers() const;
 
     // Card deck methods
     ChanceCard* drawChanceCard();
