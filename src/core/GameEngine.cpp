@@ -3,7 +3,15 @@
 #include "core/TurnContext.hpp"
 #include "core/Command.hpp"
 #include "core/Dice.hpp"
+#include "core/ConfigLoader.hpp"
 #include "tile/ActionTile.hpp"
+
+#include "card/MoveCard.hpp"
+#include "card/DiscountCard.hpp"
+#include "card/ShieldCard.hpp"
+#include "card/TeleportCard.hpp"
+#include "card/LassoCard.hpp"
+#include "card/DemolitionCard.hpp"
 
 #include "player/Player.hpp"
 #include "exception/CommandException.hpp"
@@ -19,6 +27,19 @@ GameEngine::GameEngine(int size)
         , communityDeck(CardDeck<CommunityChestCard>{})
         , skillDeck(CardDeck<SkillCard>{})
         , status(GameStatus::NOT_STARTED)
+        , activeConfig(Config{})
+        , players{std::vector<std::unique_ptr<Player>>{}} {
+
+    skillDeck.addCard(new MoveCard(1));
+    skillDeck.addCard(new MoveCard(2));
+    skillDeck.addCard(new MoveCard(3));
+    skillDeck.addCard(new DiscountCard(25));
+    skillDeck.addCard(new DiscountCard(50));
+    skillDeck.addCard(new ShieldCard());
+    skillDeck.addCard(new TeleportCard(0));
+    skillDeck.addCard(new LassoCard());
+    skillDeck.addCard(new DemolitionCard());
+    skillDeck.shuffle();
         , players{std::vector<std::unique_ptr<Player>>{}} {
     initializeCardDecks();
 }
@@ -63,42 +84,58 @@ void GameEngine::run() {
 
 void GameEngine::loadGame() {
     std::cout << "[INFO] Loading Game...\n";
-    std::cout << "Input configuration filename\n" ;
+    std::cout << "Input configuration folder\n" ;
     std::cout << "> ";
-    std::string filename;
-    std::getline(std::cin, filename);
-    if (filename.empty()) {
+    std::string folder;
+    std::getline(std::cin, folder);
+    if (folder.empty()) {
         this->board.generateDefaultBoard();
         return;
     }
 
     std::cout << "\n";
-    std::cout << "[INFO] Memuat konfigurasi board dari file: " << filename << "\n";
-    this->board = Board(40); // temporary dummy board bootstrap
-    // load from file
-    this->board.generateDefaultBoard(); 
+    std::cout << "[INFO] Loading configuration from folder: " << folder << "\n";
+    
+    try {
+        ConfigLoader loader;
+        Config cfg = loader.loadAll(folder);
+        this->activeConfig = cfg;
 
+        this->board = Board(40);
+        this->board.buildFromConfig(this->activeConfig);
+    } catch (const std::exception& ex) {
+        std::cout << ex.what() << "\n";
+        this->board.generateDefaultBoard();
+    }
+
+    std::cout << "[INFO] Board loaded from config successfully.\n";
+    
     int maxTurns;
-    std::cout << "\n";
-    std::cout << "[INFO] Memuat giliran maksimal permainan\n";
-    std::cout << "Masukkan batas jumlah giliran permainan (atau -1 untuk tanpa batas)\n";
+    std::cout << "[INFO] Querying max turns\n";
+    std::cout << "Enter max turn (-1 for unlimited turns)\n";
     std::cout << "> ";
     std::cin >> maxTurns;
+    if (maxTurns == -1 && this->activeConfig.misc.maxTurn > 0) {
+        maxTurns = this->activeConfig.misc.maxTurn;
+    }
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     this->turnmgr = TurnManager(maxTurns);
 
     int numPlayers;
     std::cout << "\n";
-    std::cout << "[INFO] Memuat pemain\n";
-    std::cout << "Masukkan jumlah pemain (2-6)\n";
+    std::cout << "[INFO] Querying players\n";
+    std::cout << "Enter player amount (2-6)\n";
     std::cout << "> ";
     std::cin >> numPlayers;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     for (int i = 0; i < numPlayers; ++i) {
         std::string username;
-        std::cout << "Masukkan nama pemain " << (i + 1) << ": ";
+        std::cout << "Enter player " << (i + 1) << "'s name: ";
         std::getline(std::cin, username);
-        players.push_back(std::make_unique<Player>(username, 1500)); // saldo awal 1500
+        const int startingBalance = (this->activeConfig.misc.startingBalance > 0)
+            ? this->activeConfig.misc.startingBalance
+            : 1500;
+        players.push_back(std::make_unique<Player>(username, startingBalance));
     }
     turnmgr.setTurnOrder(this->getPlayers());
 
@@ -221,6 +258,29 @@ TurnManager& GameEngine::getTurnManager() {
     return turnmgr;
 }
 
+int GameEngine::getGoSalary() const {
+    return (activeConfig.special.goSalary > 0) ? activeConfig.special.goSalary : 200;
+}
+
+int GameEngine::getStartingBalance() const {
+    return (activeConfig.misc.startingBalance > 0) ? activeConfig.misc.startingBalance : 1500;
+}
+
+void GameEngine::giveRandomSkillCardTo(Player& player) {
+    if (player.getHandsAmount() >= 3) {
+        return;
+    }
+
+    if (skillDeck.size() == 0) {
+        return;
+    }
+
+    SkillCard* drawn = skillDeck.draw();
+    if (drawn == nullptr) {
+        return;
+    }
+
+    player.drawSCard(drawn);
 void GameEngine::initializeCardDecks() {
     // Initialize Chance Cards (Kesempatan)
     chanceDeck.addCard(new ChanceCard("Pergi ke stasiun terdekat", ChanceType::GO_TO_NEAREST_STATION));
