@@ -5,8 +5,7 @@
 #include "player/Player.hpp"
 
 TurnManager::TurnManager(int maxTurn)
-    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1),
-      activePlayerIndex(-1), turnOrder() {}
+    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), hasActedThisTurn(false), turnOrder(), doubleGotten(0) {}
 
 void TurnManager::setTurnOrder(const std::vector<Player*>& players) {
     this->turnOrder.clear();
@@ -41,6 +40,7 @@ void TurnManager::nextTurn(TurnContext& ctx) {
     this->activePlayerIndex =
         (this->activePlayerIndex + 1) % this->turnOrder.size();
     this->currentTurn++;
+    this->hasActedThisTurn = false;  // Reset flag for new turn
     // ctx.currentPlayer = *this->turnOrder[this->activePlayerIndex];
 }
 
@@ -62,14 +62,19 @@ int TurnManager::getActivePlayerIndex() const {
     return this->activePlayerIndex;
 }
 
-const std::vector<Player*>& TurnManager::getTurnOrder() const {
-    return this->turnOrder;
-}
+int TurnManager::getDoubleGotten() const {return this->doubleGotten;}
 
-bool TurnManager::isGameOver() const {
-    if (maxTurn < 0)
-        return false; // nanti bikin kalo smua ud bangkrut
-    return this->currentTurn >= this->maxTurn;
+const std::vector<Player*>& TurnManager::getTurnOrder() const { return this->turnOrder; }
+
+void TurnManager::setCurrentTurn(int turn) { this->currentTurn = turn; }
+
+void TurnManager::setActivePlayerIndex(int idx) { this->activePlayerIndex = idx; }
+
+void TurnManager::setMaxTurn(int max) { this->maxTurn = max; }
+
+bool TurnManager::isGameOver() const { 
+    if (maxTurn < 0) return false; // nanti bikin kalo smua ud bangkrut
+    return this->currentTurn >= this->maxTurn; 
 }
 
 std::vector<Player*> TurnManager::determineWinner() {
@@ -92,3 +97,11 @@ std::vector<Player*> TurnManager::determineWinner() {
 
     return winners;
 }
+
+bool TurnManager::getHasActedThisTurn() const { return this->hasActedThisTurn; }
+
+void TurnManager::setHasActedThisTurn(bool acted) { this->hasActedThisTurn = acted; }
+
+void TurnManager::markActionTaken() { this->hasActedThisTurn = true; }
+
+void TurnManager::resetActionFlag() { this->hasActedThisTurn = false; }

@@ -11,6 +11,7 @@
 #include "exception/InvalidGameStateException.hpp"
 #include "property/Property.hpp"
 #include "property/RailroadProperty.hpp"
+#include "property/StreetProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "board/Board.hpp"
 #include "core/GameEngine.hpp"
@@ -52,6 +53,8 @@ int Player::getPropertiesAmount() const { return this->properties.size(); }
 int Player::getHandsAmount() const { return this->hand.size(); }
 
 const std::vector<Property*>& Player::getProperties() const { return this->properties; }
+
+const std::vector<SkillCard*>& Player::getHand() const { return this->hand; }
 
 int Player::getWealth() const {
     return 0; //pastiin
@@ -113,8 +116,15 @@ void Player::moveBackwardTo(int index, TurnContext& ctx) {
     // ni nanti implement ngapain tilenya
 }
 
+void Player::setPosition(int pos) {
+    this->position = pos;
+}
+
+
+
+
 /* === PROPERTIES === */
-void Player::buy(Property* p) {
+void Player::buy(Property* p, TurnContext& ctx) {
     // double check property
     if (p == nullptr) {
         throw InvalidGameStateException("Cannot buy null property");
@@ -124,10 +134,10 @@ void Player::buy(Property* p) {
                                          p->getName());
     }
     this->deductCash(p->getBuyPrice());
-    this->addProperty(p);
+    this->addProperty(p, ctx);
 }
 
-void Player::buy(Property* p, int buyAmount) {
+void Player::buy(Property* p, int buyAmount, TurnContext& ctx) {
     // double check property
     if (p == nullptr) {
         throw InvalidGameStateException("Cannot buy null property");
@@ -137,7 +147,62 @@ void Player::buy(Property* p, int buyAmount) {
                                          p->getName());
     }
     this->deductCash(buyAmount);
-    this->addProperty(p);
+    this->addProperty(p, ctx);
+}
+
+bool Player::upgrade(TurnContext& ctx) {
+    std::vector<StreetProperty*> eligible_props;
+
+    // Kumpulkan properti yang BENAR-BENAR bisa dibangun saat ini
+    for (Property* prop : properties) {
+        StreetProperty* sp = dynamic_cast<StreetProperty*>(prop);
+        if (sp != nullptr && sp->canBuild()) {
+            eligible_props.push_back(sp);
+        }
+    }
+
+    if (eligible_props.empty()) {
+        std::cout << "Tidak ada properti yang dapat diupgrade saat ini (pastikan sudah monopoli dan memenuhi syarat pemerataan).\n";
+        return false;
+    } 
+
+    std::cout << "Properti yang dapat di-upgrade: \n";
+    int ctr = 1;
+    for (StreetProperty* sprop : eligible_props) {
+        std::cout << ctr << ". " << sprop->getCode() << " (" << sprop->getName() << ") - Level: " << sprop->getBuildingCount() << "\n";
+        ctr++;
+    }
+
+    std::cout << "Masukkan kode properti yang ingin diupgrade: ";
+    std::string cd;
+    
+    while (true) {
+        std::cin >> cd;
+        bool found = false;
+        
+        for (StreetProperty* sprop : eligible_props) {
+            if (cd == sprop->getCode()) {
+                found = true;
+                try {
+                    if (sprop->getBuildingCount() < 4) {
+                        sprop->buildHouse();
+                        std::cout << "Berhasil membangun rumah di " << sprop->getName() << "\nHarga sewa saat ini: M" << sprop->getRent(ctx) << "\n";
+                    } else {
+                        sprop->upgradeToHotel();
+                        std::cout << "Berhasil membangun hotel di " << sprop->getName() << "\nHarga sewa saat ini: M" << sprop->getRent(ctx) << "\n";
+                    }
+                    return true;
+                } catch (const InsufficientFundsException& e) {
+                    std::cout << "Gagal: Saldo tidak cukup!\n";
+                    return false;
+                }
+            }
+        }
+        
+        if (!found) {
+            std::cout << "Properti tidak valid. Silakan masukkan kode properti lain: ";
+        }
+    }
 }
 
 void Player::sell(Property& p) { 
@@ -175,7 +240,7 @@ void Player::mortgage(Property* p) {
 }
 
 // ni nnti make sure parameter type
-void Player::addProperty(Property* p) {
+void Player::addProperty(Property* p, TurnContext& ctx) {
     if (p == nullptr) {
         throw InvalidGameStateException("Cannot add null property");
     }
@@ -195,7 +260,7 @@ void Player::addProperty(Property* p) {
             return count;
         });
     }
-    p->setOwner(this);
+    p->setOwner(this, ctx);
     this->properties.push_back(p);
 }
 

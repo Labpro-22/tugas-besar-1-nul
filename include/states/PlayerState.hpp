@@ -11,5 +11,6 @@ class PlayerState {
     int balance = 0;
     std::string positionCode;
     std::string status;
+    bool isBot = false;  // Flag untuk menandai apakah player adalah bot
     std::vector<CardState> hand;
 };

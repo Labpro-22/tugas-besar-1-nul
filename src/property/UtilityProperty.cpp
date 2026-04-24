@@ -99,6 +99,6 @@ void UtilityProperty::printStatus(TurnContext& ctx) {
     }
     std::cout << "| Status: " << stat << "\n";
     std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
-    std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\n";
+    std::cout << "| Sewa saat ini    : M" << getRent(ctx) << "\n";
     std::cout << "+================================+\n";
 }

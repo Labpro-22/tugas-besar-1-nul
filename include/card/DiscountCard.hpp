@@ -12,4 +12,6 @@ class DiscountCard : public SkillCard {
     DiscountCard(int discount);
 
     void apply(TurnContext& ctx) override;
+    std::string getTypeName() const override { return "DiscountCard"; }
+    int getSkillValue() const override { return discountPercent; }
 };

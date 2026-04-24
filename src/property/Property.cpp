@@ -1,10 +1,46 @@
 // #include "property/Property.hpp"
 #include "../../include/property/Property.hpp"
+#include "player/Player.hpp"
+#include "property/StreetProperty.hpp"
+#include "core/TurnContext.hpp"
+#include "board/Board.hpp"
 
 #include <iostream>
 #include <utility>
 
 #include "../../include/exception/InvalidGameStateException.hpp"
+
+namespace {
+void recomputeStreetMonopolyForColor(TurnContext& ctx, const std::string& targetColor) {
+    std::vector<StreetProperty*> sameColorStreets;
+    sameColorStreets.reserve(4);
+
+    for (Property* p : ctx.board.getAllProperties()) {
+        StreetProperty* sp = dynamic_cast<StreetProperty*>(p);
+        if (sp != nullptr && sp->getColor() == targetColor) {
+            sameColorStreets.push_back(sp);
+        }
+    }
+
+    if (sameColorStreets.empty()) {
+        return;
+    }
+
+    Player* candidateOwner = sameColorStreets.front()->getOwner();
+    bool monopolized = candidateOwner != nullptr;
+
+    for (StreetProperty* sp : sameColorStreets) {
+        if (sp->getOwner() != candidateOwner) {
+            monopolized = false;
+            break;
+        }
+    }
+
+    for (StreetProperty* sp : sameColorStreets) {
+        sp->setMonopolized(monopolized);
+    }
+}
+}
 
 // Initializes common property state and validates basic invariants.
 Property::Property(std::string code,
@@ -65,14 +101,23 @@ Player* Property::getOwner() const {
 }
 
 // Sets owner and synchronizes status between BANK and OWNED.
-void Property::setOwner(Player* owner) {
+void Property::setOwner(Player* owner, TurnContext& ctx) {
     owner_ = owner;
 
+    // Update status dasar kepemilikan
     if (owner_ == nullptr) {
         status_ = PropertyStatus::BANK;
     } else if (status_ == PropertyStatus::BANK) {
         status_ = PropertyStatus::OWNED;
     }
+
+    // Cek apakah properti ini adalah StreetProperty
+    StreetProperty* currentStreet = dynamic_cast<StreetProperty*>(this);
+    if (currentStreet == nullptr) {
+        return;
+    }
+
+    recomputeStreetMonopolyForColor(ctx, currentStreet->getColor());
 }
 
 // Moves property from OWNED to MORTGAGED.

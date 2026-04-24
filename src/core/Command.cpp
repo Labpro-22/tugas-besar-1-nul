@@ -168,22 +168,28 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
     const std::string commandName = toUpperAscii(this->argv(0));
 
 	if (commandName == "END_TURN") {
-		if (!this->canEndTurn) {
-			out << "You have to roll the dice!\n"; 
+		if (!ctx.canEndTurn()) {
+			if (ctx.currentPlayer.isInJail()) {
+				out << "[ERROR] Kamu sedang di penjara! Pilih: bayar denda atau ROLL_DICE untuk mencoba double.\n";
+			} else {
+				out << "[ERROR] Kamu belum melempar dadu! Gunakan ROLL_DICE terlebih dahulu.\n";
+			}
 			return false;
 		}
-		out << "[COMMAND] Ending turn...\n";
-		this->canEndTurn = false;
 		return true;
 	}
 	else if (commandName == "ROLL_DICE") execRollDice(ctx, out);
 	else if (commandName == "SET_DICE") execSetDice(ctx, out);
-	else if (commandName == "PRINT_BOARD" || commandName == "CETAK_PAPAN") execPrintBoard(ctx, out);
+	else if (commandName == "PRINT_BOARD") execPrintBoard(ctx, out);
 	else if (commandName == "PRINT_PROP_CERT") execPrintCert(ctx, out);
 	else if (commandName == "PRINT_PROPERTY") execPrintProperty(ctx, out);
 	else if (commandName == "MORTGAGE") execMortgage(ctx, out);
 	else if (commandName == "PROFILE") execProfile(ctx, out);
 	else if (commandName == "USE_SKILL") execUseSkill(ctx, out);
+	else if (commandName == "HELP") execHelp(out);
+	else if (commandName == "BUILD") execUpgrade(ctx, out);
+	else if (commandName == "PRINT_LOG") execPrintLog(ctx, out);
+	else if (commandName == "SAVE") execSave(ctx, out);
 	else if (commandName == "HELP") execHelp(out);
 	else out << "[WARN] Unrecognized command: " << commandName << "\n";
 	return false;
@@ -199,25 +205,60 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 		out << "[WARN] You cannot roll the dice anymore this turn.\n";
 		return;
 	}
+
+	// Mark that player has taken action (rolling dice)
+	ctx.gameEngine.getTurnManager().markActionTaken();
+
+	// Set flag untuk validasi END_TURN
+	if (ctx.currentPlayer.isInJail()) {
+		ctx.hasTakenJailAction = true;  // Pemain di penjara sudah mencoba lempar dadu
+	} else {
+		ctx.hasRolled = true;  // Pemain normal sudah lempar dadu
+	}
+
 	int diceTotal = ctx.dice.getTotal();
 	this->canEndTurn = !ctx.dice.isDouble();
 
-    out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
-        << std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
-    out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by "
-        << diceTotal << " steps\n";
+//     out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
+//         << std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
+//     out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by "
+//         << diceTotal << " steps\n";
 
-    int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
-    Tile* baseTile = ctx.board.getTile(nextPos);
-    if (baseTile == nullptr) {
-        throw InvalidGameStateException(
-            "Player moved to an invalid tile index: " +
-            std::to_string(nextPos));
-    }
+//     int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
+//     Tile* baseTile = ctx.board.getTile(nextPos);
+//     if (baseTile == nullptr) {
+//         throw InvalidGameStateException(
+//             "Player moved to an invalid tile index: " +
+//             std::to_string(nextPos));
+//     }
 
-    out << ctx.currentPlayer.getUsername() << " landed in "
-        << baseTile->getName() << "\n";
-    baseTile->onLanded(ctx);
+//     out << ctx.currentPlayer.getUsername() << " landed in "
+//         << baseTile->getName() << "\n";
+//     baseTile->onLanded(ctx);
+
+	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
+		<< std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
+	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
+
+	// Log dice roll
+	std::string logDetail = "Lempar: " + std::to_string(ctx.dice.getDie1()) + "+" +
+	                        std::to_string(ctx.dice.getDie2()) + "=" + std::to_string(diceTotal);
+	ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "DADU", logDetail);
+
+	int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
+	Tile* baseTile = ctx.board.getTile(nextPos);
+	if (baseTile == nullptr) {
+		throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(nextPos));
+	}
+
+	out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
+
+	// Log movement
+	logDetail = "Mendarat di " + baseTile->getName() + " (" + baseTile->getCode() + ")";
+	ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "GERAK", logDetail);
+
+	baseTile->onLanded(ctx);
+
 	if (ctx.currentPlayer.isShieldActive()) ctx.currentPlayer.deactivateShield();
 }
 
@@ -236,6 +277,17 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
     }
 
 	out << "[COMMAND] Setting dice...\n";
+
+	// Mark that player has taken action (setting dice)
+	ctx.gameEngine.getTurnManager().markActionTaken();
+
+	// Set flag untuk validasi END_TURN
+	if (ctx.currentPlayer.isInJail()) {
+		ctx.hasTakenJailAction = true;
+	} else {
+		ctx.hasRolled = true;
+	}
+
 	ctx.dice.setManual(die1, die2);
 	int diceTotal = ctx.dice.getTotal();
 	this->canEndTurn = !ctx.dice.isDouble();
@@ -518,16 +570,48 @@ void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
 	out << "[INFO] You received M" << formatMoneyId(tileProperty->getMortgageValue()) << ".\n";
 }
 
-void Command::execUpgrade(TurnContext& ctx, std::ostream& out) const {}
+void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
 
-void Command::execSave(TurnContext& ctx, std::ostream& out) const {}
+}
+
+void Command::execUpgrade(TurnContext& ctx, std::ostream& out) const {
+	ctx.currentPlayer.upgrade(ctx);
+}
+
+void Command::execSave(TurnContext& ctx, std::ostream& out) const {
+    // Check if player has already taken any action this turn (spec requirement)
+    if (ctx.gameEngine.getTurnManager().getHasActedThisTurn()) {
+        out << "[ERROR] Simpan hanya dapat dilakukan di awal giliran, sebelum melakukan aksi apapun.\n";
+        return;
+    }
+
+    std::string filename;
+
+    if (argc() >= 2 && argv(1) != nullptr) {
+        filename = argv(1);
+    } else {
+        out << "[COMMAND] Input filename: ";
+        std::getline(std::cin, filename);
+    }
+
+    if (filename.empty()) {
+        out << "[WARN] Filename cannot be empty.\n";
+        return;
+    }
+
+    try {
+        ctx.gameEngine.saveGame(filename);
+    } catch (const std::exception& e) {
+        out << "[ERROR] Failed to save game: " << e.what() << "\n";
+    }
+}
 
 // void Command::execLoad(TurnContext& ctx, std::ostream& out) const {
 
 // }
 
 void Command::execPrintLog(TurnContext& ctx, std::ostream& out) const {
-
+    ctx.gameEngine.printLogs();
 }
 
 void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {
@@ -576,13 +660,26 @@ void Command::execHelp(std::ostream& out) const {
     out << "║   - Bot level Medium akan menjadi lawan Anda                     ║\n";
     out << "║   - Bot akan mengambil keputusan secara otomatis                 ║\n";
     out << "║                                                                  ║\n";
-    out << "║ Dalam permainan, Anda dapat menggunakan perintah:                ║\n";
+    out << "║ PERINTAH GERAK:                                                  ║\n";
     out << "║   - ROLL_DICE      : Lempar dadu untuk bergerak                  ║\n";
+    out << "║   - SET_DICE X Y   : Atur dadu manual (contoh: SET_DICE 3 5)     ║\n";
+    out << "║   - END_TURN       : Akhiri giliran (wajib lempar dadu dulu!)    ║\n";
+    out << "║                                                                  ║\n";
+    out << "║ PERINTAH INFO:                                                   ║\n";
     out << "║   - PRINT_BOARD    : Lihat papan permainan                       ║\n";
     out << "║   - PRINT_PROPERTY : Lihat properti Anda                         ║\n";
+    out << "║   - PRINT_PROP_CERT [KODE] : Lihat akta properti                 ║\n";
+    out << "║   - PROFILE        : Lihat profil pemain                         ║\n";
+    out << "║   - PRINT_LOG      : Lihat log transaksi                         ║\n";
+    out << "║                                                                  ║\n";
+    out << "║ PERINTAH AKSI:                                                   ║\n";
     out << "║   - MORTGAGE       : Gadai properti ke bank                      ║\n";
-    out << "║   - BUILD          : Bangun rumah/hotel                          ║\n";
-    out << "║   - dan banyak lagi...                                           ║\n";
+    out << "║   - BUILD          : Bangun rumah/hotel di properti              ║\n";
+    out << "║   - USE_SKILL      : Gunakan kartu kemampuan                     ║\n";
+    out << "║                                                                  ║\n";
+    out << "║ PERINTAH LAIN:                                                   ║\n";
+    out << "║   - SAVE           : Simpan permainan                            ║\n";
+    out << "║   - HELP           : Tampilkan panduan ini                       ║\n";
     out << "╚══════════════════════════════════════════════════════════════════╝\n";
 }
 

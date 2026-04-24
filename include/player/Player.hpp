@@ -30,8 +30,8 @@ protected:
 
   public:
     // apakah mau diimplement ato jadi buysell aja as a whole
-    void addProperty(Property* p);
-    void removeProperty(Property& p); // make sure lgi type p
+    void addProperty(Property* p, TurnContext& ctx);
+    void removeProperty(Property& p); //make sure lgi type p
 
     // public:
     // ctor dtor
@@ -50,6 +50,7 @@ protected:
     int getHandsAmount() const;
     int getWealth() const;
     const std::vector<Property*>& getProperties() const;
+    const std::vector<SkillCard*>& getHand() const;
 
     // op
     bool operator>=(const Player& other);
@@ -59,11 +60,13 @@ protected:
     int move(int steps, TurnContext& ctx);
     void moveForwardTo(int index, TurnContext& ctx);
     void moveBackwardTo(int index, TurnContext& ctx);
+    void setPosition(int pos);
     // void onLanded(TurnContext& ctx);
 
     // properties
-    void buy(Property* p);
-    void buy(Property* p, int buyAmount);
+    void buy(Property* p, TurnContext& ctx);
+    void buy(Property* p, int buyAmount, TurnContext& ctx);
+    bool upgrade(TurnContext& ctx);
     void sell(Property& p);
     void mortgage(Property* p);
 

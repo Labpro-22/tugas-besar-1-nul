@@ -52,5 +52,25 @@ template <typename T> class CardDeck {
                      "menjadi deck baru.\n";
     }
 
-    int size() const { return deck.size(); }
+    int size() const {
+        return deck.size();
+    }
+
+    const std::vector<T*>& getDeck() const {
+        return deck;
+    }
+
+    const std::vector<T*>& getDiscard() const {
+        return discard;
+    }
+
+    void clearDeck() {
+        for (auto card : deck) delete card;
+        deck.clear();
+    }
+
+    void clearDiscard() {
+        for (auto card : discard) delete card;
+        discard.clear();
+    }
 };

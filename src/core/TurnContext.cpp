@@ -36,3 +36,7 @@ void TurnContext::returnChanceCard(ChanceCard* card) {
 void TurnContext::returnCommunityChestCard(CommunityChestCard* card) {
     gameEngine.returnCommunityChestCard(card);
 }
+
+bool TurnContext::canEndTurn() const {
+    return this->getTurnMgr().getHasActedThisTurn();
+}

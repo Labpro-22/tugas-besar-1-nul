@@ -9,4 +9,5 @@ class ShieldCard : public SkillCard {
     ShieldCard() : SkillCard("ShieldCard: Kebal tagihan/sanksi", 1) {}
 
     void apply(TurnContext& ctx) override;
+    std::string getTypeName() const override { return "ShieldCard"; }
 };

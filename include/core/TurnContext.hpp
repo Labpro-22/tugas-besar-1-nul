@@ -23,12 +23,14 @@ class TurnContext {
     Board& board;
     GameEngine& gameEngine;
 
-    TurnContext(Player& player,
-                Dice& dice,
-                Board& board,
-                GameEngine& gameEngine)
-        : currentPlayer(player), dice(dice), board(board),
-          gameEngine(gameEngine) {}
+    // Flags untuk validasi giliran
+    bool hasRolled;                 // Sudah lempar dadu?
+    bool hasTakenJailAction;        // Sudah bayar/lempar dadu saat di penjara?
+
+    TurnContext(Player& player, Dice& dice, Board& board, GameEngine& gameEngine)
+        : currentPlayer(player), dice(dice), board(board), gameEngine(gameEngine),
+          hasRolled(false), hasTakenJailAction(false) {}
+
 
     Tile& getTile() const;
     int getBoardSize() const;
@@ -42,6 +44,6 @@ class TurnContext {
     void returnChanceCard(ChanceCard* card);
     void returnCommunityChestCard(CommunityChestCard* card);
 
-    // current/max turn num
-    // skillused, movedbycard, doublecount <- turncontext
+    // Validasi apakah bisa end turn
+    bool canEndTurn() const;
 };

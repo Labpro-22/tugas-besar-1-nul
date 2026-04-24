@@ -9,4 +9,5 @@ class DemolitionCard : public SkillCard {
     DemolitionCard();
 
     void apply(TurnContext& ctx) override;
+    std::string getTypeName() const override { return "DemolitionCard"; }
 };

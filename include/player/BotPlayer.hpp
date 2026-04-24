@@ -8,22 +8,18 @@
  * Inherits from Player and implements automatic decision making
  */
 class BotPlayer : public Player {
-  private:
-    int botDifficulty; // 1 = Easy, 2 = Medium, 3 = Hard
+private:
     std::string botName;
 
   public:
     // Constructor
-    BotPlayer(std::string name, int balance, int difficulty = 1);
+    BotPlayer(std::string name, int balance);
 
     // Destructor
     ~BotPlayer();
 
     // Check if this is a bot player
     bool isBot() const override;
-
-    // Get bot difficulty level
-    int getDifficulty() const;
 
     // Main decision making method - called when it's bot's turn
     void decideAction(TurnContext& ctx) override;

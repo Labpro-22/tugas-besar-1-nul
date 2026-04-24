@@ -15,37 +15,37 @@ class TileConfig;
 class StreetTile;
 class Config;
 
-class Board {
-  private:
-    std::vector<std::unique_ptr<Tile>>
-        tiles; // 20 hingga 60 tiles; bisa menggunakan smart pointer untuk RAII
-    std::vector<std::unique_ptr<Property>>
-        properties; // owner for property instances used by PropertyTile
-    std::map<std::string, int>
-        codeToIndex; // masi error nnti cek lgi dah mo turu dl
-    int size;
+class Board{
+    private:
+        std::vector<Tile*> tiles; // owner for all tile instances
+        std::vector<Property*> properties; // owner for property instances used by PropertyTile
+        std::map<std::string, int> codeToIndex; // masi error nnti cek lgi dah mo turu dl
+        int size;
 
-  public:
-    Board(const std::map<std::string, int>& data, int s);
-    Board(int s);
+        void clearOwnedData();
+    
+    public:
+        Board(const std::map<std::string, int>& data, int s);
+        Board(int s);
 
-    Board(Board&&) noexcept = default;            // Move Constructor
-    Board& operator=(Board&&) noexcept = default; // Move Assignment Operator
+        Board(Board&&) noexcept;            // Move Constructor
+        Board& operator=(Board&&) noexcept; // Move Assignment Operator
 
-    Board(const Board&) = delete;
-    Board& operator=(const Board&) = delete;
+        Board(const Board&) = delete;
+        Board& operator=(const Board&) = delete;
+        
+        std::vector<Property*> getAllProperties();
+        Tile* getTile(int idx);
+        Tile* getTileByCode(std::string cd);
+        void setTileAt(int idx, Tile* tile);
+        int getPlacedTileCount() const;
+        std::vector<Tile*>& getAllTiles();
+        int getSize() const;
+        int& getSizeRef();
+        std::vector<StreetTile*> getColorGroup(std::string clr);
+        void buildFromConfig(const Config& config);
 
-    Tile* getTile(int idx);
-    Tile* getTileByCode(std::string cd);
-    void setTileAt(int idx, std::unique_ptr<Tile> tile);
-    int getPlacedTileCount() const;
-    std::vector<std::unique_ptr<Tile>>& getAllTiles();
-    int getSize() const;
-    int& getSizeRef();
-    std::vector<StreetTile*> getColorGroup(std::string clr);
-    void buildFromConfig(const Config& config);
+        void generateDefaultBoard(); 
 
-    void generateDefaultBoard();
-
-    ~Board();
+        ~Board();
 };

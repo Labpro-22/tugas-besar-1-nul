@@ -9,6 +9,7 @@
 #include <vector>
 #include "core/TurnManager.hpp"
 #include "core/AuctionManager.hpp"
+#include <limits>
 
 using namespace std;
 
@@ -58,8 +59,9 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
         cout << "[Y/N] Apakah Anda mau beli " << getName()
              << "? (Harga: " << getProperty()->getBuyPrice() << ")\n\n";
         cin >> ans;
-        if (ans == "Y" || ans == "y") {
-            player.buy(getProperty());
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear newline from buffer
+        if (ans == "Y" || ans == "y"){
+            player.buy(getProperty(), ctx);
             cout << "[" << player.getUsername() << "] baru saja membeli " << getName() << "\n";
             cout << "Uang [" << player.getUsername() << "] tersisa: " << player.getBalance() << "\n\n"; 
             break;
@@ -67,7 +69,7 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
             AuctionManager am;
             TurnManager tm = ctx.getTurnMgr();
             AuctionWinner aw = am.runAuction(*(getProperty()), tm.getTurnOrder(), tm.getActivePlayerIndex());
-            aw.winner.buy(&aw.prop_won, aw.buyAmount);
+            aw.winner.buy(&aw.prop_won, aw.buyAmount, ctx);
             cout << "[" << aw.winner.getUsername() << "] baru saja membeli " << aw.prop_won.getName() << "\n";
             cout << "Uang [" << aw.winner.getUsername() << "] tersisa: " << aw.winner.getBalance() << "\n\n"; 
             break;
@@ -264,21 +266,20 @@ void RailroadTile::onLanded(TurnContext& ctx) {
     }
 }
 
-void RailroadTile::autoAcquire(Player& player) {
+void RailroadTile::autoAcquire(Player& player, TurnContext& ctx){
     Property* prop = getProperty();
-    player.addProperty(prop);
-    cout << "[" << prop->getName() << "] menjadi milik ["
-         << prop->getOwner()->getUsername() << "].\n\n";
+    player.addProperty(prop, ctx);
+    cout << "[" << prop->getName() << "] menjadi milik [" << prop->getOwner()->getUsername() << "].\n\n";
 }
 
 void UtilityTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
-    if (property->getStatus() == PropertyStatus::BANK) {
-        autoAcquire(player);
-
-    } else if (property->getStatus() == PropertyStatus::OWNED) {
-
-        if (property->getOwner() != &player) {
+    if (property->getStatus() == PropertyStatus::BANK){
+        autoAcquire(player, ctx);
+        
+    } else if (property->getStatus() == PropertyStatus::OWNED){
+        
+        if (property->getOwner() != &player){
             Property* prop = getProperty();
             cout << "[" << player.getUsername() << "] mendarat di ["
                  << prop->getName() << "] milik ["
@@ -292,9 +293,8 @@ void UtilityTile::onLanded(TurnContext& ctx) {
     }
 }
 
-void UtilityTile::autoAcquire(Player& player) {
+void UtilityTile::autoAcquire(Player& player, TurnContext& ctx){
     Property* prop = getProperty();
-    player.addProperty(prop);
-    cout << "[" << prop->getName() << "] menjadi milik ["
-         << prop->getOwner()->getUsername() << "].\n\n";
+    player.addProperty(prop, ctx);
+    cout << "[" << prop->getName() << "] menjadi milik [" << prop->getOwner()->getUsername() << "].\n\n";
 }
