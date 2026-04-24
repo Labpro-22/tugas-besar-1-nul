@@ -162,20 +162,20 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 
 	const std::string commandName = toUpperAscii(this->argv(0));
 
-	if (commandName == "END_TURN" || commandName == "SELESAI") {
+	if (commandName == "END_TURN") {
 		if (!ctx.canEndTurn()) {
 			if (ctx.currentPlayer.isInJail()) {
-				out << "[ERROR] Kamu sedang di penjara! Pilih: bayar denda atau LEMPAR_DADU untuk mencoba double.\n";
+				out << "[ERROR] Kamu sedang di penjara! Pilih: bayar denda atau ROLL_DICE untuk mencoba double.\n";
 			} else {
-				out << "[ERROR] Kamu belum melempar dadu! Gunakan LEMPAR_DADU terlebih dahulu.\n";
+				out << "[ERROR] Kamu belum melempar dadu! Gunakan ROLL_DICE terlebih dahulu.\n";
 			}
 			return false;
 		}
 		return true;
 	}
-	else if (commandName == "ROLL_DICE" || commandName == "LEMPAR_DADU") execRollDice(ctx, out);
-	else if (commandName == "SET_DICE" || commandName == "ATUR_DADU") execSetDice(ctx, out);
-	else if (commandName == "PRINT_BOARD" || commandName == "CETAK_PAPAN") execPrintBoard(ctx, out);
+	else if (commandName == "ROLL_DICE") execRollDice(ctx, out);
+	else if (commandName == "SET_DICE") execSetDice(ctx, out);
+	else if (commandName == "PRINT_BOARD") execPrintBoard(ctx, out);
 	else if (commandName == "PRINT_PROP_CERT") execPrintCert(ctx, out);
 	else if (commandName == "PRINT_PROPERTY") execPrintProperty(ctx, out);
 	else if (commandName == "MORTGAGE") execMortgage(ctx, out);
@@ -183,10 +183,9 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	else if (commandName == "USE_SKILL") execUseSkill(ctx, out);
 	else if (commandName == "HELP") execHelp(out);
 	else if (commandName == "BUILD") execUpgrade(ctx, out);
-	
-	else if (commandName == "PRINT_LOG" || commandName == "CETAK_LOG") execPrintLog(ctx, out);
-	else if (commandName == "SAVE" || commandName == "SIMPAN") execSave(ctx, out);
-	else if (commandName == "HELP" || commandName == "BANTUAN") execHelp(out);
+	else if (commandName == "PRINT_LOG") execPrintLog(ctx, out);
+	else if (commandName == "SAVE") execSave(ctx, out);
+	else if (commandName == "HELP") execHelp(out);
 	else out << "[WARN] Unrecognized command: " << commandName << "\n";
 	return false;
 }
