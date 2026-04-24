@@ -56,6 +56,7 @@ public:
     int getHandsAmount() const;
     int getWealth() const;
     const std::vector<Property*>& getProperties() const;
+    const std::vector<SkillCard*>& getHand() const;
 
     // op
     bool operator>=(const Player& other);
@@ -65,6 +66,7 @@ public:
     int move(int steps, TurnContext& ctx);
     void moveForwardTo(int index, TurnContext& ctx);
     void moveBackwardTo(int index, TurnContext& ctx);
+    void setPosition(int pos);
     // void onLanded(TurnContext& ctx);
 
     // properties
