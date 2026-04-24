@@ -8,21 +8,19 @@
 #include "core/TransactionLogger.hpp"
 #include "card/DeckCard.hpp"
 #include "card/ChanceCard.hpp"
+#include "card/DeckCard.hpp"
 #include "card/CommunityChestCard.hpp"
 #include "card/SkillCard.hpp"
 #include "config/Config.hpp"
+#include "core/TurnManager.hpp"
 
 class Player;
 class TurnContext;
 
-enum class GameStatus {
-    NOT_STARTED,
-    RUNNING,
-    FINISHED
-};
+enum class GameStatus { NOT_STARTED, RUNNING, FINISHED };
 
 class GameEngine {
-private:
+  private:
     // Board board;
     Board board;
     TurnManager turnmgr;
@@ -36,7 +34,7 @@ private:
     std::vector<Player*> players;
     void clearPlayers();
 
-public:
+  public:
     explicit GameEngine(int size);
     ~GameEngine();
 

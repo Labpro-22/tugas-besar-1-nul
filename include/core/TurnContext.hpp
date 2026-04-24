@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <algorithm>
+#include <vector>
 
 class Player;
 class Board;
@@ -16,9 +16,8 @@ class CommunityChestCard;
 class GameEngine;
 class TurnManager;
 
-
 class TurnContext {
-public:
+  public:
     Player& currentPlayer;
     Dice& dice;
     Board& board;

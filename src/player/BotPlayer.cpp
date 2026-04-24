@@ -1,8 +1,8 @@
 #include "player/BotPlayer.hpp"
-#include <iostream>
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
-#include <algorithm>
+#include <iostream>
 
 BotPlayer::BotPlayer(std::string name, int balance)
     : Player(name, balance), botName(name) {
@@ -105,7 +105,9 @@ int BotPlayer::decideUseSkillCard(int cardCount) {
     return -1; // Don't use any card
 }
 
-int BotPlayer::decideJailAction(int jailFine, int currentBalance, bool hasJailCard) {
+int BotPlayer::decideJailAction(int jailFine,
+                                int currentBalance,
+                                bool hasJailCard) {
     // Bot logic for jail decision
     // Returns: 1 = Pay fine, 2 = Use card, 3 = Try roll
 

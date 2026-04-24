@@ -1,13 +1,14 @@
 #pragma once
-#include <iostream>
-#include <vector>
-#include <map>
-#include <string>
 #include <algorithm>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 // using namespace std;
 
-#include "tile/Tile.hpp"
 #include "property/Property.hpp"
+#include "tile/Tile.hpp"
 
 // Forward declarations
 class TileConfig;

@@ -5,8 +5,8 @@
 #include "core/TurnContext.hpp"
 #include "board/Board.hpp"
 
-#include <utility>
 #include <iostream>
+#include <utility>
 
 #include "../../include/exception/InvalidGameStateException.hpp"
 
@@ -51,7 +51,8 @@ Property::Property(std::string code,
                    int festivalMult,
                    int festivalDur)
     : code_(std::move(code)), name_(std::move(name)), status_(status),
-      owner_(nullptr), buyPrice_(buyPrice), mortgageValue_(mortgageValue), festivalMult_(1), festivalDur_(0) {
+      owner_(nullptr), buyPrice_(buyPrice), mortgageValue_(mortgageValue),
+      festivalMult_(1), festivalDur_(0) {
     if (code_.empty()) {
         throw InvalidGameStateException("Property code cannot be empty");
     }
@@ -150,8 +151,6 @@ bool Property::operator==(const Property& other) const {
     return code_ == other.code_;
 }
 
-
-
 // Applies festival effect with capped stack and duration reset.
 void Property::applyFestival() {
     if (status_ != PropertyStatus::OWNED) {
@@ -175,7 +174,6 @@ void Property::decreaseFestivalDuration() {
     }
 }
 
-
 // Returns current festival rent multiplier.
 int Property::getFestivalMultiplier() const {
     return festivalMult_;
@@ -185,4 +183,3 @@ int Property::getFestivalMultiplier() const {
 int Property::getFestivalDuration() const {
     return festivalDur_;
 }
-

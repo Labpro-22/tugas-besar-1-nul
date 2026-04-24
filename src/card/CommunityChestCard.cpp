@@ -6,7 +6,9 @@
 
 #include <iostream>
 
-CommunityChestCard::CommunityChestCard(std::string desc, CommunityChestType t, int amt) 
+CommunityChestCard::CommunityChestCard(std::string desc,
+                                       CommunityChestType t,
+                                       int amt)
     : Card(std::move(desc)), type(t), amount(amt) {}
 
 void CommunityChestCard::execute(Player* player, TurnContext& ctx) {

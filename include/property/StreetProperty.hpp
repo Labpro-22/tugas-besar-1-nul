@@ -15,9 +15,9 @@ class StreetProperty : public Property {
                    int housePrice,
                    int hotelPrice,
                    std::vector<int> rentTable,
-                  PropertyStatus ps = PropertyStatus::BANK,
-                  int festivalMul = 1,
-                int festivalDur = 0);
+                   PropertyStatus ps = PropertyStatus::BANK,
+                   int festivalMul = 1,
+                   int festivalDur = 0);
 
     int getRent(const TurnContext& ctx) const override;
     int sellToBank();

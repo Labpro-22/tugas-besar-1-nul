@@ -2,8 +2,8 @@
 #include "property/Property.hpp"
 #include "player/Player.hpp"
 
-#include <utility>
 #include <iostream>
+#include <utility>
 
 #include "exception/InvalidGameStateException.hpp"
 
@@ -13,10 +13,16 @@ RailroadProperty::RailroadProperty(std::string code,
                                    int buyPrice,
                                    int mortgageValue,
                                    std::map<int, int> rentTable,
-                                    PropertyStatus status,
-                                    int festivalMult,
-                                    int festivalDur)
-    : Property(std::move(code), std::move(name), buyPrice, mortgageValue, status, festivalMult, festivalDur),
+                                   PropertyStatus status,
+                                   int festivalMult,
+                                   int festivalDur)
+    : Property(std::move(code),
+               std::move(name),
+               buyPrice,
+               mortgageValue,
+               status,
+               festivalMult,
+               festivalDur),
       rentTable_(std::move(rentTable)) {
     if (rentTable_.empty()) {
         throw InvalidGameStateException("Railroad rent table cannot be empty");
@@ -68,7 +74,7 @@ void RailroadProperty::setOwnedRailroadCounter(
     ownedRailroadCounter_ = std::move(counter);
 }
 
-void RailroadProperty::printStatus(TurnContext& ctx){
+void RailroadProperty::printStatus(TurnContext& ctx) {
     std::cout << "+================================+\n";
     std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\n";
     std::string stat = "BANK";

@@ -1,4 +1,4 @@
 #include "exception/InvalidGameStateException.hpp"
 
 InvalidGameStateException::InvalidGameStateException(const std::string& message)
-    : NimonspoliException("[GAME STATE ERR]", message) {}
+    : NimonspoliException("[STATE ERR]", message) {}

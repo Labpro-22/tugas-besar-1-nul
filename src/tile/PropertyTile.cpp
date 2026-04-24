@@ -1,55 +1,63 @@
 #include "tile/PropertyTile.hpp"
-#include "property/Property.hpp"
-#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
-#include "core/TurnManager.hpp"
+#include "core/BankruptcyManager.hpp"
+#include "exception/BankruptcyException.hpp"
+#include "player/Player.hpp"
+#include "property/Property.hpp"
 #include <iostream>
+#include <limits>
+#include <vector>
+#include "core/TurnManager.hpp"
 #include "core/AuctionManager.hpp"
 #include <limits>
 
 using namespace std;
 
 // semua konstruktor
-PropertyTile::PropertyTile(int idx, Property &p) : Tile(idx, p.getCode(), p.getName()), property(&p){};
+PropertyTile::PropertyTile(int idx, Property& p)
+    : Tile(idx, p.getCode(), p.getName()), property(&p) {};
 
-StreetTile::StreetTile(int idx, StreetProperty &prop) : PropertyTile(idx, prop){};
-RailroadTile::RailroadTile(int idx, RailroadProperty &prop) : PropertyTile(idx, prop){};
-UtilityTile::UtilityTile(int idx, UtilityProperty &prop) : PropertyTile(idx, prop){};
+StreetTile::StreetTile(int idx, StreetProperty& prop)
+    : PropertyTile(idx, prop) {};
+RailroadTile::RailroadTile(int idx, RailroadProperty& prop)
+    : PropertyTile(idx, prop) {};
+UtilityTile::UtilityTile(int idx, UtilityProperty& prop)
+    : PropertyTile(idx, prop) {};
 
-Property* PropertyTile::getProperty(){
+Property* PropertyTile::getProperty() {
     return property;
 };
 
-//helper
-void printOwner(Player& player){
+// helper
+void printOwner(Player& player) {
     cout << "Properti ini milik " << player.getUsername() << "\n";
 }
 
-void PropertyTile::onLanded(TurnContext& ctx){
+void PropertyTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     printOwner(player);
 }
 
-
-void StreetTile::onLanded(TurnContext& ctx){
+void StreetTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
-    if (property->getStatus() == PropertyStatus::OWNED){
-        if (property->getOwner() != &player){
+    if (property->getStatus() == PropertyStatus::OWNED) {
+        if (property->getOwner() != &player) {
             triggerRentPayment(ctx);
         }
-    } else if (property->getStatus() == PropertyStatus::BANK){
+    } else if (property->getStatus() == PropertyStatus::BANK) {
         triggerBuyOrAuction(ctx);
-    } //kalau Mortgaged lewat aja sih
-    
+    } // kalau Mortgaged lewat aja sih
 }
 
-void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
+void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
-    cout << "[" << player.getUsername() << "] mendarat di [" << getName() << "].\n\n";
+    cout << "[" << player.getUsername() << "] mendarat di [" << getName()
+         << "].\n\n";
     getProperty()->printStatus(ctx);
     string ans;
-    while (true){
-        cout << "[Y/N] Apakah Anda mau beli " << getName() << "? (Harga: " << getProperty()->getBuyPrice() << ")\n\n";
+    while (true) {
+        cout << "[Y/N] Apakah Anda mau beli " << getName()
+             << "? (Harga: " << getProperty()->getBuyPrice() << ")\n\n";
         cin >> ans;
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear newline from buffer
         if (ans == "Y" || ans == "y"){
@@ -65,40 +73,197 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
             cout << "[" << aw.winner.getUsername() << "] baru saja membeli " << aw.prop_won.getName() << "\n";
             cout << "Uang [" << aw.winner.getUsername() << "] tersisa: " << aw.winner.getBalance() << "\n\n"; 
             break;
-        } else{
+        } else {
             cout << "input tidak valid. Throw input invalid exception.\n";
         }
     }
 }
 
-void StreetTile::triggerRentPayment(TurnContext& ctx){
+void StreetTile::triggerRentPayment(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     if (player.isShieldActive()) {
         cout << "You have an active shield! No rent paid\n";
         return;
     }
 
+    Property* property = getProperty();
+    Player* owner = property->getOwner();
+    if (owner == nullptr) {
+        return;
+    }
     cout << "You landed in [" << getProperty()->getName() << "] owned by [" << getProperty()->getOwner()->getUsername() << "].\n\n";
     getProperty()->printStatus(ctx);
     player.deductCash(getProperty()->getRent(ctx));
     cout << "Money left: <M" << player.getBalance() << ">.\n\n";
+
+    const int rent = property->getRent(ctx);
+    cout << "You landed in [" << property->getName() << "] owned by [" << owner->getUsername() << "].\n\n";
+    property->printStatus(ctx);
+
+    if (player.getBalance() < rent) {
+        const bool canContinue = triggerBankruptcy(ctx, rent);
+        if (!canContinue) {
+            return;
+        }
+    }
+
+    player.deductCash(rent);
+    owner->addCash(rent);
+    cout << "Rent paid: M" << rent << "\n";
+    cout << "Money left: <M" << player.getBalance() << ">.\n\n";
 }
 
-void RailroadTile::onLanded(TurnContext& ctx){
+bool StreetTile::triggerBankruptcy(TurnContext& ctx, int debtAmount) {
     Player& player = ctx.currentPlayer;
-    if (property->getStatus() == PropertyStatus::BANK){
-        autoAcquire(player, ctx);
-    } else if (property->getStatus() == PropertyStatus::OWNED){
-        
-        if (property->getOwner() != &player){
-            Property* prop = getProperty();
-            cout << "[" << player.getUsername() << "] mendarat di [" << prop->getName() << "] milik [" << prop->getOwner()->getUsername() << "].\n\n";
-            prop->printStatus(ctx); //ini harusnya jadi 0 harga belinya
-            cout << "Uang anda tersisa: <M" << player.getBalance() - prop->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player
+
+    while (player.getBalance() < debtAmount) {
+        auto options = BankruptcyManager::getAvailableLiquidationOptions(ctx);
+        if (options.empty()) {
+            BankruptcyManager::declareBankrupt(ctx);
+            cout << player.getUsername() << " cannot cover rent and is bankrupt\n";
+            return false;
         }
-    } else{
-        //kalau Mortgaged lewat aja sih
-    }    
+
+        cout << "=== Panel Likuidasi ===\n";
+        cout << "Uang kamu saat ini: M" << player.getBalance()
+             << "  |  Kewajiban: M" << debtAmount << "\n\n";
+
+        vector<LiquidationOption> sellOptions;
+        vector<LiquidationOption> mortgageOptions;
+        for (const auto& option : options) {
+            if (option.property == nullptr || option.property->getStatus() != PropertyStatus::OWNED) {
+                continue;
+            }
+
+            if (option.type == LiquidationOption::SELL) {
+                sellOptions.push_back(option);
+            } else {
+                mortgageOptions.push_back(option);
+            }
+        }
+
+        vector<LiquidationOption> numberedOptions;
+        int menuIndex = 1;
+
+        cout << "[Jual ke Bank]\n";
+        if (sellOptions.empty()) {
+            cout << "- Tidak ada properti yang bisa dijual\n";
+        } else {
+            for (const auto& option : sellOptions) {
+                Property* prop = option.property;
+                string typeLabel = "LAIN";
+                string extraLabel;
+
+                if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
+                    typeLabel = street->getColorGroup();
+                    if (street->hasHotel()) {
+                        const int housePart = 4 * street->getHousePrice();
+                        const int hotelPart = street->getHotelPrice();
+                        extraLabel = " (termasuk hotel: M" + to_string(housePart + hotelPart) + ")";
+                    } else if (street->getBuildingCount() > 0) {
+                        const int buildingPart = street->getBuildingCount() * street->getHousePrice();
+                        extraLabel = " (termasuk " + to_string(street->getBuildingCount()) +
+                                     " rumah: M" + to_string(buildingPart / 2) + ")";
+                    }
+                } else if (dynamic_cast<RailroadProperty*>(prop) != nullptr) {
+                    typeLabel = "STATION";
+                } else if (dynamic_cast<UtilityProperty*>(prop) != nullptr) {
+                    typeLabel = "UTILITY";
+                }
+
+                cout << menuIndex << ". " << prop->getName() << " (" << prop->getCode() << ")"
+                     << "  [" << typeLabel << "]"
+                     << "  Harga Jual: M" << option.cashValue
+                     << extraLabel << "\n";
+                numberedOptions.push_back(option);
+                ++menuIndex;
+            }
+        }
+
+        cout << "\n[Gadaikan]\n";
+        if (mortgageOptions.empty()) {
+            cout << "- Tidak ada properti yang bisa digadaikan\n";
+        } else {
+            for (const auto& option : mortgageOptions) {
+                Property* prop = option.property;
+                string typeLabel = "LAIN";
+                if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
+                    typeLabel = street->getColorGroup();
+                } else if (dynamic_cast<RailroadProperty*>(prop) != nullptr) {
+                    typeLabel = "STATION";
+                } else if (dynamic_cast<UtilityProperty*>(prop) != nullptr) {
+                    typeLabel = "UTILITY";
+                }
+
+                cout << menuIndex << ". " << prop->getName() << " (" << prop->getCode() << ")"
+                     << "  [" << typeLabel << "]"
+                     << "  Nilai Gadai: M" << option.cashValue << "\n";
+                numberedOptions.push_back(option);
+                ++menuIndex;
+            }
+        }
+
+        if (numberedOptions.empty()) {
+            BankruptcyManager::declareBankrupt(ctx);
+            cout << player.getUsername() << " cannot cover rent and is bankrupt\n";
+            return false;
+        }
+
+        int selected = 0;
+        cout << "\nPilih aksi likuidasi (nomor): ";
+        while (!(cin >> selected) || selected < 1 || selected > static_cast<int>(numberedOptions.size())) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Input tidak valid, masukkan nomor yang benar: ";
+        }
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        const LiquidationOption choice = numberedOptions[static_cast<size_t>(selected - 1)];
+        if (choice.property == nullptr || choice.property->getStatus() != PropertyStatus::OWNED) {
+            cout << "Properti tidak valid untuk diproses.\n\n";
+            continue;
+        }
+
+        try {
+            if (choice.type == LiquidationOption::MORTGAGE) {
+                player.mortgage(choice.property);
+                cout << "[LIKUIDASI] Berhasil menggadaikan " << choice.property->getName()
+                     << " untuk M" << choice.cashValue << "\n\n";
+            } else {
+                const int saleValue = choice.property->sellToBank();
+                player.addCash(saleValue);
+                player.sell(*choice.property);
+                cout << "[LIKUIDASI] Berhasil menjual " << choice.property->getName()
+                     << " ke bank untuk M" << saleValue << "\n\n";
+            }
+        } catch (const std::exception& ex) {
+            cout << "[LIKUIDASI] Gagal: " << ex.what() << "\n\n";
+        }
+    }
+
+    return true;
+}
+
+void RailroadTile::onLanded(TurnContext& ctx) {
+    Player& player = ctx.currentPlayer;
+    if (property->getStatus() == PropertyStatus::BANK) {
+        autoAcquire(player);
+    } else if (property->getStatus() == PropertyStatus::OWNED) {
+
+        if (property->getOwner() != &player) {
+            Property* prop = getProperty();
+            cout << "[" << player.getUsername() << "] mendarat di ["
+                 << prop->getName() << "] milik ["
+                 << prop->getOwner()->getUsername() << "].\n\n";
+            prop->printStatus(ctx); // ini harusnya jadi 0 harga belinya
+            cout << "Uang anda tersisa: <M"
+                 << player.getBalance() - prop->getRent(ctx)
+                 << ">.\n\n"; // nanti implement dari player, biar bisa kurangi
+                              // balance player
+        }
+    } else {
+        // kalau Mortgaged lewat aja sih
+    }
 }
 
 void RailroadTile::autoAcquire(Player& player, TurnContext& ctx){
@@ -107,7 +272,7 @@ void RailroadTile::autoAcquire(Player& player, TurnContext& ctx){
     cout << "[" << prop->getName() << "] menjadi milik [" << prop->getOwner()->getUsername() << "].\n\n";
 }
 
-void UtilityTile::onLanded(TurnContext& ctx){
+void UtilityTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     if (property->getStatus() == PropertyStatus::BANK){
         autoAcquire(player, ctx);
@@ -116,13 +281,16 @@ void UtilityTile::onLanded(TurnContext& ctx){
         
         if (property->getOwner() != &player){
             Property* prop = getProperty();
-            cout << "[" << player.getUsername() << "] mendarat di [" << prop->getName() << "] milik [" << prop->getOwner()->getUsername() << "].\n\n";
-            prop->printStatus(ctx); //ini harusnya jadi 0 harga belinya
-            cout << "Uang anda tersisa: <M" << player.getBalance() << ">.\n\n"; //nanti implement dari player
+            cout << "[" << player.getUsername() << "] mendarat di ["
+                 << prop->getName() << "] milik ["
+                 << prop->getOwner()->getUsername() << "].\n\n";
+            prop->printStatus(ctx); // ini harusnya jadi 0 harga belinya
+            cout << "Uang anda tersisa: <M" << player.getBalance()
+                 << ">.\n\n"; // nanti implement dari player
         }
-    } else{
-        //kalau Mortgaged lewat aja sih
-    }   
+    } else {
+        // kalau Mortgaged lewat aja sih
+    }
 }
 
 void UtilityTile::autoAcquire(Player& player, TurnContext& ctx){

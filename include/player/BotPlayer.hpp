@@ -11,7 +11,7 @@ class BotPlayer : public Player {
 private:
     std::string botName;
 
-public:
+  public:
     // Constructor
     BotPlayer(std::string name, int balance);
 

@@ -5,10 +5,10 @@
 class TurnContext;
 
 class MoveCard : public SkillCard {
-private:
+  private:
     int steps;
 
-public:
+  public:
     MoveCard(int stp);
 
     void apply(TurnContext& ctx) override;

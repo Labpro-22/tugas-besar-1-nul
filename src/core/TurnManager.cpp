@@ -1,6 +1,7 @@
 #include "core/TurnManager.hpp"
-#include "core/TurnContext.hpp"
 #include "core/Dice.hpp"
+#include "core/GameEngine.hpp"
+#include "core/TurnContext.hpp"
 #include "player/Player.hpp"
 
 TurnManager::TurnManager(int maxTurn)
@@ -18,7 +19,8 @@ void TurnManager::setTurnOrder(const std::vector<Player*>& players) {
 }
 
 void TurnManager::addPlayerToOrder(Player* player) {
-    if (player == nullptr) return;
+    if (player == nullptr)
+        return;
     this->turnOrder.push_back(player);
     if (this->activePlayerIndex < 0) {
         this->activePlayerIndex = 0;
@@ -31,25 +33,34 @@ void TurnManager::resetTurns() {
 }
 
 void TurnManager::nextTurn(TurnContext& ctx) {
-    if (this->turnOrder.empty()) return;
+    if (this->turnOrder.empty())
+        return;
 
     ctx.dice.reset();
-    this->activePlayerIndex = (this->activePlayerIndex + 1) % this->turnOrder.size();
+    this->activePlayerIndex =
+        (this->activePlayerIndex + 1) % this->turnOrder.size();
     this->currentTurn++;
     this->hasActedThisTurn = false;  // Reset flag for new turn
     // ctx.currentPlayer = *this->turnOrder[this->activePlayerIndex];
 }
 
 Player* TurnManager::getCurrentPlayer() {
-    if (this->turnOrder.empty()) return nullptr;
+    if (this->turnOrder.empty())
+        return nullptr;
     return this->turnOrder[this->activePlayerIndex];
 }
 
-int TurnManager::getCurrentTurn() const { return this->currentTurn; }
+int TurnManager::getCurrentTurn() const {
+    return this->currentTurn;
+}
 
-int TurnManager::getMaxTurn() const { return this->maxTurn; }
+int TurnManager::getMaxTurn() const {
+    return this->maxTurn;
+}
 
-int TurnManager::getActivePlayerIndex() const { return this->activePlayerIndex; }
+int TurnManager::getActivePlayerIndex() const {
+    return this->activePlayerIndex;
+}
 
 int TurnManager::getDoubleGotten() const {return this->doubleGotten;}
 
@@ -72,7 +83,8 @@ std::vector<Player*> TurnManager::determineWinner() {
 
     // coba nnt siapa tau bs pake operator banding player
     for (Player* player : this->turnOrder) {
-        if (player == nullptr) continue;
+        if (player == nullptr)
+            continue;
         int wealth = player->getWealth();
         if (wealth > maxWealth) {
             winners.clear();

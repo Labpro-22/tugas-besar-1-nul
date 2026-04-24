@@ -1,30 +1,30 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <functional>
 #include <map>
+#include <string>
+#include <vector>
 
 class GameManager;
 
 class CommandHandler {
-public:
+  public:
     CommandHandler(GameManager* game);
-    
+
     // Process a command string
     bool processCommand(const std::string& command);
-    
+
     // Main loop for reading commands
     void runMainLoop();
-    
+
     // Display menu
     void displayMainMenu();
     void displayHelp();
-    
-private:
+
+  private:
     GameManager* game;
     bool running;
-    
+
     // Command handlers
     void handleCetakPapan();
     void handleLemparDadu();
@@ -40,7 +40,7 @@ private:
     void handleGunakanKemampuan();
     void handleHelp();
     void handleExit();
-    
+
     // Utility functions
     std::vector<std::string> tokenize(const std::string& str);
     void trim(std::string& str);

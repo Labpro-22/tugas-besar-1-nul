@@ -5,10 +5,10 @@
 class TurnContext;
 
 class TeleportCard : public SkillCard {
-private:
+  private:
     int position;
 
-public:
+  public:
     TeleportCard(int pos);
 
     void apply(TurnContext& ctx) override;

@@ -1,6 +1,5 @@
 #include "core/GameEngine.hpp"
 
-#include "core/TurnContext.hpp"
 #include "core/Command.hpp"
 #include "core/Dice.hpp"
 #include "core/ConfigLoader.hpp"
@@ -21,6 +20,8 @@
 #include "exception/CommandException.hpp"
 #include "card/ChanceCard.hpp"
 #include "card/CommunityChestCard.hpp"
+#include "core/TurnContext.hpp"
+#include "core/TurnManager.hpp"
 #include "card/SkillCard.hpp"
 #include "card/DemolitionCard.hpp"
 #include "card/DiscountCard.hpp"
@@ -166,6 +167,7 @@ bool GameEngine::executeBotTurn(TurnContext& ctx) {
             }
         }
     }
+    turnmgr.setTurnOrder(this->getPlayers());
 
     // Trigger tile onLanded
     baseTile->onLanded(ctx);
@@ -261,34 +263,54 @@ std::vector<Player*> GameEngine::getPlayers() const {
     return players;
 }
 
-
 void GameEngine::displayPlayers() const {
     std::cout << "\n=== Daftar Pemain ===\n";
     for (const auto& player : players) {
-        std::cout << "Pemain: " << player->getUsername() << " | Posisi: " << player->getPosition() << " | Kekayaan: " << player->getWealth() << "\n";
+        std::cout << "Pemain: " << player->getUsername()
+                  << " | Posisi: " << player->getPosition()
+                  << " | Kekayaan: " << player->getWealth() << "\n";
     }
     std::cout << "=====================\n\n";
 }
 
 void GameEngine::printBanner() {
     cout << "\n";
-    cout << "  ╔══════════════════════════════════════════════════════════════╗\n";
-    cout << "  ║                                                              ║\n";
-    cout << "  ║     ███╗   ██╗██╗███╗   ███╗ ██████╗ ███╗   ██╗███████╗      ║\n";
-    cout << "  ║     ████╗  ██║██║████╗ ████║██╔═══██╗████╗  ██║██╔════╝      ║\n";
-    cout << "  ║     ██╔██╗ ██║██║██╔████╔██║██║   ██║██╔██╗ ██║███████╗      ║\n";
-    cout << "  ║     ██║╚██╗██║██║██║╚██╔╝██║██║   ██║██║╚██╗██║╚════██║      ║\n";
-    cout << "  ║     ██║ ╚████║██║██║ ╚═╝ ██║╚██████╔╝██║ ╚████║███████║      ║\n";
-    cout << "  ║     ╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝      ║\n";
-    cout << "  ║                                                              ║\n";
-    cout << "  ║              ██████╗  ██████╗ ██╗     ███████╗               ║\n";
-    cout << "  ║              ██╔══██╗██╔═══██╗██║     ╚═███╔═╝               ║\n";
-    cout << "  ║              ██████╔╝██║   ██║██║       ███║                 ║\n";
-    cout << "  ║              ██╔═══╝ ██║   ██║██║       ███║                 ║\n";
-    cout << "  ║              ██║     ╚██████╔╝███████╗███████╗               ║\n";
-    cout << "  ║              ╚═╝      ╚═════╝ ╚══════╝╚══════╝               ║\n";
-    cout << "  ║                                                              ║\n";
-    cout << "  ╚══════════════════════════════════════════════════════════════╝\n";
+    cout
+        << "  "
+           "╔══════════════════════════════════════════════════════════════╗\n";
+    cout << "  ║                                                              "
+            "║\n";
+    cout << "  ║     ███╗   ██╗██╗███╗   ███╗ ██████╗ ███╗   ██╗███████╗      "
+            "║\n";
+    cout << "  ║     ████╗  ██║██║████╗ ████║██╔═══██╗████╗  ██║██╔════╝      "
+            "║\n";
+    cout << "  ║     ██╔██╗ ██║██║██╔████╔██║██║   ██║██╔██╗ ██║███████╗      "
+            "║\n";
+    cout << "  ║     ██║╚██╗██║██║██║╚██╔╝██║██║   ██║██║╚██╗██║╚════██║      "
+            "║\n";
+    cout << "  ║     ██║ ╚████║██║██║ ╚═╝ ██║╚██████╔╝██║ ╚████║███████║      "
+            "║\n";
+    cout << "  ║     ╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝      "
+            "║\n";
+    cout << "  ║                                                              "
+            "║\n";
+    cout << "  ║              ██████╗  ██████╗ ██╗     ███████╗               "
+            "║\n";
+    cout << "  ║              ██╔══██╗██╔═══██╗██║     ╚═███╔═╝               "
+            "║\n";
+    cout << "  ║              ██████╔╝██║   ██║██║       ███║                 "
+            "║\n";
+    cout << "  ║              ██╔═══╝ ██║   ██║██║       ███║                 "
+            "║\n";
+    cout << "  ║              ██║     ╚██████╔╝███████╗███████╗               "
+            "║\n";
+    cout << "  ║              ╚═╝      ╚═════╝ ╚══════╝╚══════╝               "
+            "║\n";
+    cout << "  ║                                                              "
+            "║\n";
+    cout
+        << "  "
+           "╚══════════════════════════════════════════════════════════════╝\n";
 }
 
 void GameEngine::startMenu() {

@@ -6,7 +6,7 @@ class Player;
 class TurnContext;
 
 class TurnManager {
-private:
+  private:
     int currentTurn;
     int maxTurn;
     int activePlayerIndex;
@@ -14,7 +14,7 @@ private:
 
     std::vector<Player*> turnOrder;
 
-public:
+  public:
     explicit TurnManager(int maxTurn = -1);
     ~TurnManager() = default;
 

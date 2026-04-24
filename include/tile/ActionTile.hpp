@@ -10,43 +10,41 @@ class TurnContext;
 class StreetProperty;
 class Property;
 
-enum class TaxType{
-    PPH,
-    PBM
+enum class TaxType { PPH, PBM };
+
+class ActionTile : public Tile {
+  public:
+    ActionTile(int idx, string cd, string nm);
+    virtual void onLanded(TurnContext& ctx);
 };
 
-class ActionTile : public Tile{
-    public:
-        ActionTile(int idx, string cd, string nm);
-        virtual void onLanded(TurnContext& ctx);
+class GoTile : public ActionTile {
+  public:
+    GoTile(int idx, string cd, string nm);
 };
 
-class GoTile : public ActionTile{
-    public:
-        GoTile(int idx, string cd, string nm);
+class JailTile : public ActionTile {
+  private:
+    vector<Player*> inmates;
+    vector<Player*> visitors;
+
+  public:
+    JailTile(int idx, string cd, string nm);
+    void onLanded(TurnContext& ctx) override;
+    void addInmate(Player& player);
+    void removeInmate(Player& player);
+    bool isInmate(Player& player);
 };
 
-class JailTile : public ActionTile{
-    private:
-        vector<Player*> inmates;
-        vector<Player*> visitors;
-    public:
-        JailTile(int idx, string cd, string nm);
-        void onLanded(TurnContext& ctx) override;
-        void addInmate(Player& player);
-        void removeInmate(Player& player);
-        bool isInmate(Player& player);
+class FreeParkingTile : public ActionTile {
+  public:
+    FreeParkingTile(int idx, string cd, string nm);
 };
 
-class FreeParkingTile : public ActionTile{
-    public:
-        FreeParkingTile(int idx, string cd, string nm);
-};
-
-class GoToJailTile : public ActionTile{
-    public:
-        GoToJailTile(int idx, string cd, string nm);
-        void onLanded(TurnContext& ctx) override;
+class GoToJailTile : public ActionTile {
+  public:
+    GoToJailTile(int idx, string cd, string nm);
+    void onLanded(TurnContext& ctx) override;
 };
 
 enum class CardTileType {
@@ -65,19 +63,20 @@ class CardTile : public ActionTile{
         CardTileType getCardType() const;
 };
 
-class FestivalTile : public ActionTile{
-    public:
-        FestivalTile(int idx, string cd, string nm);
-        void onLanded(TurnContext& ctx) override;
-        void applyFestival(Player& player, Property& prop);
+class FestivalTile : public ActionTile {
+  public:
+    FestivalTile(int idx, string cd, string nm);
+    void onLanded(TurnContext& ctx) override;
+    void applyFestival(Player& player, Property& prop);
 };
 
-class TaxTile : public ActionTile{
-    private:
-        TaxType taxType;
-    public: 
-        TaxTile(int idx, string cd, string nm, TaxType type);
-        void onLanded(TurnContext& ctx) override;
-        void applyPPH(Player& player);
-        void applyPBM(Player& player);
+class TaxTile : public ActionTile {
+  private:
+    TaxType taxType;
+
+  public:
+    TaxTile(int idx, string cd, string nm, TaxType type);
+    void onLanded(TurnContext& ctx) override;
+    void applyPPH(Player& player);
+    void applyPBM(Player& player);
 };

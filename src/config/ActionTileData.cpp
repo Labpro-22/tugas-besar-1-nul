@@ -25,17 +25,17 @@ bool ActionTileData::isValid() const {
     if (id < 1 || id > 40) {
         return false;
     }
-    
+
     // Code cannot be empty
     if (code.empty()) {
         return false;
     }
-    
+
     // Type must be valid
     auto validTypes = ActionTileType::getValidTypes();
     if (validTypes.find(type) == validTypes.end()) {
         return false;
     }
-    
+
     return true;
 }

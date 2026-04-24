@@ -1,14 +1,14 @@
 #include "board/Board.hpp"
 #include "core/ConfigLoader.hpp"
-#include "tile/Tile.hpp"
-#include "tile/PropertyTile.hpp"
 #include "tile/ActionTile.hpp"
+#include "tile/PropertyTile.hpp"
+#include "tile/Tile.hpp"
 
+#include "config/ActionTileData.hpp"
 #include "config/Config.hpp"
 #include "config/PropertyData.hpp"
-#include "config/ActionTileData.hpp"
-#include "property/StreetProperty.hpp"
 #include "property/RailroadProperty.hpp"
+#include "property/StreetProperty.hpp"
 #include "property/UtilityProperty.hpp"
 
 #include "exception/ConfigException.hpp"
@@ -22,17 +22,21 @@ using namespace std;
 namespace {
 std::string toUpperAscii(const std::string& input) {
     std::string result = input;
-    std::transform(result.begin(), result.end(), result.begin(),
-                   [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
+    std::transform(
+        result.begin(), result.end(), result.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::toupper(ch));
+        });
     return result;
 }
-}
+} // namespace
 
-Board::Board(const map<string, int>& data, int s) : 
-    tiles(static_cast<size_t>(s < 0 ? 0 : s)), codeToIndex(data), size(s < 0 ? 0 :s){}
+Board::Board(const map<string, int>& data, int s)
+    : tiles(static_cast<size_t>(s < 0 ? 0 : s)), codeToIndex(data),
+      size(s < 0 ? 0 : s) {}
 
-Board::Board(int s) : tiles(static_cast<size_t>(s < 0 ? 0 : s)), size(s < 0 ? 0 : s){
-    codeToIndex["initializer"] = -1; //untuk inisialisasi codeToIndex
+Board::Board(int s)
+    : tiles(static_cast<size_t>(s < 0 ? 0 : s)), size(s < 0 ? 0 : s) {
+    codeToIndex["initializer"] = -1; // untuk inisialisasi codeToIndex
 }
 
 Board::Board(Board&& other) noexcept
@@ -87,7 +91,7 @@ Tile* Board::getTile(int idx){
     return tiles[static_cast<size_t>(idx)];
 };
 
-Tile* Board::getTileByCode(string cd){
+Tile* Board::getTileByCode(string cd) {
     auto mapped = codeToIndex.find(cd);
     if (mapped != codeToIndex.end()) {
         return getTile(mapped->second);
@@ -104,8 +108,8 @@ Tile* Board::getTileByCode(string cd){
     if (it != tiles.end()) {
         return *it;
     }
-    
-    return nullptr; //null jika tidak ditemukan
+
+    return nullptr; // null jika tidak ditemukan
 }
 
 std::vector<Tile*>& Board::getAllTiles(){
@@ -141,15 +145,21 @@ int Board::getPlacedTileCount() const {
     return count;
 }
 
-int Board::getSize() const { return size; };
-int& Board::getSizeRef() { return size; };
+int Board::getSize() const {
+    return size;
+};
+int& Board::getSizeRef() {
+    return size;
+};
 
-vector<StreetTile*> Board::getColorGroup(string clr){
+vector<StreetTile*> Board::getColorGroup(string clr) {
     vector<StreetTile*> result;
 
     string normalizedTarget = clr;
-    transform(normalizedTarget.begin(), normalizedTarget.end(), normalizedTarget.begin(),
-        [](unsigned char ch) { return static_cast<char>(toupper(ch)); });
+    transform(normalizedTarget.begin(),
+              normalizedTarget.end(),
+              normalizedTarget.begin(),
+              [](unsigned char ch) { return static_cast<char>(toupper(ch)); });
 
     for (Tile* tile : tiles) {
         if (tile == nullptr) {
@@ -161,13 +171,17 @@ vector<StreetTile*> Board::getColorGroup(string clr){
             continue;
         }
 
-        StreetProperty* streetProp = dynamic_cast<StreetProperty*>(streetTile->getProperty());
+        StreetProperty* streetProp =
+            dynamic_cast<StreetProperty*>(streetTile->getProperty());
         if (streetProp == nullptr) {
             continue;
         }
 
         string tileColor = streetProp->getColorGroup();
-        transform(tileColor.begin(), tileColor.end(), tileColor.begin(),
+        transform(
+            tileColor.begin(),
+            tileColor.end(),
+            tileColor.begin(),
             [](unsigned char ch) { return static_cast<char>(toupper(ch)); });
 
         if (tileColor == normalizedTarget) {
@@ -178,7 +192,7 @@ vector<StreetTile*> Board::getColorGroup(string clr){
     return result;
 }
 
-void Board::buildFromConfig(const Config& config){
+void Board::buildFromConfig(const Config& config) {
     if (size < 40) {
         size = 40;
     }

@@ -1,6 +1,6 @@
 #include "card/TeleportCard.hpp"
-#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
+#include "player/Player.hpp"
 #include "exception/InvalidGameStateException.hpp"
 
 TeleportCard::TeleportCard(int pos) : SkillCard("TeleportCard: Pindah ke petak manapun", 0), position(pos) {

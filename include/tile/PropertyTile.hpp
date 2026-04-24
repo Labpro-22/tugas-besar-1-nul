@@ -1,10 +1,9 @@
 #pragma once
 
-#include "Tile.hpp"
-#include "../include/property/StreetProperty.hpp"
 #include "../include/property/RailroadProperty.hpp"
+#include "../include/property/StreetProperty.hpp"
 #include "../include/property/UtilityProperty.hpp"
-#include <iostream>
+#include "Tile.hpp"
 #include <vector>
 
 class TurnContext;
@@ -13,16 +12,17 @@ class Property;
 
 // ======================================================================================
 
-class PropertyTile : public Tile{
-    protected: 
-        Property* property;
-    public:
-        PropertyTile(int idx, Property &p);
-        Property* getProperty();
-        virtual void onLanded(TurnContext& ctx);
+class PropertyTile : public Tile {
+  protected:
+    Property* property;
+
+  public:
+    PropertyTile(int idx, Property& p);
+    Property* getProperty();
+    virtual void onLanded(TurnContext& ctx);
 };
 
-class StreetTile : public PropertyTile{
+class StreetTile : public PropertyTile {
     // private:
     //     std::string colorCategory;
     public:
@@ -30,6 +30,7 @@ class StreetTile : public PropertyTile{
         void onLanded(TurnContext& ctx) override;
         void triggerBuyOrAuction(TurnContext& ctx);
         void triggerRentPayment(TurnContext& ctx);
+        bool triggerBankruptcy(TurnContext& ctx, int debtAmount);
 };
 
 class RailroadTile : public PropertyTile{

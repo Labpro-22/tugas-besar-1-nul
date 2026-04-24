@@ -10,17 +10,17 @@ class Board;
 class Player;
 class TurnContext;
 
-class Tile{
-    protected:
-        int index;
-        string code;
-        string name;
+class Tile {
+  protected:
+    int index;
+    string code;
+    string name;
 
-    public:
-        Tile(int idx, string cd, string nm);
-        int getIndex();
-        string getCode();
-        string getName();
-        string getDisplay();
-        virtual void onLanded(TurnContext& ctx) = 0; 
+  public:
+    Tile(int idx, string cd, string nm);
+    int getIndex();
+    string getCode();
+    string getName();
+    string getDisplay();
+    virtual void onLanded(TurnContext& ctx) = 0;
 };

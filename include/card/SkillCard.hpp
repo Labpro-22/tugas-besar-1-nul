@@ -6,10 +6,10 @@ class Player;
 class TurnContext;
 
 class SkillCard : public Card {
-protected:
-    int remainingDuration; 
+  protected:
+    int remainingDuration;
 
-public:
+  public:
     SkillCard(std::string desc, int duration);
 
     int getDuration() const;
@@ -24,4 +24,3 @@ public:
     virtual int getSkillValue() const { return 0; }
     int getRemainingDuration() const { return remainingDuration; }
 };
-

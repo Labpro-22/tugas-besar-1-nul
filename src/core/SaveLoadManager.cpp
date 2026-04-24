@@ -13,8 +13,8 @@
 
 namespace {
 
-std::string readRequiredNonEmptyLine(std::istream &in,
-                                     const std::string &errorMessage) {
+std::string readRequiredNonEmptyLine(std::istream& in,
+                                     const std::string& errorMessage) {
     std::string line;
     while (std::getline(in, line)) {
         if (!line.empty()) {
@@ -24,8 +24,8 @@ std::string readRequiredNonEmptyLine(std::istream &in,
     throw SaveLoadException(errorMessage);
 }
 
-std::vector<std::string> readLines(std::istream &in, int count,
-                                   const std::string &sectionName) {
+std::vector<std::string>
+readLines(std::istream& in, int count, const std::string& sectionName) {
     if (count < 0) {
         throw SaveLoadException("Invalid negative count in section: " +
                                 sectionName);
@@ -46,8 +46,8 @@ std::vector<std::string> readLines(std::istream &in, int count,
 
 } // namespace
 
-void SaveLoadManager::save(const GameState &state,
-                           const std::string &filename) const {
+void SaveLoadManager::save(const GameState& state,
+                           const std::string& filename) const {
     std::ofstream out(filename);
     if (!out.is_open()) {
         throw SaveLoadException("Failed to open save file for writing: " +
@@ -82,7 +82,7 @@ void SaveLoadManager::save(const GameState &state,
     out << serializeLog(state.log);
 }
 
-GameState SaveLoadManager::load(const std::string &filename) const {
+GameState SaveLoadManager::load(const std::string& filename) const {
     std::ifstream in(filename);
     if (!in.is_open()) {
         throw SaveLoadException("Failed to open save file for reading: " +
@@ -151,7 +151,7 @@ GameState SaveLoadManager::load(const std::string &filename) const {
     }
 
     state.turnOrder.clear();
-    for (const std::string &username : turnOrderUsernames) {
+    for (const std::string& username : turnOrderUsernames) {
         auto it = usernameToIndex.find(username);
         if (it == usernameToIndex.end()) {
             throw SaveLoadException("Unknown username in turn order: " +
@@ -191,8 +191,8 @@ GameState SaveLoadManager::load(const std::string &filename) const {
     propertyBlock.push_back(std::to_string(propertyCount));
     std::vector<std::string> propertyLines =
         readLines(in, propertyCount, "STATE_PROPERTI");
-    propertyBlock.insert(propertyBlock.end(), propertyLines.begin(),
-                         propertyLines.end());
+    propertyBlock.insert(
+        propertyBlock.end(), propertyLines.begin(), propertyLines.end());
     state.properties = parseProperties(propertyBlock);
 
     const std::string deckCountLine =
@@ -229,49 +229,49 @@ GameState SaveLoadManager::load(const std::string &filename) const {
 }
 
 std::string SaveLoadManager::serializePlayers(
-    const std::vector<PlayerState> &players) const {
+    const std::vector<PlayerState>& players) const {
     StateSerializer serializer;
     return serializer.serializePlayers(players);
 }
 
 std::string SaveLoadManager::serializeProperties(
-    const std::vector<PropertyState> &properties) const {
+    const std::vector<PropertyState>& properties) const {
     StateSerializer serializer;
     return serializer.serializeProperties(properties);
 }
 
 std::string
-SaveLoadManager::serializeDeck(const std::vector<std::string> &deck) const {
+SaveLoadManager::serializeDeck(const std::vector<std::string>& deck) const {
     StateSerializer serializer;
     return serializer.serializeDeck(deck);
 }
 
 std::string
-SaveLoadManager::serializeLog(const std::vector<LogEntry> &logs) const {
+SaveLoadManager::serializeLog(const std::vector<LogEntry>& logs) const {
     StateSerializer serializer;
     return serializer.serializeLog(logs);
 }
 
 std::vector<PlayerState>
-SaveLoadManager::parsePlayers(const std::vector<std::string> &lines) const {
+SaveLoadManager::parsePlayers(const std::vector<std::string>& lines) const {
     StateParser parser;
     return parser.parsePlayers(lines);
 }
 
 std::vector<PropertyState>
-SaveLoadManager::parseProperties(const std::vector<std::string> &lines) const {
+SaveLoadManager::parseProperties(const std::vector<std::string>& lines) const {
     StateParser parser;
     return parser.parseProperties(lines);
 }
 
 std::vector<std::string>
-SaveLoadManager::parseDeck(const std::vector<std::string> &lines) const {
+SaveLoadManager::parseDeck(const std::vector<std::string>& lines) const {
     StateParser parser;
     return parser.parseDeck(lines);
 }
 
 std::vector<LogEntry>
-SaveLoadManager::parseLog(const std::vector<std::string> &lines) const {
+SaveLoadManager::parseLog(const std::vector<std::string>& lines) const {
     StateParser parser;
     return parser.parseLog(lines);
 }
