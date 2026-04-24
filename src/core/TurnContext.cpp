@@ -1,9 +1,9 @@
 #include "core/TurnContext.hpp"
-#include "player/Player.hpp"
 #include "board/Board.hpp"
-#include "core/GameEngine.hpp"
-#include "tile/Tile.hpp"
 #include "core/Dice.hpp"
+#include "core/GameEngine.hpp"
+#include "player/Player.hpp"
+#include "tile/Tile.hpp"
 
 Tile& TurnContext::getTile() const {
     return *board.getTile(currentPlayer.getPosition());

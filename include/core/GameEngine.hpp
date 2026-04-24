@@ -5,22 +5,18 @@
 #include <vector>
 
 #include "board/Board.hpp"
-#include "core/TurnManager.hpp"
-#include "card/DeckCard.hpp"
 #include "card/ChanceCard.hpp"
+#include "card/DeckCard.hpp"
 #include "card/SkillCard.hpp"
+#include "core/TurnManager.hpp"
 
 class Player;
 class TurnContext;
 
-enum class GameStatus {
-    NOT_STARTED,
-    RUNNING,
-    FINISHED
-};
+enum class GameStatus { NOT_STARTED, RUNNING, FINISHED };
 
 class GameEngine {
-private:
+  private:
     // Board board;
     Board board;
     TurnManager turnmgr;
@@ -31,7 +27,7 @@ private:
 
     std::vector<std::unique_ptr<Player>> players;
 
-public:
+  public:
     explicit GameEngine(int size);
     ~GameEngine();
 
@@ -44,7 +40,7 @@ public:
 
     void printBanner();
     void startMenu();
-    
+
     TurnManager& getTurnManager();
     void displayPlayers() const;
     std::vector<Player*> getPlayers() const;

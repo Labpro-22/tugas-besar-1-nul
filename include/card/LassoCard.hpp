@@ -5,7 +5,7 @@
 class TurnContext;
 
 class LassoCard : public SkillCard {
-public:
+  public:
     LassoCard();
 
     void apply(TurnContext& ctx) override;

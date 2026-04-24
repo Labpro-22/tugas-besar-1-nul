@@ -7,7 +7,7 @@
 class TurnContext;
 
 class Command {
-private:
+  private:
     std::string rawInput;
     std::vector<std::string> tokens;
     mutable std::vector<const char*> argvCache;
@@ -28,10 +28,11 @@ private:
     void execHelp(std::ostream& out) const;
     void execPrintBoard(TurnContext& ctx, std::ostream& out) const;
 
-public:
+  public:
     Command() = default;
 
-    void promptInput(std::istream& in = std::cin, std::ostream& out = std::cout);
+    void promptInput(std::istream& in = std::cin,
+                     std::ostream& out = std::cout);
     void parse(const std::string& input);
 
     int argc() const;

@@ -1,34 +1,31 @@
 #include "tile/ActionTile.hpp"
+#include "board/Board.hpp"
 #include "core/TurnContext.hpp"
 #include "player/Player.hpp"
-#include "board/Board.hpp"
 #include "tile/PropertyTile.hpp"
-#include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 using namespace std;
 
-ActionTile::ActionTile(int idx, string cd, string nm)
-    : Tile(idx, cd, nm) {}
+ActionTile::ActionTile(int idx, string cd, string nm) : Tile(idx, cd, nm) {}
 
-void ActionTile::onLanded(TurnContext& ctx){}
+void ActionTile::onLanded(TurnContext& ctx) {}
 
-GoTile::GoTile(int idx, string cd, string nm)
-    : ActionTile(idx, cd, nm) {}
+GoTile::GoTile(int idx, string cd, string nm) : ActionTile(idx, cd, nm) {}
 
-JailTile::JailTile(int idx, string cd, string nm)
-    : ActionTile(idx, cd, nm) {}
+JailTile::JailTile(int idx, string cd, string nm) : ActionTile(idx, cd, nm) {}
 
-void JailTile::onLanded(TurnContext& ctx){}
+void JailTile::onLanded(TurnContext& ctx) {}
 
-void JailTile::addInmate(Player& player){
-    inmates.push_back(&player); 
-    //pindahkan player ke penjara
+void JailTile::addInmate(Player& player) {
+    inmates.push_back(&player);
+    // pindahkan player ke penjara
     cout << "[" << player.getUsername() << "] got in jail.\n";
 }
 
-void JailTile::removeInmate(Player& player){
+void JailTile::removeInmate(Player& player) {
     auto it = find(inmates.begin(), inmates.end(), &player);
     if (it != inmates.end()) {
         inmates.erase(it);
@@ -36,7 +33,7 @@ void JailTile::removeInmate(Player& player){
     cout << "[" << player.getUsername() << "] got out of jail.\n";
 }
 
-bool JailTile::isInmate(Player& player){
+bool JailTile::isInmate(Player& player) {
     return find(inmates.begin(), inmates.end(), &player) != inmates.end();
 }
 
@@ -46,29 +43,28 @@ FreeParkingTile::FreeParkingTile(int idx, string cd, string nm)
 GoToJailTile::GoToJailTile(int idx, string cd, string nm)
     : ActionTile(idx, cd, nm) {}
 
-void GoToJailTile::onLanded(TurnContext& ctx){
+void GoToJailTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     std::vector<std::unique_ptr<Tile>>& allTiles = ctx.board.getAllTiles();
     JailTile* targetJail = nullptr;
     for (const auto& tile : allTiles) {
         targetJail = dynamic_cast<JailTile*>(tile.get());
         if (targetJail != nullptr) {
-            break; 
+            break;
         }
     }
 
     if (targetJail != nullptr) {
-        targetJail->addInmate(player); 
+        targetJail->addInmate(player);
     } else {
         // in case tidak ada petak penjara, bikin exception nanti
         std::cout << "Sistem Error: Tidak ada penjara di kota ini!\n";
     }
 }
 
-CardTile::CardTile(int idx, string cd, string nm)
-    : ActionTile(idx, cd, nm){}
+CardTile::CardTile(int idx, string cd, string nm) : ActionTile(idx, cd, nm) {}
 
-void CardTile::onLanded(TurnContext& ctx){
+void CardTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     card->execute(&player, ctx);
 }
@@ -76,78 +72,81 @@ void CardTile::onLanded(TurnContext& ctx){
 FestivalTile::FestivalTile(int idx, string cd, string nm)
     : ActionTile(idx, cd, nm) {}
 
-void FestivalTile::onLanded(TurnContext& ctx){
+void FestivalTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
-    cout << "[" << ctx.currentPlayer.getUsername() << "] landed on Festival Tile.\nChoose property to increase rent: \n";
+    cout << "[" << ctx.currentPlayer.getUsername()
+         << "] landed on Festival Tile.\nChoose property to increase rent: \n";
     std::vector<std::unique_ptr<Tile>>& allTiles = ctx.board.getAllTiles();
     PropertyTile* proptile = nullptr;
     for (const auto& tile : allTiles) {
         proptile = dynamic_cast<PropertyTile*>(tile.get());
         if (proptile != nullptr) {
-            if (proptile->getProperty()->getOwner() == &ctx.currentPlayer){
+            if (proptile->getProperty()->getOwner() == &ctx.currentPlayer) {
                 proptile->getProperty()->printStatus(ctx);
             }
         }
     }
     std::string inp;
-    while (true){
+    while (true) {
         cout << "Enter property code chosen to be applied Festival: ";
         cin >> inp;
         Tile* selectedTile = ctx.board.getTileByCode(inp);
-        
-        if (selectedTile != nullptr){
+
+        if (selectedTile != nullptr) {
             proptile = dynamic_cast<PropertyTile*>(selectedTile);
-            
+
             // Validasi Ganda
-            if (proptile != nullptr && proptile->getProperty()->getOwner() == &player) {
+            if (proptile != nullptr &&
+                proptile->getProperty()->getOwner() == &player) {
                 break; // Input valid! Keluar dari loop.
             } else {
-                cout << "[ERROR] Properti tidak valid atau bukan milik Anda!\n\n"; // nanti ganti jadi exception
+                cout << "[ERROR] Properti tidak valid atau bukan milik "
+                        "Anda!\n\n"; // nanti ganti jadi exception
             }
         } else {
-            cout << "[ERROR] Kode petak tidak ditemukan!\n\n"; //nanti ganti jadi exception
+            cout << "[ERROR] Kode petak tidak ditemukan!\n\n"; // nanti ganti
+                                                               // jadi exception
         }
     }
     applyFestival(player, *(proptile->getProperty()));
 }
 
-void FestivalTile::applyFestival(Player& player, Property& prop){
+void FestivalTile::applyFestival(Player& player, Property& prop) {
     prop.applyFestival();
 }
 
 TaxTile::TaxTile(int idx, string cd, string nm, TaxType type)
     : ActionTile(idx, cd, nm), taxType(type) {}
 
-void TaxTile::onLanded(TurnContext& ctx){
+void TaxTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
-    if (taxType == TaxType::PPH){ //is PPH
+    if (taxType == TaxType::PPH) { // is PPH
         applyPPH(player);
-    }
-    else if (taxType == TaxType::PBM){ //is PBM
+    } else if (taxType == TaxType::PBM) { // is PBM
         applyPBM(player);
     }
 }
 
-void TaxTile::applyPPH(Player& player){
-    int taxFlat = 67; // nanti sesuaikan
-    float taxPercent = 10; //nanti sesuaikan
+void TaxTile::applyPPH(Player& player) {
+    int taxFlat = 67;      // nanti sesuaikan
+    float taxPercent = 10; // nanti sesuaikan
     int inp;
-    while (true){
-        cout << "2 options: pay flat for: " << taxFlat << " or " << taxPercent << "%% of your wealth?\n";
+    while (true) {
+        cout << "2 options: pay flat for: " << taxFlat << " or " << taxPercent
+             << "%% of your wealth?\n";
         cin >> inp;
-        if (inp == 1 || inp == 2){
+        if (inp == 1 || inp == 2) {
             break;
         }
     }
-    if (inp == 1){
+    if (inp == 1) {
         player.deductCash(taxFlat);
-    } else{
-        player.deductCash(ceil(taxPercent*player.getBalance()));
+    } else {
+        player.deductCash(ceil(taxPercent * player.getBalance()));
     }
-
 }
 
-void TaxTile::applyPBM(Player& player){
-    int taxFlat = 67; //nanti sesuaikan sama config
+void TaxTile::applyPBM(Player& player) {
+    int taxFlat = 67; // nanti sesuaikan sama config
     player.deductCash(taxFlat);
 }

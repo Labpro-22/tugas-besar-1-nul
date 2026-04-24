@@ -11,10 +11,16 @@ UtilityProperty::UtilityProperty(std::string code,
                                  int buyPrice,
                                  int mortgageValue,
                                  std::map<int, int> multiplierTable,
-                                PropertyStatus status,
-                                int festivalMult,
-                                int festivalDur)
-    : Property(std::move(code), std::move(name), buyPrice, mortgageValue, status, festivalMult, festivalDur),
+                                 PropertyStatus status,
+                                 int festivalMult,
+                                 int festivalDur)
+    : Property(std::move(code),
+               std::move(name),
+               buyPrice,
+               mortgageValue,
+               status,
+               festivalMult,
+               festivalDur),
       multiplierTable_(std::move(multiplierTable)) {
     if (multiplierTable_.empty()) {
         throw InvalidGameStateException(
@@ -80,9 +86,9 @@ void UtilityProperty::setDiceTotalExtractor(
     diceTotalExtractor_ = std::move(extractor);
 }
 
-void UtilityProperty::printStatus(TurnContext& ctx){
+void UtilityProperty::printStatus(TurnContext& ctx) {
     std::cout << "+================================+\n";
-    std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\t\t|\n";
+    std::cout << "| [" << "] " << getName() << " (" << getCode() << ")\t\t|\n";
     std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t\t|\n";
     std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\t\t|\n";
     std::cout << "+================================+\n";

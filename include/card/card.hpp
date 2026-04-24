@@ -1,19 +1,19 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
+#include <random>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <random>
 
 class Player;
-class TurnContext; 
+class TurnContext;
 
 class Card {
-protected:
+  protected:
     std::string description;
 
-public:
+  public:
     Card(std::string desc);
     virtual ~Card() = default;
 

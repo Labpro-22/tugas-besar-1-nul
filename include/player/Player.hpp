@@ -8,16 +8,13 @@ class Property;
 class SkillCard;
 class TurnContext;
 
-enum class PlayerStatus {
-    ACTIVE,
-    JAILED,
-    BANKRUPT
-};
+enum class PlayerStatus { ACTIVE, JAILED, BANKRUPT };
 
 class Player {
-protected:
+  protected:
     /* misc */
-    // const int* boardSizeSource; // non-owning pointer (ngikut RAII krn ga manage lgsg)
+    // const int* boardSizeSource; // non-owning pointer (ngikut RAII krn ga
+    // manage lgsg)
 
     /* general */
     std::string username;
@@ -28,19 +25,19 @@ protected:
 
     /* skills */
     bool usedSkillThisTurn;
-    int discountRate; // DiscountCard
+    int discountRate;    // DiscountCard
     bool isShieldActive; // ShieldCard
 
     /* containers */
     std::vector<Property*> properties;
     std::vector<SkillCard*> hand;
 
-public:
+  public:
     // apakah mau diimplement ato jadi buysell aja as a whole
     void addProperty(Property* p);
-    void removeProperty(Property& p); //make sure lgi type p
+    void removeProperty(Property& p); // make sure lgi type p
 
-// public:
+    // public:
     // ctor dtor
     Player(std::string username, int balance);
     ~Player();

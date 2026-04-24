@@ -5,7 +5,7 @@
 class TurnContext;
 
 class ShieldCard : public SkillCard {
-public:
+  public:
     ShieldCard() : SkillCard("ShieldCard: Kebal tagihan/sanksi", 1) {}
 
     void apply(TurnContext& ctx) override;

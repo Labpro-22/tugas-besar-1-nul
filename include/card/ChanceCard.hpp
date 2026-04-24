@@ -5,17 +5,13 @@
 class Player;
 class TurnContext;
 
-enum class ChanceType {
-    GO_TO_NEAREST_STATION,
-    MOVE_BACK_3,
-    GO_TO_JAIL
-};
+enum class ChanceType { GO_TO_NEAREST_STATION, MOVE_BACK_3, GO_TO_JAIL };
 
 class ChanceCard : public Card {
-private:
+  private:
     ChanceType type;
 
-public:
+  public:
     ChanceCard(std::string desc, ChanceType t);
 
     void execute(Player* player, TurnContext& ctx) override;

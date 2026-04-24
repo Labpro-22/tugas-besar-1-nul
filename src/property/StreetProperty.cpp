@@ -1,8 +1,8 @@
 #include "property/StreetProperty.hpp"
 
 #include <algorithm>
-#include <utility>
 #include <iostream>
+#include <utility>
 
 #include "exception/InvalidGameStateException.hpp"
 
@@ -18,11 +18,16 @@ StreetProperty::StreetProperty(std::string code,
                                PropertyStatus ps,
                                int festivalMult,
                                int festivalDur)
-    : Property(std::move(code), std::move(name), buyPrice, mortgageValue, ps, festivalMult, festivalDur),
+    : Property(std::move(code),
+               std::move(name),
+               buyPrice,
+               mortgageValue,
+               ps,
+               festivalMult,
+               festivalDur),
       colorGroup_(std::move(colorGroup)), buildingCount_(0), isHotel_(false),
       housePrice_(housePrice), hotelPrice_(hotelPrice),
-      rentTable_(std::move(rentTable)), 
-      monopolized_(false) {
+      rentTable_(std::move(rentTable)), monopolized_(false) {
     if (colorGroup_.empty()) {
         throw InvalidGameStateException(
             "StreetProperty color group cannot be empty");
@@ -50,11 +55,9 @@ int StreetProperty::getRent(const TurnContext& ctx) const {
     return baseRent * festivalMult_;
 }
 
-
 int StreetProperty::sellToBank() {
     if (status_ != PropertyStatus::OWNED) {
-        throw InvalidGameStateException(
-            "Can only sell owned property to bank");
+        throw InvalidGameStateException("Can only sell owned property to bank");
     }
 
     int buildingCost = 0;
@@ -102,7 +105,7 @@ int StreetProperty::getHousePrice() const {
 int StreetProperty::getHotelPrice() const {
     return hotelPrice_;
 }
-const std::string StreetProperty::getColor() const{
+const std::string StreetProperty::getColor() const {
     return colorGroup_;
 }
 
@@ -162,28 +165,30 @@ void StreetProperty::demolish() {
 
     --buildingCount_;
 }
-void StreetProperty::printStatus(TurnContext& ctx){
-    //nanti perbaiki di trigger agar tunjukin kalau di daerah bukan sendiri
+void StreetProperty::printStatus(TurnContext& ctx) {
+    // nanti perbaiki di trigger agar tunjukin kalau di daerah bukan sendiri
     std::cout << "+=============================================+\n";
-    std::cout << "| [" << getColorGroup() << "] " << getName() << " (" << getCode() << ")\n";
+    std::cout << "| [" << getColorGroup() << "] " << getName() << " ("
+              << getCode() << ")\n";
     std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
     printRentTable();
     std::cout << "+=============================================+\n";
-    if (getStatus() == PropertyStatus::OWNED){
+    if (getStatus() == PropertyStatus::OWNED) {
         std::cout << "Harga saat ini : M" << getRent(ctx) << "\n";
     }
 }
 
-const std::vector<int>& StreetProperty::getRentTable() const{
+const std::vector<int>& StreetProperty::getRentTable() const {
     return rentTable_;
 }
 
-void StreetProperty::printRentTable(){
+void StreetProperty::printRentTable() {
     std::vector<int> rt = getRentTable();
-    for (int i = 0; i<rt.size(); i++){
-        if (i < rt.size()-1){
-            std::cout << "| Sewa dengan banyak rumah " << i << ": M" << rt[i] << "\n";
-        } else{
+    for (int i = 0; i < rt.size(); i++) {
+        if (i < rt.size() - 1) {
+            std::cout << "| Sewa dengan banyak rumah " << i << ": M" << rt[i]
+                      << "\n";
+        } else {
             std::cout << "| Sewa dengan hotel: M" << rt[i] << "\n";
         }
     }

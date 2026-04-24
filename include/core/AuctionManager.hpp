@@ -7,7 +7,6 @@ class Property;
 
 class AuctionManager {
   public:
-
     Player* runAuction(Property* prop,
                        const std::vector<Player*>& players,
                        int startIdx);

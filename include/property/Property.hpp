@@ -15,9 +15,9 @@ class Property {
              std::string name,
              int buyPrice,
              int mortgageValue,
-             PropertyStatus status = PropertyStatus::BANK, 
-            int festivalMult = 1,
-          int festivalDur = 0);
+             PropertyStatus status = PropertyStatus::BANK,
+             int festivalMult = 1,
+             int festivalDur = 0);
 
     virtual ~Property() = default;
 
@@ -43,10 +43,10 @@ class Property {
     bool operator==(const Property& other) const;
 
     virtual void printStatus(TurnContext& ctx) = 0;
-    
+
     int getFestivalMultiplier() const;
     int getFestivalDuration() const;
-    
+
     void applyFestival();
     void decreaseFestivalDuration();
 
@@ -59,5 +59,4 @@ class Property {
     int mortgageValue_;
     int festivalMult_;
     int festivalDur_;
-    
 };

@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "config/Config.hpp"
 #include "config/ActionTileData.hpp"
+#include "config/Config.hpp"
 #include "config/MiscConfig.hpp"
 #include "config/PropertyData.hpp"
 #include "config/RailroadConfig.hpp"

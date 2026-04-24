@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <algorithm>
+#include <vector>
 
 class Player;
 class Board;
@@ -15,18 +15,20 @@ class ChanceCard;
 class GameEngine;
 class TurnManager;
 
-
 class TurnContext {
-public:
+  public:
     Player& currentPlayer;
     Dice& dice;
     Board& board;
     GameEngine& gameEngine;
 
-    TurnContext(Player& player, Dice& dice, Board& board, GameEngine& gameEngine)
-        : currentPlayer(player), dice(dice), board(board), gameEngine(gameEngine) {}
+    TurnContext(Player& player,
+                Dice& dice,
+                Board& board,
+                GameEngine& gameEngine)
+        : currentPlayer(player), dice(dice), board(board),
+          gameEngine(gameEngine) {}
 
-    
     Tile& getTile() const;
     int getBoardSize() const;
 

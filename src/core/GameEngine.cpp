@@ -1,21 +1,19 @@
 #include "core/GameEngine.hpp"
 
-#include "core/TurnContext.hpp"
 #include "core/Command.hpp"
 #include "core/Dice.hpp"
+#include "core/TurnContext.hpp"
 #include "tile/ActionTile.hpp"
 
-#include "player/Player.hpp"
 #include "exception/CommandException.hpp"
+#include "player/Player.hpp"
 
 #include <limits>
 
 GameEngine::GameEngine(int size)
-    : board(Board{size})
-        , turnmgr(TurnManager{})
-        , chanceDeck(CardDeck<ChanceCard>{})
-        , skillDeck(CardDeck<SkillCard>{})
-        , players{std::vector<std::unique_ptr<Player>>{}} {};
+    : board(Board{size}), turnmgr(TurnManager{}),
+      chanceDeck(CardDeck<ChanceCard>{}), skillDeck(CardDeck<SkillCard>{}),
+      players{std::vector<std::unique_ptr<Player>>{}} {};
 
 GameEngine::~GameEngine() = default;
 
@@ -35,8 +33,9 @@ void GameEngine::run() {
         }
 
         TurnContext ctx(*currentPlayer, gameDice, board, *this);
-        std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": " << currentPlayer->getUsername() << " ===\n";
-        
+        std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": "
+                  << currentPlayer->getUsername() << " ===\n";
+
         goNext = false;
         try {
             cmd.promptInput();
@@ -46,7 +45,7 @@ void GameEngine::run() {
         } catch (const std::exception& exc) {
             std::cout << exc.what() << "\n";
         }
-        
+
         if (goNext) {
             turnmgr.nextTurn(ctx);
         }
@@ -57,7 +56,7 @@ void GameEngine::run() {
 
 void GameEngine::loadGame() {
     std::cout << "[INFO] Loading Game...\n";
-    std::cout << "Input configuration filename\n" ;
+    std::cout << "Input configuration filename\n";
     std::cout << "> ";
     std::string filename;
     std::getline(std::cin, filename);
@@ -67,15 +66,17 @@ void GameEngine::loadGame() {
     }
 
     std::cout << "\n";
-    std::cout << "[INFO] Memuat konfigurasi board dari file: " << filename << "\n";
+    std::cout << "[INFO] Memuat konfigurasi board dari file: " << filename
+              << "\n";
     this->board = Board(40); // temporary dummy board bootstrap
     // load from file
-    this->board.generateDefaultBoard(); 
+    this->board.generateDefaultBoard();
 
     int maxTurns;
     std::cout << "\n";
     std::cout << "[INFO] Memuat giliran maksimal permainan\n";
-    std::cout << "Masukkan batas jumlah giliran permainan (atau -1 untuk tanpa batas)\n";
+    std::cout << "Masukkan batas jumlah giliran permainan (atau -1 untuk tanpa "
+                 "batas)\n";
     std::cout << "> ";
     std::cin >> maxTurns;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -92,10 +93,10 @@ void GameEngine::loadGame() {
         std::string username;
         std::cout << "Masukkan nama pemain " << (i + 1) << ": ";
         std::getline(std::cin, username);
-        players.push_back(std::make_unique<Player>(username, 1500)); // saldo awal 1500
+        players.push_back(
+            std::make_unique<Player>(username, 1500)); // saldo awal 1500
     }
     turnmgr.setTurnOrder(this->getPlayers());
-
 }
 
 void GameEngine::newGame() {
@@ -121,7 +122,8 @@ void GameEngine::newGame() {
         std::string username;
         std::cout << "Enter player " << (i + 1) << "'s name: ";
         std::getline(std::cin, username);
-        players.push_back(std::make_unique<Player>(username, 1500)); // saldo awal 1500
+        players.push_back(
+            std::make_unique<Player>(username, 1500)); // saldo awal 1500
     }
     turnmgr.setTurnOrder(this->getPlayers());
 }
@@ -138,34 +140,54 @@ std::vector<Player*> GameEngine::getPlayers() const {
     return result;
 }
 
-
 void GameEngine::displayPlayers() const {
     std::cout << "\n=== Daftar Pemain ===\n";
     for (const auto& player : players) {
-        std::cout << "Pemain: " << player->getUsername() << " | Posisi: " << player->getPosition() << " | Kekayaan: " << player->getWealth() << "\n";
+        std::cout << "Pemain: " << player->getUsername()
+                  << " | Posisi: " << player->getPosition()
+                  << " | Kekayaan: " << player->getWealth() << "\n";
     }
     std::cout << "=====================\n\n";
 }
 
 void GameEngine::printBanner() {
     cout << "\n";
-    cout << "  ╔══════════════════════════════════════════════════════════════╗\n";
-    cout << "  ║                                                              ║\n";
-    cout << "  ║     ███╗   ██╗██╗███╗   ███╗ ██████╗ ███╗   ██╗███████╗      ║\n";
-    cout << "  ║     ████╗  ██║██║████╗ ████║██╔═══██╗████╗  ██║██╔════╝      ║\n";
-    cout << "  ║     ██╔██╗ ██║██║██╔████╔██║██║   ██║██╔██╗ ██║███████╗      ║\n";
-    cout << "  ║     ██║╚██╗██║██║██║╚██╔╝██║██║   ██║██║╚██╗██║╚════██║      ║\n";
-    cout << "  ║     ██║ ╚████║██║██║ ╚═╝ ██║╚██████╔╝██║ ╚████║███████║      ║\n";
-    cout << "  ║     ╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝      ║\n";
-    cout << "  ║                                                              ║\n";
-    cout << "  ║              ██████╗  ██████╗ ██╗     ███████╗               ║\n";
-    cout << "  ║              ██╔══██╗██╔═══██╗██║     ╚═███╔═╝               ║\n";
-    cout << "  ║              ██████╔╝██║   ██║██║       ███║                 ║\n";
-    cout << "  ║              ██╔═══╝ ██║   ██║██║       ███║                 ║\n";
-    cout << "  ║              ██║     ╚██████╔╝███████╗███████╗               ║\n";
-    cout << "  ║              ╚═╝      ╚═════╝ ╚══════╝╚══════╝               ║\n";
-    cout << "  ║                                                              ║\n";
-    cout << "  ╚══════════════════════════════════════════════════════════════╝\n";
+    cout
+        << "  "
+           "╔══════════════════════════════════════════════════════════════╗\n";
+    cout << "  ║                                                              "
+            "║\n";
+    cout << "  ║     ███╗   ██╗██╗███╗   ███╗ ██████╗ ███╗   ██╗███████╗      "
+            "║\n";
+    cout << "  ║     ████╗  ██║██║████╗ ████║██╔═══██╗████╗  ██║██╔════╝      "
+            "║\n";
+    cout << "  ║     ██╔██╗ ██║██║██╔████╔██║██║   ██║██╔██╗ ██║███████╗      "
+            "║\n";
+    cout << "  ║     ██║╚██╗██║██║██║╚██╔╝██║██║   ██║██║╚██╗██║╚════██║      "
+            "║\n";
+    cout << "  ║     ██║ ╚████║██║██║ ╚═╝ ██║╚██████╔╝██║ ╚████║███████║      "
+            "║\n";
+    cout << "  ║     ╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝      "
+            "║\n";
+    cout << "  ║                                                              "
+            "║\n";
+    cout << "  ║              ██████╗  ██████╗ ██╗     ███████╗               "
+            "║\n";
+    cout << "  ║              ██╔══██╗██╔═══██╗██║     ╚═███╔═╝               "
+            "║\n";
+    cout << "  ║              ██████╔╝██║   ██║██║       ███║                 "
+            "║\n";
+    cout << "  ║              ██╔═══╝ ██║   ██║██║       ███║                 "
+            "║\n";
+    cout << "  ║              ██║     ╚██████╔╝███████╗███████╗               "
+            "║\n";
+    cout << "  ║              ╚═╝      ╚═════╝ ╚══════╝╚══════╝               "
+            "║\n";
+    cout << "  ║                                                              "
+            "║\n";
+    cout
+        << "  "
+           "╚══════════════════════════════════════════════════════════════╝\n";
 }
 
 void GameEngine::startMenu() {
@@ -214,4 +236,3 @@ void GameEngine::startMenu() {
 TurnManager& GameEngine::getTurnManager() {
     return turnmgr;
 }
-

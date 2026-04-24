@@ -1,18 +1,18 @@
 #include "core/Command.hpp"
-#include "core/Dice.hpp"
-#include "core/TurnContext.hpp"
-#include "core/GameEngine.hpp"
-#include "core/TurnManager.hpp"
 #include "board/Board.hpp"
+#include "core/Dice.hpp"
+#include "core/GameEngine.hpp"
+#include "core/TurnContext.hpp"
+#include "core/TurnManager.hpp"
+#include "exception/InvalidGameStateException.hpp"
 #include "player/Player.hpp"
-#include "tile/Tile.hpp"
-#include "tile/PropertyTile.hpp"
 #include "property/Property.hpp"
 #include "property/PropertyStatus.hpp"
-#include "property/StreetProperty.hpp"
 #include "property/RailroadProperty.hpp"
+#include "property/StreetProperty.hpp"
 #include "property/UtilityProperty.hpp"
-#include "exception/InvalidGameStateException.hpp"
+#include "tile/PropertyTile.hpp"
+#include "tile/Tile.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -22,587 +22,647 @@
 
 namespace {
 std::string toUpperAscii(const std::string& input) {
-	std::string result = input;
-	std::transform(result.begin(), result.end(), result.begin(),
-		[](unsigned char c) { return static_cast<char>(std::toupper(c)); });
-	return result;
+    std::string result = input;
+    std::transform(
+        result.begin(), result.end(), result.begin(), [](unsigned char c) {
+            return static_cast<char>(std::toupper(c));
+        });
+    return result;
 }
 
 std::string formatMoneyId(int amount) {
-	std::string digits = std::to_string(amount);
-	std::string formatted;
-	formatted.reserve(digits.size() + (digits.size() / 3));
+    std::string digits = std::to_string(amount);
+    std::string formatted;
+    formatted.reserve(digits.size() + (digits.size() / 3));
 
-	int groupCount = 0;
-	for (int i = static_cast<int>(digits.size()) - 1; i >= 0; --i) {
-		formatted.push_back(digits[static_cast<size_t>(i)]);
-		++groupCount;
-		if (groupCount == 3 && i > 0) {
-			formatted.push_back('.');
-			groupCount = 0;
-		}
-	}
+    int groupCount = 0;
+    for (int i = static_cast<int>(digits.size()) - 1; i >= 0; --i) {
+        formatted.push_back(digits[static_cast<size_t>(i)]);
+        ++groupCount;
+        if (groupCount == 3 && i > 0) {
+            formatted.push_back('.');
+            groupCount = 0;
+        }
+    }
 
-	std::reverse(formatted.begin(), formatted.end());
-	return formatted;
+    std::reverse(formatted.begin(), formatted.end());
+    return formatted;
 }
 
 std::string propertyStatusText(PropertyStatus status) {
-	if (status == PropertyStatus::MORTGAGED) {
-		return "MORTGAGED [M]";
-	}
-	if (status == PropertyStatus::OWNED) {
-		return "OWNED";
-	}
-	return "BANK";
+    if (status == PropertyStatus::MORTGAGED) {
+        return "MORTGAGED [M]";
+    }
+    if (status == PropertyStatus::OWNED) {
+        return "OWNED";
+    }
+    return "BANK";
 }
 
 std::string padRight(const std::string& text, size_t width) {
-	if (text.size() >= width) {
-		return text;
-	}
-	return text + std::string(width - text.size(), ' ');
+    if (text.size() >= width) {
+        return text;
+    }
+    return text + std::string(width - text.size(), ' ');
 }
 
 std::pair<std::string, std::string> tileColorCodeAndAnsi(Tile* tile) {
-	if (tile == nullptr) {
-		return {"DF", "\033[37m"};
-	}
+    if (tile == nullptr) {
+        return {"DF", "\033[37m"};
+    }
 
-	if (dynamic_cast<UtilityTile*>(tile) != nullptr) {
-		return {"AB", "\033[96m"};
-	}
+    if (dynamic_cast<UtilityTile*>(tile) != nullptr) {
+        return {"AB", "\033[96m"};
+    }
 
-	if (PropertyTile* propTile = dynamic_cast<PropertyTile*>(tile)) {
-		if (StreetProperty* street = dynamic_cast<StreetProperty*>(propTile->getProperty())) {
-			const std::string group = toUpperAscii(street->getColorGroup());
-			if (group == "COKLAT") return {"CK", "\033[33m"};
-			if (group == "BIRU MUDA") return {"BM", "\033[94m"};
-			if (group == "PINK") return {"PK", "\033[95m"};
-			if (group == "ORANGE") return {"OR", "\033[91m"};
-			if (group == "MERAH") return {"MR", "\033[31m"};
-			if (group == "KUNING") return {"KN", "\033[93m"};
-			if (group == "HIJAU") return {"HJ", "\033[32m"};
-			if (group == "BIRU TUA") return {"BT", "\033[34m"};
-		}
-	}
+    if (PropertyTile* propTile = dynamic_cast<PropertyTile*>(tile)) {
+        if (StreetProperty* street =
+                dynamic_cast<StreetProperty*>(propTile->getProperty())) {
+            const std::string group = toUpperAscii(street->getColorGroup());
+            if (group == "COKLAT")
+                return {"CK", "\033[33m"};
+            if (group == "BIRU MUDA")
+                return {"BM", "\033[94m"};
+            if (group == "PINK")
+                return {"PK", "\033[95m"};
+            if (group == "ORANGE")
+                return {"OR", "\033[91m"};
+            if (group == "MERAH")
+                return {"MR", "\033[31m"};
+            if (group == "KUNING")
+                return {"KN", "\033[93m"};
+            if (group == "HIJAU")
+                return {"HJ", "\033[32m"};
+            if (group == "BIRU TUA")
+                return {"BT", "\033[34m"};
+        }
+    }
 
-	return {"DF", "\033[37m"};
+    return {"DF", "\033[37m"};
 }
-}
-
+} // namespace
 
 void Command::rebuildArgvCache() const {
-	argvCache.clear();
-	argvCache.reserve(tokens.size());
-	for (const std::string& token : tokens) {
-		argvCache.push_back(token.c_str());
-	}
+    argvCache.clear();
+    argvCache.reserve(tokens.size());
+    for (const std::string& token : tokens) {
+        argvCache.push_back(token.c_str());
+    }
 }
 
 void Command::promptInput(std::istream& in, std::ostream& out) {
-	out << "> ";
-	std::getline(in, rawInput);
-	parse(rawInput);
+    out << "> ";
+    std::getline(in, rawInput);
+    parse(rawInput);
 }
 
 void Command::parse(const std::string& input) {
-	rawInput = input;
-	tokens.clear();
+    rawInput = input;
+    tokens.clear();
 
-	std::string current;
-	bool inQuotes = false;
+    std::string current;
+    bool inQuotes = false;
 
-	for (size_t i = 0; i < rawInput.size(); ++i) {
-		const char ch = rawInput[i];
+    for (size_t i = 0; i < rawInput.size(); ++i) {
+        const char ch = rawInput[i];
 
-		if (ch == '"') {
-			inQuotes = !inQuotes;
-			continue;
-		}
+        if (ch == '"') {
+            inQuotes = !inQuotes;
+            continue;
+        }
 
-		if (!inQuotes && (ch == ' ' || ch == '\t')) {
-			if (!current.empty()) {
-				tokens.push_back(current);
-				current.clear();
-			}
-			continue;
-		}
+        if (!inQuotes && (ch == ' ' || ch == '\t')) {
+            if (!current.empty()) {
+                tokens.push_back(current);
+                current.clear();
+            }
+            continue;
+        }
 
-		current.push_back(ch);
-	}
+        current.push_back(ch);
+    }
 
-	if (!current.empty()) {
-		tokens.push_back(current);
-	}
+    if (!current.empty()) {
+        tokens.push_back(current);
+    }
 
-	rebuildArgvCache();
+    rebuildArgvCache();
 }
 
 int Command::argc() const {
-	return static_cast<int>(tokens.size());
+    return static_cast<int>(tokens.size());
 }
 
 const char* Command::argv(int index) const {
-	if (index < 0 || index >= argc()) {
-		return nullptr;
-	}
-	return argvCache[static_cast<size_t>(index)];
+    if (index < 0 || index >= argc()) {
+        return nullptr;
+    }
+    return argvCache[static_cast<size_t>(index)];
 }
 
 const std::vector<std::string>& Command::args() const {
-	return tokens;
+    return tokens;
 }
 
 bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
-	if (argc() == 0) {
-		out << "[WARN] No Command Written. Type in HELP for command list\n";
-		return false;
-	}
+    if (argc() == 0) {
+        out << "[WARN] No Command Written. Type in HELP for command list\n";
+        return false;
+    }
 
-	const std::string commandName = toUpperAscii(this->argv(0));
+    const std::string commandName = toUpperAscii(this->argv(0));
 
-	if (commandName == "END_TURN") return true;
-	else if (commandName == "ROLL_DICE") execRollDice(ctx, out);
-	else if (commandName == "SET_DICE") execSetDice(ctx, out);
-	else if (commandName == "PRINT_BOARD" || commandName == "CETAK_PAPAN") execPrintBoard(ctx, out);
-	else if (commandName == "PRINT_PROP_CERT") execPrintCert(ctx, out);
-	else if (commandName == "PRINT_PROPERTY") execPrintProperty(ctx, out);
-	else if (commandName == "HELP") execHelp(out);
-	else out << "[WARN] Unrecognized command: " << commandName << "\n";
-	return false;
+    if (commandName == "END_TURN")
+        return true;
+    else if (commandName == "ROLL_DICE")
+        execRollDice(ctx, out);
+    else if (commandName == "SET_DICE")
+        execSetDice(ctx, out);
+    else if (commandName == "PRINT_BOARD" || commandName == "CETAK_PAPAN")
+        execPrintBoard(ctx, out);
+    else if (commandName == "PRINT_PROP_CERT")
+        execPrintCert(ctx, out);
+    else if (commandName == "PRINT_PROPERTY")
+        execPrintProperty(ctx, out);
+    else if (commandName == "HELP")
+        execHelp(out);
+    else
+        out << "[WARN] Unrecognized command: " << commandName << "\n";
+    return false;
 }
 
 /* === COMMANDS === */
 
 void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
-	out << "[COMMAND] Rolling dice...\n";
+    out << "[COMMAND] Rolling dice...\n";
 
-	bool validRoll = ctx.dice.roll();
-	if (!validRoll) {
-		out << "[WARN] You cannot roll the dice anymore this turn.\n";
-		return;
-	}
-	int diceTotal = ctx.dice.getTotal();
+    bool validRoll = ctx.dice.roll();
+    if (!validRoll) {
+        out << "[WARN] You cannot roll the dice anymore this turn.\n";
+        return;
+    }
+    int diceTotal = ctx.dice.getTotal();
 
-	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
-		<< std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
-	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
-	
-	int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
-	Tile* baseTile = ctx.board.getTile(nextPos);
-	if (baseTile == nullptr) {
-		throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(nextPos));
-	}
+    out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
+        << std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
+    out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by "
+        << diceTotal << " steps\n";
 
-	out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
-	baseTile->onLanded(ctx);
+    int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
+    Tile* baseTile = ctx.board.getTile(nextPos);
+    if (baseTile == nullptr) {
+        throw InvalidGameStateException(
+            "Player moved to an invalid tile index: " +
+            std::to_string(nextPos));
+    }
+
+    out << ctx.currentPlayer.getUsername() << " landed in "
+        << baseTile->getName() << "\n";
+    baseTile->onLanded(ctx);
 }
 
 void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
-	if (argc() < 3) {
-		throw InvalidGameStateException("SET_DICE command requires exactly 2 arguments for die values");
-	}
+    if (argc() < 3) {
+        throw InvalidGameStateException(
+            "SET_DICE command requires exactly 2 arguments for die values");
+    }
 
-	int die1 = std::stoi(argv(1));
-	int die2 = std::stoi(argv(2));
+    int die1 = std::stoi(argv(1));
+    int die2 = std::stoi(argv(2));
 
-	if (die1 < 1 || die1 > 6 || die2 < 1 || die2 > 6) {
-		throw InvalidGameStateException("Die values must be between 1 and 6 inclusively");
-	}
+    if (die1 < 1 || die1 > 6 || die2 < 1 || die2 > 6) {
+        throw InvalidGameStateException(
+            "Die values must be between 1 and 6 inclusively");
+    }
 
-	out << "[COMMAND] Setting dice...\n";
-	ctx.dice.setManual(die1, die2);
-	int diceTotal = ctx.dice.getTotal();
+    out << "[COMMAND] Setting dice...\n";
+    ctx.dice.setManual(die1, die2);
+    int diceTotal = ctx.dice.getTotal();
 
-	out << "Dice set to: " << die1 << " and " << die2 << "\n"
-		<< "Result = " << std::to_string(diceTotal) << "\n";
+    out << "Dice set to: " << die1 << " and " << die2 << "\n"
+        << "Result = " << std::to_string(diceTotal) << "\n";
 }
 
 void Command::execPrintCert(TurnContext& ctx, std::ostream& out) const {
-	std::string propertyCode;
+    std::string propertyCode;
 
-	if (argc() >= 2 && argv(1) != nullptr) {
-		propertyCode = argv(1);
-	} else {
-		out << "[COMMAND] Input property code: ";
-		std::getline(std::cin, propertyCode);
-	}
+    if (argc() >= 2 && argv(1) != nullptr) {
+        propertyCode = argv(1);
+    } else {
+        out << "[COMMAND] Input property code: ";
+        std::getline(std::cin, propertyCode);
+    }
 
-	if (propertyCode.empty()) {
-		out << "[WARN] Property code cannot be empty.\n";
-		return;
-	}
+    if (propertyCode.empty()) {
+        out << "[WARN] Property code cannot be empty.\n";
+        return;
+    }
 
-	// ini pake pointer tiati dah
-	Tile* tile = ctx.board.getTileByCode(propertyCode);
-	if (tile == nullptr) {
-		out << "[WARN] Property with code '" << propertyCode << "' not found.\n";
-		return;
-	}
+    // ini pake pointer tiati dah
+    Tile* tile = ctx.board.getTileByCode(propertyCode);
+    if (tile == nullptr) {
+        out << "[WARN] Property with code '" << propertyCode
+            << "' not found.\n";
+        return;
+    }
 
-	PropertyTile* propertyTile = dynamic_cast<PropertyTile*>(tile);
-	if (propertyTile == nullptr) {
-		out << "[WARN] Tile with code '" << propertyCode << "' is not a property tile.\n";
-		return;
-	}
+    PropertyTile* propertyTile = dynamic_cast<PropertyTile*>(tile);
+    if (propertyTile == nullptr) {
+        out << "[WARN] Tile with code '" << propertyCode
+            << "' is not a property tile.\n";
+        return;
+    }
 
-	Property* property = propertyTile->getProperty();
-	if (property == nullptr) {
-		out << "[WARN] Property data for code '" << propertyCode << "' is unavailable.\n";
-		return;
-	}
+    Property* property = propertyTile->getProperty();
+    if (property == nullptr) {
+        out << "[WARN] Property data for code '" << propertyCode
+            << "' is unavailable.\n";
+        return;
+    }
 
-	out << "[INFO] Property Certificate\n";
-	out << "Code  : " << property->getCode() << "\n";
-	out << "Name  : " << property->getName() << "\n";
+    out << "[INFO] Property Certificate\n";
+    out << "Code  : " << property->getCode() << "\n";
+    out << "Name  : " << property->getName() << "\n";
 
-	const PropertyStatus status = property->getStatus();
-	if (status == PropertyStatus::BANK) {
-		out << "Status: BANK\n";
-		out << "Owner : BANK\n";
-		return;
-	}
+    const PropertyStatus status = property->getStatus();
+    if (status == PropertyStatus::BANK) {
+        out << "Status: BANK\n";
+        out << "Owner : BANK\n";
+        return;
+    }
 
-	if (status == PropertyStatus::MORTGAGED) {
-		out << "Status: MORTGAGED\n";
-	} else {
-		out << "Status: OWNED\n";
-	}
+    if (status == PropertyStatus::MORTGAGED) {
+        out << "Status: MORTGAGED\n";
+    } else {
+        out << "Status: OWNED\n";
+    }
 
-	Player* owner = property->getOwner();
-	if (owner == nullptr) {
-		out << "Owner : UNKNOWN\n";
-		return;
-	}
+    Player* owner = property->getOwner();
+    if (owner == nullptr) {
+        out << "Owner : UNKNOWN\n";
+        return;
+    }
 
-	out << "Owner : " << owner->getUsername() << "\n";
+    out << "Owner : " << owner->getUsername() << "\n";
 }
 
 void Command::execPrintProperty(TurnContext& ctx, std::ostream& out) const {
-	Player &curPlayer = ctx.currentPlayer;
-	const auto& properties = curPlayer.getProperties();
+    Player& curPlayer = ctx.currentPlayer;
+    const auto& properties = curPlayer.getProperties();
 
-	out << "[COMMAND] Checking properties...\n";
-	if (properties.empty()) {
-		out << "You don't have any properties.\n";
-		return;
-	}
+    out << "[COMMAND] Checking properties...\n";
+    if (properties.empty()) {
+        out << "You don't have any properties.\n";
+        return;
+    }
 
-	struct PropertyLine {
-		std::string name;
-		std::string code;
-		std::string buildingInfo;
-		std::string statusText;
-		int baseValue;
-	};
+    struct PropertyLine {
+        std::string name;
+        std::string code;
+        std::string buildingInfo;
+        std::string statusText;
+        int baseValue;
+    };
 
-	std::unordered_map<std::string, std::vector<PropertyLine>> grouped;
-	std::vector<std::string> groupOrder;
-	int totalWealth = 0;
+    std::unordered_map<std::string, std::vector<PropertyLine>> grouped;
+    std::vector<std::string> groupOrder;
+    int totalWealth = 0;
 
-	for (Property* prop : properties) {
-		if (prop == nullptr) {
-			continue;
-		}
+    for (Property* prop : properties) {
+        if (prop == nullptr) {
+            continue;
+        }
 
-		std::string groupName = "LAINNYA";
-		std::string buildingInfo;
+        std::string groupName = "LAINNYA";
+        std::string buildingInfo;
 
-		if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
-			groupName = toUpperAscii(street->getColorGroup());
-			if (street->hasHotel()) {
-				buildingInfo = "Hotel";
-			} else if (street->getBuildingCount() > 0) {
-				buildingInfo = std::to_string(street->getBuildingCount()) + " rumah";
-			}
-		} else if (dynamic_cast<RailroadProperty*>(prop) != nullptr) {
-			groupName = "STATION";
-		} else if (dynamic_cast<UtilityProperty*>(prop) != nullptr) {
-			groupName = "UTIL";
-		}
+        if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
+            groupName = toUpperAscii(street->getColorGroup());
+            if (street->hasHotel()) {
+                buildingInfo = "Hotel";
+            } else if (street->getBuildingCount() > 0) {
+                buildingInfo =
+                    std::to_string(street->getBuildingCount()) + " rumah";
+            }
+        } else if (dynamic_cast<RailroadProperty*>(prop) != nullptr) {
+            groupName = "STATION";
+        } else if (dynamic_cast<UtilityProperty*>(prop) != nullptr) {
+            groupName = "UTIL";
+        }
 
-		if (grouped.find(groupName) == grouped.end()) {
-			groupOrder.push_back(groupName);
-		}
+        if (grouped.find(groupName) == grouped.end()) {
+            groupOrder.push_back(groupName);
+        }
 
-		grouped[groupName].push_back(PropertyLine{
-			prop->getName(),
-			prop->getCode(),
-			buildingInfo,
-			propertyStatusText(prop->getStatus()),
-			prop->getBuyPrice()
-		});
+        grouped[groupName].push_back(
+            PropertyLine{prop->getName(),
+                         prop->getCode(),
+                         buildingInfo,
+                         propertyStatusText(prop->getStatus()),
+                         prop->getBuyPrice()});
 
-		totalWealth += prop->getBuyPrice();
-	}
+        totalWealth += prop->getBuyPrice();
+    }
 
-	out << "=== Properties of: " << curPlayer.getUsername() << " ===\n";
-	for (const std::string& groupName : groupOrder) {
-		out << "\n[" << groupName << "]\n";
-		const auto& lines = grouped[groupName];
-		for (const PropertyLine& line : lines) {
-			out << "  - " << line.name << " (" << line.code << ")";
-			if (!line.buildingInfo.empty()) {
-				out << "  " << line.buildingInfo;
-			}
-			out << "  M" << line.baseValue << "  " << line.statusText << "\n";
-		}
-	}
+    out << "=== Properties of: " << curPlayer.getUsername() << " ===\n";
+    for (const std::string& groupName : groupOrder) {
+        out << "\n[" << groupName << "]\n";
+        const auto& lines = grouped[groupName];
+        for (const PropertyLine& line : lines) {
+            out << "  - " << line.name << " (" << line.code << ")";
+            if (!line.buildingInfo.empty()) {
+                out << "  " << line.buildingInfo;
+            }
+            out << "  M" << line.baseValue << "  " << line.statusText << "\n";
+        }
+    }
 
-	out << "\nTotal kekayaan properti: M" << formatMoneyId(totalWealth) << "\n";
-
+    out << "\nTotal kekayaan properti: M" << formatMoneyId(totalWealth) << "\n";
 }
 
-void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
+void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {}
 
-}
+void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {}
 
-void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
+void Command::execUpgrade(TurnContext& ctx, std::ostream& out) const {}
 
-}
-
-void Command::execUpgrade(TurnContext& ctx, std::ostream& out) const {
-
-}
-
-void Command::execSave(TurnContext& ctx, std::ostream& out) const {
-
-}
+void Command::execSave(TurnContext& ctx, std::ostream& out) const {}
 
 // void Command::execLoad(TurnContext& ctx, std::ostream& out) const {
 
 // }
 
-void Command::execPrintLog(TurnContext& ctx, std::ostream& out) const {
+void Command::execPrintLog(TurnContext& ctx, std::ostream& out) const {}
 
-}
-
-void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {
-	
-}
+void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {}
 
 void Command::execHelp(std::ostream& out) const {
-	out << "\n";
-    out << "╔══════════════════════════════════════════════════════════════════╗\n";
-    out << "║                        P A N D U A N                             ║\n";
-    out << "╠══════════════════════════════════════════════════════════════════╣\n";
-    out << "║ Nimonspoli adalah permainan papan strategi yang terinspirasi     ║\n";
-    out << "║ dari Monopoly. Pemain bergerak mengelilingi papan, membeli       ║\n";
-    out << "║ properti, membangun rumah/hotel, dan memungut sewa.              ║\n";
-    out << "║                                                                  ║\n";
-    out << "║ Tujuan: Menjadi pemain terkaya atau satu-satunya yang tersisa    ║\n";
-    out << "║ setelah pemain lain bangkrut.                                    ║\n";
-    out << "║                                                                  ║\n";
-    out << "║ MODE BOT (Bonus):                                                ║\n";
-    out << "║   - Anda bisa bermain melawan 1-3 bot/komputer                   ║\n";
-    out << "║   - Bot level Medium akan menjadi lawan Anda                     ║\n";
-    out << "║   - Bot akan mengambil keputusan secara otomatis                 ║\n";
-    out << "║                                                                  ║\n";
-    out << "║ Dalam permainan, Anda dapat menggunakan perintah:                ║\n";
-    out << "║   - ROLL_DICE      : Lempar dadu untuk bergerak                  ║\n";
-    out << "║   - PRINT_BOARD    : Lihat papan permainan                       ║\n";
-    out << "║   - PRINT_PROP     : Lihat properti Anda                         ║\n";
-    out << "║   - MORTGAGE       : Gadai properti ke bank                      ║\n";
-    out << "║   - BUILD          : Bangun rumah/hotel                          ║\n";
-    out << "║   - dan banyak lagi...                                           ║\n";
-    out << "╚══════════════════════════════════════════════════════════════════╝\n";
+    out << "\n";
+    out << "╔══════════════════════════════════════════════════════════════════"
+           "╗\n";
+    out << "║                        P A N D U A N                             "
+           "║\n";
+    out << "╠══════════════════════════════════════════════════════════════════"
+           "╣\n";
+    out << "║ Nimonspoli adalah permainan papan strategi yang terinspirasi     "
+           "║\n";
+    out << "║ dari Monopoly. Pemain bergerak mengelilingi papan, membeli       "
+           "║\n";
+    out << "║ properti, membangun rumah/hotel, dan memungut sewa.              "
+           "║\n";
+    out << "║                                                                  "
+           "║\n";
+    out << "║ Tujuan: Menjadi pemain terkaya atau satu-satunya yang tersisa    "
+           "║\n";
+    out << "║ setelah pemain lain bangkrut.                                    "
+           "║\n";
+    out << "║                                                                  "
+           "║\n";
+    out << "║ MODE BOT (Bonus):                                                "
+           "║\n";
+    out << "║   - Anda bisa bermain melawan 1-3 bot/komputer                   "
+           "║\n";
+    out << "║   - Bot level Medium akan menjadi lawan Anda                     "
+           "║\n";
+    out << "║   - Bot akan mengambil keputusan secara otomatis                 "
+           "║\n";
+    out << "║                                                                  "
+           "║\n";
+    out << "║ Dalam permainan, Anda dapat menggunakan perintah:                "
+           "║\n";
+    out << "║   - ROLL_DICE      : Lempar dadu untuk bergerak                  "
+           "║\n";
+    out << "║   - PRINT_BOARD    : Lihat papan permainan                       "
+           "║\n";
+    out << "║   - PRINT_PROP     : Lihat properti Anda                         "
+           "║\n";
+    out << "║   - MORTGAGE       : Gadai properti ke bank                      "
+           "║\n";
+    out << "║   - BUILD          : Bangun rumah/hotel                          "
+           "║\n";
+    out << "║   - dan banyak lagi...                                           "
+           "║\n";
+    out << "╚══════════════════════════════════════════════════════════════════"
+           "╝\n";
 }
 
 void Command::execPrintBoard(TurnContext& ctx, std::ostream& out) const {
-	struct CellContent {
-		std::string line1Plain;
-		std::string line1Rendered;
-		std::string line2;
-	};
+    struct CellContent {
+        std::string line1Plain;
+        std::string line1Rendered;
+        std::string line2;
+    };
 
-	const std::vector<Player*> players = ctx.gameEngine.getPlayers();
-	std::unordered_map<const Player*, int> playerIndex;
-	for (size_t i = 0; i < players.size(); ++i) {
-		if (players[i] != nullptr) {
-			playerIndex[players[i]] = static_cast<int>(i) + 1;
-		}
-	}
+    const std::vector<Player*> players = ctx.gameEngine.getPlayers();
+    std::unordered_map<const Player*, int> playerIndex;
+    for (size_t i = 0; i < players.size(); ++i) {
+        if (players[i] != nullptr) {
+            playerIndex[players[i]] = static_cast<int>(i) + 1;
+        }
+    }
 
-	std::map<int, std::vector<int>> pawnsByTile;
-	for (size_t i = 0; i < players.size(); ++i) {
-		Player* p = players[i];
-		if (p == nullptr) continue;
-		pawnsByTile[p->getPosition()].push_back(static_cast<int>(i) + 1);
-	}
+    std::map<int, std::vector<int>> pawnsByTile;
+    for (size_t i = 0; i < players.size(); ++i) {
+        Player* p = players[i];
+        if (p == nullptr)
+            continue;
+        pawnsByTile[p->getPosition()].push_back(static_cast<int>(i) + 1);
+    }
 
-	auto ownerLineForTile = [&](Tile* tile) {
-		std::string ownerText;
-		if (PropertyTile* propTile = dynamic_cast<PropertyTile*>(tile)) {
-			Property* prop = propTile->getProperty();
-			if (prop != nullptr && prop->getOwner() != nullptr) {
-				auto ownerIt = playerIndex.find(prop->getOwner());
-				if (ownerIt != playerIndex.end()) {
-					ownerText = "P" + std::to_string(ownerIt->second);
-				}
+    auto ownerLineForTile = [&](Tile* tile) {
+        std::string ownerText;
+        if (PropertyTile* propTile = dynamic_cast<PropertyTile*>(tile)) {
+            Property* prop = propTile->getProperty();
+            if (prop != nullptr && prop->getOwner() != nullptr) {
+                auto ownerIt = playerIndex.find(prop->getOwner());
+                if (ownerIt != playerIndex.end()) {
+                    ownerText = "P" + std::to_string(ownerIt->second);
+                }
 
-				if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
-					if (street->hasHotel()) {
-						ownerText += " *";
-					} else {
-						const int level = street->getBuildingCount();
-						if (level > 0) {
-							ownerText += " " + std::string(static_cast<size_t>(std::min(level, 4)), '^');
-							if (level > 4) {
-								ownerText += "+";
-							}
-						}
-					}
-				}
+                if (StreetProperty* street =
+                        dynamic_cast<StreetProperty*>(prop)) {
+                    if (street->hasHotel()) {
+                        ownerText += " *";
+                    } else {
+                        const int level = street->getBuildingCount();
+                        if (level > 0) {
+                            ownerText +=
+                                " " + std::string(static_cast<size_t>(
+                                                      std::min(level, 4)),
+                                                  '^');
+                            if (level > 4) {
+                                ownerText += "+";
+                            }
+                        }
+                    }
+                }
 
-				if (prop->getStatus() == PropertyStatus::MORTGAGED) {
-					if (!ownerText.empty()) ownerText += " ";
-					ownerText += "[M]";
-				}
-			}
-		}
+                if (prop->getStatus() == PropertyStatus::MORTGAGED) {
+                    if (!ownerText.empty())
+                        ownerText += " ";
+                    ownerText += "[M]";
+                }
+            }
+        }
 
-		auto pawnIt = pawnsByTile.find(tile != nullptr ? tile->getIndex() : -1);
-		if (pawnIt != pawnsByTile.end()) {
-			std::ostringstream pawnStream;
-			pawnStream << "(";
-			for (size_t i = 0; i < pawnIt->second.size(); ++i) {
-				if (i > 0) pawnStream << ",";
-				pawnStream << pawnIt->second[i];
-			}
-			pawnStream << ")";
+        auto pawnIt = pawnsByTile.find(tile != nullptr ? tile->getIndex() : -1);
+        if (pawnIt != pawnsByTile.end()) {
+            std::ostringstream pawnStream;
+            pawnStream << "(";
+            for (size_t i = 0; i < pawnIt->second.size(); ++i) {
+                if (i > 0)
+                    pawnStream << ",";
+                pawnStream << pawnIt->second[i];
+            }
+            pawnStream << ")";
 
-			if (!ownerText.empty()) ownerText += " ";
-			ownerText += pawnStream.str();
-		}
+            if (!ownerText.empty())
+                ownerText += " ";
+            ownerText += pawnStream.str();
+        }
 
-		return ownerText;
-	};
+        return ownerText;
+    };
 
-	auto cellForIndex = [&](int idx) {
-		Tile* tile = ctx.board.getTile(idx);
-		if (tile == nullptr) {
-			return CellContent{"[??] ---", "[??] ---", ""};
-		}
+    auto cellForIndex = [&](int idx) {
+        Tile* tile = ctx.board.getTile(idx);
+        if (tile == nullptr) {
+            return CellContent{"[??] ---", "[??] ---", ""};
+        }
 
-		const auto codeAndAnsi = tileColorCodeAndAnsi(tile);
-		const std::string plain = "[" + codeAndAnsi.first + "] " + tile->getCode();
-		const std::string rendered = codeAndAnsi.second + plain + "\033[0m";
-		return CellContent{plain, rendered, ownerLineForTile(tile)};
-	};
+        const auto codeAndAnsi = tileColorCodeAndAnsi(tile);
+        const std::string plain =
+            "[" + codeAndAnsi.first + "] " + tile->getCode();
+        const std::string rendered = codeAndAnsi.second + plain + "\033[0m";
+        return CellContent{plain, rendered, ownerLineForTile(tile)};
+    };
 
-	std::vector<int> topRow;
-	for (int i = 20; i <= 30; ++i) topRow.push_back(i);
-	std::vector<int> bottomRow;
-	for (int i = 10; i >= 0; --i) bottomRow.push_back(i);
-	std::vector<int> leftCol;
-	for (int i = 19; i >= 11; --i) leftCol.push_back(i);
-	std::vector<int> rightCol;
-	for (int i = 31; i <= 39; ++i) rightCol.push_back(i);
+    std::vector<int> topRow;
+    for (int i = 20; i <= 30; ++i)
+        topRow.push_back(i);
+    std::vector<int> bottomRow;
+    for (int i = 10; i >= 0; --i)
+        bottomRow.push_back(i);
+    std::vector<int> leftCol;
+    for (int i = 19; i >= 11; --i)
+        leftCol.push_back(i);
+    std::vector<int> rightCol;
+    for (int i = 31; i <= 39; ++i)
+        rightCol.push_back(i);
 
-	std::vector<CellContent> perimeterCells;
-	for (int idx : topRow) perimeterCells.push_back(cellForIndex(idx));
-	for (int idx : bottomRow) perimeterCells.push_back(cellForIndex(idx));
-	for (int idx : leftCol) perimeterCells.push_back(cellForIndex(idx));
-	for (int idx : rightCol) perimeterCells.push_back(cellForIndex(idx));
+    std::vector<CellContent> perimeterCells;
+    for (int idx : topRow)
+        perimeterCells.push_back(cellForIndex(idx));
+    for (int idx : bottomRow)
+        perimeterCells.push_back(cellForIndex(idx));
+    for (int idx : leftCol)
+        perimeterCells.push_back(cellForIndex(idx));
+    for (int idx : rightCol)
+        perimeterCells.push_back(cellForIndex(idx));
 
-	size_t cellWidth = 10;
-	for (const CellContent& cell : perimeterCells) {
-		cellWidth = std::max(cellWidth, cell.line1Plain.size());
-		cellWidth = std::max(cellWidth, cell.line2.size());
-	}
+    size_t cellWidth = 10;
+    for (const CellContent& cell : perimeterCells) {
+        cellWidth = std::max(cellWidth, cell.line1Plain.size());
+        cellWidth = std::max(cellWidth, cell.line2.size());
+    }
 
-	const TurnManager& tm = ctx.gameEngine.getTurnManager();
-	const int currentTurnHuman = tm.getCurrentTurn() + 1;
-	const int maxTurn = tm.getMaxTurn();
-	const std::string turnText = maxTurn > 0
-		? ("TURN " + std::to_string(currentTurnHuman) + " / " + std::to_string(maxTurn))
-		: ("TURN " + std::to_string(currentTurnHuman) + " / INF");
+    const TurnManager& tm = ctx.gameEngine.getTurnManager();
+    const int currentTurnHuman = tm.getCurrentTurn() + 1;
+    const int maxTurn = tm.getMaxTurn();
+    const std::string turnText =
+        maxTurn > 0 ? ("TURN " + std::to_string(currentTurnHuman) + " / " +
+                       std::to_string(maxTurn))
+                    : ("TURN " + std::to_string(currentTurnHuman) + " / INF");
 
-	std::vector<std::string> centerLines = {
-		"==================================",
-		"||          NIMONSPOLI          ||",
-		"==================================",
-		"",
-		turnText,
-		"",
-		"----------------------------------",
-		"LEGENDA KEPEMILIKAN & STATUS",
-		"P1-P4 : Properti milik pemain",
-		"^     : Rumah",
-		"*     : Hotel",
-		"(1)   : Bidak pemain",
-		"----------------------------------",
-		"KODE WARNA:",
-		"[CK]=Coklat  [MR]=Merah",
-		"[BM]=Biru Muda [KN]=Kuning",
-		"[PK]=Pink    [HJ]=Hijau",
-		"[OR]=Orange  [BT]=Biru Tua",
-		"[DF]=Aksi    [AB]=Utilitas"
-	};
+    std::vector<std::string> centerLines = {
+        "==================================",
+        "||          NIMONSPOLI          ||",
+        "==================================",
+        "",
+        turnText,
+        "",
+        "----------------------------------",
+        "LEGENDA KEPEMILIKAN & STATUS",
+        "P1-P4 : Properti milik pemain",
+        "^     : Rumah",
+        "*     : Hotel",
+        "(1)   : Bidak pemain",
+        "----------------------------------",
+        "KODE WARNA:",
+        "[CK]=Coklat  [MR]=Merah",
+        "[BM]=Biru Muda [KN]=Kuning",
+        "[PK]=Pink    [HJ]=Hijau",
+        "[OR]=Orange  [BT]=Biru Tua",
+        "[DF]=Aksi    [AB]=Utilitas"};
 
-	size_t centerWidth = 34;
-	for (const std::string& line : centerLines) {
-		centerWidth = std::max(centerWidth, line.size());
-	}
+    size_t centerWidth = 34;
+    for (const std::string& line : centerLines) {
+        centerWidth = std::max(centerWidth, line.size());
+    }
 
-	// Keep middle rows aligned with the full top/bottom board width (11 cells).
-	// Top row width: 1 + 11 * (cellWidth + 3)
-	// Middle row width with left+center+right blocks: 2 * cellWidth + centerWidth + 10
-	// Solve for centerWidth to place the right block exactly at the board edge.
-	const size_t alignedCenterWidth = (9 * cellWidth) + 24;
-	centerWidth = std::max(centerWidth, alignedCenterWidth);
+    // Keep middle rows aligned with the full top/bottom board width (11 cells).
+    // Top row width: 1 + 11 * (cellWidth + 3)
+    // Middle row width with left+center+right blocks: 2 * cellWidth +
+    // centerWidth + 10 Solve for centerWidth to place the right block exactly
+    // at the board edge.
+    const size_t alignedCenterWidth = (9 * cellWidth) + 24;
+    centerWidth = std::max(centerWidth, alignedCenterWidth);
 
-	auto printRowBorder = [&](size_t cellCount) {
-		out << "+";
-		for (size_t i = 0; i < cellCount; ++i) {
-			out << std::string(cellWidth + 2, '-') << "+";
-		}
-		out << "\n";
-	};
+    auto printRowBorder = [&](size_t cellCount) {
+        out << "+";
+        for (size_t i = 0; i < cellCount; ++i) {
+            out << std::string(cellWidth + 2, '-') << "+";
+        }
+        out << "\n";
+    };
 
-	auto printCellLine = [&](const std::vector<CellContent>& rowCells, int lineNo) {
-		out << "|";
-		for (const CellContent& cell : rowCells) {
-			const std::string& content = (lineNo == 1) ? cell.line1Rendered : cell.line2;
-			const std::string& plain = (lineNo == 1) ? cell.line1Plain : cell.line2;
-			out << " " << content << std::string(cellWidth - plain.size(), ' ') << " |";
-		}
-		out << "\n";
-	};
+    auto printCellLine = [&](const std::vector<CellContent>& rowCells,
+                             int lineNo) {
+        out << "|";
+        for (const CellContent& cell : rowCells) {
+            const std::string& content =
+                (lineNo == 1) ? cell.line1Rendered : cell.line2;
+            const std::string& plain =
+                (lineNo == 1) ? cell.line1Plain : cell.line2;
+            out << " " << content << std::string(cellWidth - plain.size(), ' ')
+                << " |";
+        }
+        out << "\n";
+    };
 
-	std::vector<CellContent> topCells;
-	for (int idx : topRow) topCells.push_back(cellForIndex(idx));
-	printRowBorder(topCells.size());
-	printCellLine(topCells, 1);
-	printCellLine(topCells, 2);
-	printRowBorder(topCells.size());
+    std::vector<CellContent> topCells;
+    for (int idx : topRow)
+        topCells.push_back(cellForIndex(idx));
+    printRowBorder(topCells.size());
+    printCellLine(topCells, 1);
+    printCellLine(topCells, 2);
+    printRowBorder(topCells.size());
 
-	for (size_t r = 0; r < leftCol.size(); ++r) {
-		const CellContent leftCell = cellForIndex(leftCol[r]);
-		const CellContent rightCell = cellForIndex(rightCol[r]);
-		const std::string center = r < centerLines.size() ? centerLines[r] : "";
+    for (size_t r = 0; r < leftCol.size(); ++r) {
+        const CellContent leftCell = cellForIndex(leftCol[r]);
+        const CellContent rightCell = cellForIndex(rightCol[r]);
+        const std::string center = r < centerLines.size() ? centerLines[r] : "";
 
-		out << "| " << leftCell.line1Rendered
-			<< std::string(cellWidth - leftCell.line1Plain.size(), ' ') << " | "
-			<< padRight(center, centerWidth) << " | "
-			<< rightCell.line1Rendered
-			<< std::string(cellWidth - rightCell.line1Plain.size(), ' ') << " |\n";
+        out << "| " << leftCell.line1Rendered
+            << std::string(cellWidth - leftCell.line1Plain.size(), ' ') << " | "
+            << padRight(center, centerWidth) << " | " << rightCell.line1Rendered
+            << std::string(cellWidth - rightCell.line1Plain.size(), ' ')
+            << " |\n";
 
-		out << "| " << leftCell.line2
-			<< std::string(cellWidth - leftCell.line2.size(), ' ') << " | "
-			<< std::string(centerWidth, ' ') << " | "
-			<< rightCell.line2
-			<< std::string(cellWidth - rightCell.line2.size(), ' ') << " |\n";
+        out << "| " << leftCell.line2
+            << std::string(cellWidth - leftCell.line2.size(), ' ') << " | "
+            << std::string(centerWidth, ' ') << " | " << rightCell.line2
+            << std::string(cellWidth - rightCell.line2.size(), ' ') << " |\n";
 
-		out << "+" << std::string(cellWidth + 2, '-') << "+"
-			<< std::string(centerWidth + 2, '-') << "+"
-			<< std::string(cellWidth + 2, '-') << "+\n";
-	}
+        out << "+" << std::string(cellWidth + 2, '-') << "+"
+            << std::string(centerWidth + 2, '-') << "+"
+            << std::string(cellWidth + 2, '-') << "+\n";
+    }
 
-	std::vector<CellContent> bottomCells;
-	for (int idx : bottomRow) bottomCells.push_back(cellForIndex(idx));
-	printCellLine(bottomCells, 1);
-	printCellLine(bottomCells, 2);
-	printRowBorder(bottomCells.size());
+    std::vector<CellContent> bottomCells;
+    for (int idx : bottomRow)
+        bottomCells.push_back(cellForIndex(idx));
+    printCellLine(bottomCells, 1);
+    printCellLine(bottomCells, 2);
+    printRowBorder(bottomCells.size());
 }
