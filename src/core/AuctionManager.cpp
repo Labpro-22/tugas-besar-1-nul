@@ -86,18 +86,22 @@ std::vector<Player*> buildAuctionOrder(const std::vector<Player*>& players,
 
 } // namespace
 
-Player* AuctionManager::runAuction(Property* prop,
+
+AuctionWinner::AuctionWinner(Player& player, Property& prop, int amount):
+    winner(player), prop_won(prop), buyAmount(amount){};
+
+AuctionWinner AuctionManager::runAuction(Property& prop,
                                    const std::vector<Player*>& players,
                                    int startIdx) {
     lastWinningBid_ = -1;
-
-    if (prop == nullptr) {
-        throw CommandException("Auction property cannot be null");
-    }
+    // harusnya udah ga butuh, prop memang tidak boleh null karena reference
+    // if (prop == nullptr) {
+    //     throw CommandException("Auction property cannot be null");
+    // }
 
     std::vector<Player*> order = buildAuctionOrder(players, startIdx + 1);
     if (order.empty()) {
-        return nullptr;
+        throw CommandException("Auction order cannot be empty");
     }
 
     const int activeCount = static_cast<int>(order.size());
@@ -106,8 +110,8 @@ Player* AuctionManager::runAuction(Property* prop,
     int consecutivePasses = 0;
     int turnIdx = 0;
 
-    std::cout << "[LELANG] Memulai lelang untuk " << prop->getName() << " ("
-              << prop->getCode() << ")\n";
+    std::cout << "[LELANG] Memulai lelang untuk " << prop.getName() << " ("
+              << prop.getCode() << ")\n";
 
     while (true) {
         Player* current = order[static_cast<std::size_t>(turnIdx)];
@@ -143,14 +147,14 @@ Player* AuctionManager::runAuction(Property* prop,
                     std::cout << "[LELANG] Tidak ada bid. "
                               << current->getUsername()
                               << " wajib bid minimum 0.\n";
-                    return winner;
+                    return AuctionWinner(*winner, prop, 0);
                 }
 
                 if (winner != nullptr && consecutivePasses >= activeCount - 1) {
                     lastWinningBid_ = highestBid;
                     std::cout << "[LELANG] Pemenang: " << winner->getUsername()
                               << " dengan bid " << highestBid << "\n";
-                    return winner;
+                    return AuctionWinner(*winner, prop, highestBid);
                 }
 
                 break;

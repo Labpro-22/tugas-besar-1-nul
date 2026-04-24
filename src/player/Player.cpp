@@ -127,11 +127,25 @@ void Player::buy(Property* p) {
     this->addProperty(p);
 }
 
-void Player::sell(Property& p) {
+void Player::buy(Property* p, int buyAmount) {
+    // double check property
+    if (p == nullptr) {
+        throw InvalidGameStateException("Cannot buy null property");
+    }
+    if (this->getBalance() < p->getBuyPrice()) {
+        throw InsufficientFundsException("Not enough money to buy " + 
+                                         p->getName());
+    }
+    this->deductCash(buyAmount);
+    this->addProperty(p);
+}
+
+void Player::sell(Property& p) { 
     // double check exception
     if (this->getPropertiesAmount() < 1) {
         // throw EmptyProperties
     }
+    //tambahin cash
     this->removeProperty(p);
 }
 

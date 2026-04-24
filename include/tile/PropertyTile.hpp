@@ -4,7 +4,6 @@
 #include "../include/property/StreetProperty.hpp"
 #include "../include/property/UtilityProperty.hpp"
 #include "Tile.hpp"
-#include <iostream>
 #include <vector>
 
 class TurnContext;

@@ -63,6 +63,7 @@ protected:
 
     // properties
     void buy(Property* p);
+    void buy(Property* p, int buyAmount);
     void sell(Property& p);
     void mortgage(Property* p);
 

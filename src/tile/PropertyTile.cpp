@@ -6,6 +6,9 @@
 #include "property/Property.hpp"
 #include <iostream>
 #include <limits>
+#include <vector>
+#include "core/TurnManager.hpp"
+#include "core/AuctionManager.hpp"
 
 using namespace std;
 
@@ -58,10 +61,15 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
         if (ans == "Y" || ans == "y") {
             player.buy(getProperty());
             cout << "[" << player.getUsername() << "] baru saja membeli " << getName() << "\n";
-            cout << "Uang [" << player.getUsername() << "] tersisa: " << player.getBalance() << "\n\n"; //nanti implement dari player, biar bisa kurangi balance player
+            cout << "Uang [" << player.getUsername() << "] tersisa: " << player.getBalance() << "\n\n"; 
             break;
-        } else if (ans == "N" || ans == "n") {
-            cout << "AUCTIONNNNNNNNN\n"; // nanti masukkan fungsi auction
+        } else if (ans == "N" || ans == "n"){
+            AuctionManager am;
+            TurnManager tm = ctx.getTurnMgr();
+            AuctionWinner aw = am.runAuction(*(getProperty()), tm.getTurnOrder(), tm.getActivePlayerIndex());
+            aw.winner.buy(&aw.prop_won, aw.buyAmount);
+            cout << "[" << aw.winner.getUsername() << "] baru saja membeli " << aw.prop_won.getName() << "\n";
+            cout << "Uang [" << aw.winner.getUsername() << "] tersisa: " << aw.winner.getBalance() << "\n\n"; 
             break;
         } else {
             cout << "input tidak valid. Throw input invalid exception.\n";
@@ -81,6 +89,10 @@ void StreetTile::triggerRentPayment(TurnContext& ctx) {
     if (owner == nullptr) {
         return;
     }
+    cout << "You landed in [" << getProperty()->getName() << "] owned by [" << getProperty()->getOwner()->getUsername() << "].\n\n";
+    getProperty()->printStatus(ctx);
+    player.deductCash(getProperty()->getRent(ctx));
+    cout << "Money left: <M" << player.getBalance() << ">.\n\n";
 
     const int rent = property->getRent(ctx);
     cout << "You landed in [" << property->getName() << "] owned by [" << owner->getUsername() << "].\n\n";
