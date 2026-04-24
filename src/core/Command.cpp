@@ -162,7 +162,17 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 
 	const std::string commandName = toUpperAscii(this->argv(0));
 
-	if (commandName == "END_TURN") return true;
+	if (commandName == "END_TURN" || commandName == "SELESAI") {
+		if (!ctx.canEndTurn()) {
+			if (ctx.currentPlayer.isInJail()) {
+				out << "[ERROR] Kamu sedang di penjara! Pilih: bayar denda atau LEMPAR_DADU untuk mencoba double.\n";
+			} else {
+				out << "[ERROR] Kamu belum melempar dadu! Gunakan LEMPAR_DADU terlebih dahulu.\n";
+			}
+			return false;
+		}
+		return true;
+	}
 	else if (commandName == "ROLL_DICE" || commandName == "LEMPAR_DADU") execRollDice(ctx, out);
 	else if (commandName == "SET_DICE" || commandName == "ATUR_DADU") execSetDice(ctx, out);
 	else if (commandName == "PRINT_BOARD" || commandName == "CETAK_PAPAN") execPrintBoard(ctx, out);
@@ -194,6 +204,13 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 
 	// Mark that player has taken action (rolling dice)
 	ctx.gameEngine.getTurnManager().markActionTaken();
+
+	// Set flag untuk validasi END_TURN
+	if (ctx.currentPlayer.isInJail()) {
+		ctx.hasTakenJailAction = true;  // Pemain di penjara sudah mencoba lempar dadu
+	} else {
+		ctx.hasRolled = true;  // Pemain normal sudah lempar dadu
+	}
 
 	int diceTotal = ctx.dice.getTotal();
 
@@ -239,6 +256,13 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 
 	// Mark that player has taken action (setting dice)
 	ctx.gameEngine.getTurnManager().markActionTaken();
+
+	// Set flag untuk validasi END_TURN
+	if (ctx.currentPlayer.isInJail()) {
+		ctx.hasTakenJailAction = true;
+	} else {
+		ctx.hasRolled = true;
+	}
 
 	ctx.dice.setManual(die1, die2);
 	int diceTotal = ctx.dice.getTotal();
@@ -608,13 +632,26 @@ void Command::execHelp(std::ostream& out) const {
     out << "║   - Bot level Medium akan menjadi lawan Anda                     ║\n";
     out << "║   - Bot akan mengambil keputusan secara otomatis                 ║\n";
     out << "║                                                                  ║\n";
-    out << "║ Dalam permainan, Anda dapat menggunakan perintah:                ║\n";
+    out << "║ PERINTAH GERAK:                                                  ║\n";
     out << "║   - ROLL_DICE      : Lempar dadu untuk bergerak                  ║\n";
+    out << "║   - SET_DICE X Y   : Atur dadu manual (contoh: SET_DICE 3 5)     ║\n";
+    out << "║   - END_TURN       : Akhiri giliran (wajib lempar dadu dulu!)    ║\n";
+    out << "║                                                                  ║\n";
+    out << "║ PERINTAH INFO:                                                   ║\n";
     out << "║   - PRINT_BOARD    : Lihat papan permainan                       ║\n";
     out << "║   - PRINT_PROPERTY : Lihat properti Anda                         ║\n";
+    out << "║   - PRINT_PROP_CERT [KODE] : Lihat akta properti                 ║\n";
+    out << "║   - PROFILE        : Lihat profil pemain                         ║\n";
+    out << "║   - PRINT_LOG      : Lihat log transaksi                         ║\n";
+    out << "║                                                                  ║\n";
+    out << "║ PERINTAH AKSI:                                                   ║\n";
     out << "║   - MORTGAGE       : Gadai properti ke bank                      ║\n";
-    out << "║   - BUILD          : Bangun rumah/hotel                          ║\n";
-    out << "║   - dan banyak lagi...                                           ║\n";
+    out << "║   - BUILD          : Bangun rumah/hotel di properti              ║\n";
+    out << "║   - USE_SKILL      : Gunakan kartu kemampuan                     ║\n";
+    out << "║                                                                  ║\n";
+    out << "║ PERINTAH LAIN:                                                   ║\n";
+    out << "║   - SAVE           : Simpan permainan                            ║\n";
+    out << "║   - HELP           : Tampilkan panduan ini                       ║\n";
     out << "╚══════════════════════════════════════════════════════════════════╝\n";
 }
 
