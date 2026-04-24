@@ -4,7 +4,7 @@
 #include "player/Player.hpp"
 
 TurnManager::TurnManager(int maxTurn)
-    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), turnOrder() {}
+    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), hasActedThisTurn(false), turnOrder() {}
 
 void TurnManager::setTurnOrder(const std::vector<Player*>& players) {
     this->turnOrder.clear();
@@ -36,6 +36,7 @@ void TurnManager::nextTurn(TurnContext& ctx) {
     ctx.dice.reset();
     this->activePlayerIndex = (this->activePlayerIndex + 1) % this->turnOrder.size();
     this->currentTurn++;
+    this->hasActedThisTurn = false;  // Reset flag for new turn
     // ctx.currentPlayer = *this->turnOrder[this->activePlayerIndex];
 }
 
@@ -51,6 +52,12 @@ int TurnManager::getMaxTurn() const { return this->maxTurn; }
 int TurnManager::getActivePlayerIndex() const { return this->activePlayerIndex; }
 
 const std::vector<Player*>& TurnManager::getTurnOrder() const { return this->turnOrder; }
+
+void TurnManager::setCurrentTurn(int turn) { this->currentTurn = turn; }
+
+void TurnManager::setActivePlayerIndex(int idx) { this->activePlayerIndex = idx; }
+
+void TurnManager::setMaxTurn(int max) { this->maxTurn = max; }
 
 bool TurnManager::isGameOver() const { 
     if (maxTurn < 0) return false; // nanti bikin kalo smua ud bangkrut
@@ -76,3 +83,11 @@ std::vector<Player*> TurnManager::determineWinner() {
 
     return winners;
 }
+
+bool TurnManager::getHasActedThisTurn() const { return this->hasActedThisTurn; }
+
+void TurnManager::setHasActedThisTurn(bool acted) { this->hasActedThisTurn = acted; }
+
+void TurnManager::markActionTaken() { this->hasActedThisTurn = true; }
+
+void TurnManager::resetActionFlag() { this->hasActedThisTurn = false; }

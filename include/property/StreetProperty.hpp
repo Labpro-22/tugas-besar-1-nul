@@ -41,6 +41,8 @@ class StreetProperty : public Property {
     void upgradeToHotel();
     void demolish();
 
+    // Restore building state from save file (deserialization helper)
+    void restoreBuildings(int count, bool hotel);
 
     void printStatus(TurnContext& ctx) override;
     void printRentTable();

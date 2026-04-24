@@ -163,12 +163,14 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	const std::string commandName = toUpperAscii(this->argv(0));
 
 	if (commandName == "END_TURN") return true;
-	else if (commandName == "ROLL_DICE") execRollDice(ctx, out);
-	else if (commandName == "SET_DICE") execSetDice(ctx, out);
+	else if (commandName == "ROLL_DICE" || commandName == "LEMPAR_DADU") execRollDice(ctx, out);
+	else if (commandName == "SET_DICE" || commandName == "ATUR_DADU") execSetDice(ctx, out);
 	else if (commandName == "PRINT_BOARD" || commandName == "CETAK_PAPAN") execPrintBoard(ctx, out);
-	else if (commandName == "PRINT_PROP_CERT") execPrintCert(ctx, out);
-	else if (commandName == "PRINT_PROPERTY") execPrintProperty(ctx, out);
-	else if (commandName == "HELP") execHelp(out);
+	else if (commandName == "PRINT_PROP_CERT" || commandName == "CETAK_AKTA") execPrintCert(ctx, out);
+	else if (commandName == "PRINT_PROPERTY" || commandName == "CETAK_PROPERTI") execPrintProperty(ctx, out);
+	else if (commandName == "PRINT_LOG" || commandName == "CETAK_LOG") execPrintLog(ctx, out);
+	else if (commandName == "SAVE" || commandName == "SIMPAN") execSave(ctx, out);
+	else if (commandName == "HELP" || commandName == "BANTUAN") execHelp(out);
 	else out << "[WARN] Unrecognized command: " << commandName << "\n";
 	return false;
 }
@@ -183,12 +185,21 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 		out << "[WARN] You cannot roll the dice anymore this turn.\n";
 		return;
 	}
+
+	// Mark that player has taken action (rolling dice)
+	ctx.gameEngine.getTurnManager().markActionTaken();
+
 	int diceTotal = ctx.dice.getTotal();
 
 	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
 		<< std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
 	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
-	
+
+	// Log dice roll
+	std::string logDetail = "Lempar: " + std::to_string(ctx.dice.getDie1()) + "+" +
+	                        std::to_string(ctx.dice.getDie2()) + "=" + std::to_string(diceTotal);
+	ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "DADU", logDetail);
+
 	int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
 	Tile* baseTile = ctx.board.getTile(nextPos);
 	if (baseTile == nullptr) {
@@ -196,6 +207,11 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 	}
 
 	out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
+
+	// Log movement
+	logDetail = "Mendarat di " + baseTile->getName() + " (" + baseTile->getCode() + ")";
+	ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "GERAK", logDetail);
+
 	baseTile->onLanded(ctx);
 }
 
@@ -212,6 +228,10 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 	}
 
 	out << "[COMMAND] Setting dice...\n";
+
+	// Mark that player has taken action (setting dice)
+	ctx.gameEngine.getTurnManager().markActionTaken();
+
 	ctx.dice.setManual(die1, die2);
 	int diceTotal = ctx.dice.getTotal();
 
@@ -389,7 +409,31 @@ void Command::execUpgrade(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execSave(TurnContext& ctx, std::ostream& out) const {
+    // Check if player has already taken any action this turn (spec requirement)
+    if (ctx.gameEngine.getTurnManager().getHasActedThisTurn()) {
+        out << "[ERROR] Simpan hanya dapat dilakukan di awal giliran, sebelum melakukan aksi apapun.\n";
+        return;
+    }
 
+    std::string filename;
+
+    if (argc() >= 2 && argv(1) != nullptr) {
+        filename = argv(1);
+    } else {
+        out << "[COMMAND] Input filename: ";
+        std::getline(std::cin, filename);
+    }
+
+    if (filename.empty()) {
+        out << "[WARN] Filename cannot be empty.\n";
+        return;
+    }
+
+    try {
+        ctx.gameEngine.saveGame(filename);
+    } catch (const std::exception& e) {
+        out << "[ERROR] Failed to save game: " << e.what() << "\n";
+    }
 }
 
 // void Command::execLoad(TurnContext& ctx, std::ostream& out) const {
@@ -397,7 +441,7 @@ void Command::execSave(TurnContext& ctx, std::ostream& out) const {
 // }
 
 void Command::execPrintLog(TurnContext& ctx, std::ostream& out) const {
-
+    ctx.gameEngine.printLogs();
 }
 
 void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {

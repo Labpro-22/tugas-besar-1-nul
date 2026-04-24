@@ -3,14 +3,34 @@
 #include "core/TurnContext.hpp"
 #include "core/Command.hpp"
 #include "core/Dice.hpp"
+#include "core/SaveLoadManager.hpp"
 #include "tile/ActionTile.hpp"
+#include "tile/PropertyTile.hpp"
+#include "property/Property.hpp"
 
 #include "player/Player.hpp"
+#include "player/BotPlayer.hpp"
 #include "exception/CommandException.hpp"
 #include "card/ChanceCard.hpp"
 #include "card/CommunityChestCard.hpp"
+#include "card/SkillCard.hpp"
+#include "card/DemolitionCard.hpp"
+#include "card/DiscountCard.hpp"
+#include "card/LassoCard.hpp"
+#include "card/MoveCard.hpp"
+#include "card/ShieldCard.hpp"
+#include "card/TeleportCard.hpp"
+#include "states/GameState.hpp"
+#include "states/PlayerState.hpp"
+#include "states/CardState.hpp"
+#include "board/Board.hpp"
+#include "tile/Tile.hpp"
 
 #include <limits>
+#include <fstream>
+#include <map>
+#include <cstdlib>
+#include <ctime>
 
 GameEngine::GameEngine(int size)
     : board(Board{size})
@@ -42,17 +62,24 @@ void GameEngine::run() {
 
         TurnContext ctx(*currentPlayer, gameDice, board, *this);
         std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": " << currentPlayer->getUsername() << " ===\n";
-        
-        goNext = false;
-        try {
-            cmd.promptInput();
-            goNext = cmd.dispatch(ctx);
-        } catch (const CommandException& exc) {
-            std::cout << exc.what() << "\n";
-        } catch (const std::exception& exc) {
-            std::cout << exc.what() << "\n";
+
+        // Check if current player is a bot
+        if (currentPlayer->isBot()) {
+            std::cout << "[BOT] " << currentPlayer->getUsername() << " sedang berpikir...\n";
+            goNext = executeBotTurn(ctx);
+        } else {
+            // Human player - wait for command input
+            goNext = false;
+            try {
+                cmd.promptInput();
+                goNext = cmd.dispatch(ctx);
+            } catch (const CommandException& exc) {
+                std::cout << exc.what() << "\n";
+            } catch (const std::exception& exc) {
+                std::cout << exc.what() << "\n";
+            }
         }
-        
+
         if (goNext) {
             turnmgr.nextTurn(ctx);
         }
@@ -61,8 +88,104 @@ void GameEngine::run() {
     std::cout << "\n=== Permainan Selesai! ===\n";
 }
 
+bool GameEngine::executeBotTurn(TurnContext& ctx) {
+    BotPlayer* bot = dynamic_cast<BotPlayer*>(&ctx.currentPlayer);
+    if (bot == nullptr) {
+        return false;
+    }
+
+    // Mark that bot has taken action (for save restriction)
+    turnmgr.markActionTaken();
+
+    // Bot rolls dice automatically
+    std::cout << "[BOT] " << bot->getUsername() << " melempar dadu...\n";
+
+    bool validRoll = ctx.dice.roll();
+    if (!validRoll) {
+        std::cout << "[WARN] Bot cannot roll the dice anymore this turn.\n";
+        return true; // End turn
+    }
+
+    int diceTotal = ctx.dice.getTotal();
+    std::cout << "[BOT] Hasil: " << ctx.dice.getDie1() << "+" << ctx.dice.getDie2() << " = " << diceTotal << "\n";
+
+    // Log dice roll
+    std::string logDetail = "Lempar: " + std::to_string(ctx.dice.getDie1()) + "+" +
+                            std::to_string(ctx.dice.getDie2()) + "=" + std::to_string(diceTotal);
+    logAction(bot->getUsername(), "DADU", logDetail);
+
+    // Move bot
+    int nextPos = bot->move(diceTotal, ctx);
+    Tile* baseTile = board.getTile(nextPos);
+    if (baseTile == nullptr) {
+        std::cout << "[ERROR] Bot moved to invalid tile.\n";
+        return true;
+    }
+
+    std::cout << "[BOT] " << bot->getUsername() << " mendarat di " << baseTile->getName() << "\n";
+
+    // Log movement
+    logDetail = "Mendarat di " + baseTile->getName() + " (" + baseTile->getCode() + ")";
+    logAction(bot->getUsername(), "GERAK", logDetail);
+
+    // Handle property tile
+    PropertyTile* propTile = dynamic_cast<PropertyTile*>(baseTile);
+    if (propTile != nullptr) {
+        Property* prop = propTile->getProperty();
+        if (prop != nullptr && prop->getStatus() == PropertyStatus::BANK) {
+            // Bot decides whether to buy
+            if (bot->decideBuyProperty(prop->getBuyPrice(), bot->getBalance())) {
+                try {
+                    bot->buy(prop);
+                    std::cout << "[BOT] " << bot->getUsername() << " membeli " << prop->getName() << " seharga M" << prop->getBuyPrice() << "\n";
+                    logAction(bot->getUsername(), "BELI", "Beli " + prop->getName() + " (" + prop->getCode() + ") seharga M" + std::to_string(prop->getBuyPrice()));
+                } catch (const std::exception& e) {
+                    std::cout << "[BOT] Gagal membeli: " << e.what() << "\n";
+                }
+            } else {
+                std::cout << "[BOT] " << bot->getUsername() << " memutuskan untuk tidak membeli.\n";
+            }
+        }
+    }
+
+    // Trigger tile onLanded
+    baseTile->onLanded(ctx);
+
+    // Small delay for readability
+    std::cout << "[BOT] Giliran " << bot->getUsername() << " selesai.\n";
+
+    return true; // End bot's turn
+}
+
 void GameEngine::loadGame() {
     std::cout << "[INFO] Loading Game...\n";
+    std::cout << "Pilih opsi:\n";
+    std::cout << "  1. Load dari file save game\n";
+    std::cout << "  2. Load dari konfigurasi board (default)\n";
+    std::cout << "> ";
+    
+    std::string choice;
+    std::getline(std::cin, choice);
+    
+    if (choice == "1") {
+        // Load dari file save game
+        std::cout << "Masukkan nama file save game: ";
+        std::string filename;
+        std::getline(std::cin, filename);
+        
+        if (!filename.empty()) {
+            try {
+                this->board.generateDefaultBoard();
+                loadGame(filename);
+                return;
+            } catch (const std::exception& e) {
+                std::cout << "[ERROR] Gagal load game: " << e.what() << "\n";
+                std::cout << "Menggunakan konfigurasi default...\n";
+            }
+        }
+    }
+    
+    // Load dari konfigurasi board (default behavior)
     std::cout << "Input configuration filename\n" ;
     std::cout << "> ";
     std::string filename;
@@ -94,14 +217,33 @@ void GameEngine::loadGame() {
     std::cout << "> ";
     std::cin >> numPlayers;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    for (int i = 0; i < numPlayers; ++i) {
+    
+    int numBots = 0;
+    std::cout << "Masukkan jumlah bot (0-" << numPlayers << "): ";
+    std::cin >> numBots;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    if (numBots < 0) numBots = 0;
+    if (numBots > numPlayers) numBots = numPlayers;
+    
+    int humanPlayers = numPlayers - numBots;
+    
+    // Create human players
+    for (int i = 0; i < humanPlayers; ++i) {
         std::string username;
         std::cout << "Masukkan nama pemain " << (i + 1) << ": ";
         std::getline(std::cin, username);
         players.push_back(std::make_unique<Player>(username, 1500)); // saldo awal 1500
+        std::cout << "[INFO] Added human player: " << username << "\n";
     }
+    
+    // Create bot players
+    for (int i = 0; i < numBots; ++i) {
+        std::string botName = "Bot" + std::to_string(i + 1);
+        players.push_back(std::make_unique<BotPlayer>(botName, 1500));
+        std::cout << "[INFO] Added bot player: " << botName << "\n";
+    }
+    
     turnmgr.setTurnOrder(this->getPlayers());
-
 }
 
 void GameEngine::newGame() {
@@ -123,12 +265,32 @@ void GameEngine::newGame() {
     std::cout << "> ";
     std::cin >> numPlayers;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    for (int i = 0; i < numPlayers; ++i) {
+    
+    int numBots;
+    std::cout << "Enter number of bots (0-" << numPlayers << "): ";
+    std::cin >> numBots;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    if (numBots < 0) numBots = 0;
+    if (numBots > numPlayers) numBots = numPlayers;
+    
+    int numHumans = numPlayers - numBots;
+    
+    // Create human players
+    for (int i = 0; i < numHumans; ++i) {
         std::string username;
         std::cout << "Enter player " << (i + 1) << "'s name: ";
         std::getline(std::cin, username);
         players.push_back(std::make_unique<Player>(username, 1500)); // saldo awal 1500
+        std::cout << "[INFO] Added human player: " << username << "\n";
     }
+    
+    // Create bot players
+    for (int i = 0; i < numBots; ++i) {
+        std::string botName = "Bot" + std::to_string(i + 1);
+        players.push_back(std::make_unique<BotPlayer>(botName, 1500));
+        std::cout << "[INFO] Added bot player: " << botName << "\n";
+    }
+    
     turnmgr.setTurnOrder(this->getPlayers());
 }
 
@@ -267,5 +429,189 @@ void GameEngine::returnCommunityChestCard(CommunityChestCard* card) {
     if (card != nullptr) {
         communityDeck.addToDiscard(card);
     }
+}
+
+TransactionLogger& GameEngine::getLogger() {
+    return logger;
+}
+
+void GameEngine::logAction(const std::string& user, const std::string& action, const std::string& detail) {
+    logger.log(turnmgr.getCurrentTurn(), user, action, detail);
+}
+
+void GameEngine::printLogs(int n) {
+    logger.printLogs(n);
+}
+
+// Helper function to create skill card from CardState
+static SkillCard* createSkillCardFromState(const CardState& cardState) {
+    if (cardState.type == "DemolitionCard") {
+        return new DemolitionCard();
+    } else if (cardState.type == "DiscountCard") {
+        return new DiscountCard(cardState.value);
+    } else if (cardState.type == "LassoCard") {
+        return new LassoCard();
+    } else if (cardState.type == "MoveCard") {
+        return new MoveCard(cardState.value);
+    } else if (cardState.type == "ShieldCard") {
+        return new ShieldCard();
+    } else if (cardState.type == "TeleportCard") {
+        return new TeleportCard(cardState.value);
+    }
+    return nullptr;
+}
+
+// Helper function to convert PlayerStatus to string
+static std::string playerStatusToString(PlayerStatus status) {
+    switch (status) {
+        case PlayerStatus::ACTIVE: return "ACTIVE";
+        case PlayerStatus::JAILED: return "JAILED";
+        case PlayerStatus::BANKRUPT: return "BANKRUPT";
+        default: return "ACTIVE";
+    }
+}
+
+// Helper function to convert string to PlayerStatus
+static PlayerStatus stringToPlayerStatus(const std::string& status) {
+    if (status == "JAILED") return PlayerStatus::JAILED;
+    if (status == "BANKRUPT") return PlayerStatus::BANKRUPT;
+    return PlayerStatus::ACTIVE;
+}
+
+void GameEngine::loadGame(const std::string& file) {
+    std::cout << "[INFO] Loading game from file: " << file << "\n";
+
+    SaveLoadManager saveLoadManager;
+    GameState state = saveLoadManager.load(file);
+
+    // Clear existing players
+    players.clear();
+
+    // Create players based on saved state
+    for (const PlayerState& ps : state.players) {
+        std::unique_ptr<Player> player;
+
+        if (ps.isBot) {
+            // Create BotPlayer
+            player = std::make_unique<BotPlayer>(ps.username, ps.balance);
+            std::cout << "[INFO] Loaded bot player: " << ps.username << "\n";
+        } else {
+            // Create regular Player
+            player = std::make_unique<Player>(ps.username, ps.balance);
+            std::cout << "[INFO] Loaded player: " << ps.username << "\n";
+        }
+
+        // Set player state
+        player->setPosition(board.getTileByCode(ps.positionCode) != nullptr ?
+            board.getTileByCode(ps.positionCode)->getIndex() : 0);
+
+        // Set status based on saved state
+        if (ps.status == "JAILED") {
+            player->enterJail();
+        } else if (ps.status == "BANKRUPT") {
+            player->setBankruptStatus();
+        }
+
+        // Add skill cards to hand
+        for (const CardState& cardState : ps.hand) {
+            SkillCard* card = createSkillCardFromState(cardState);
+            if (card != nullptr) {
+                player->drawSCard(card);
+            }
+        }
+
+        players.push_back(std::move(player));
+    }
+
+    // Set up turn manager
+    turnmgr = TurnManager(state.maxTurn);
+    turnmgr.setTurnOrder(this->getPlayers());
+
+    // Set current turn and active player index from saved state
+    turnmgr.setCurrentTurn(state.currentTurn);
+    turnmgr.setActivePlayerIndex(state.activePlayerIdx);
+
+    // Copy log from state to TransactionLogger
+    for (const auto& entry : state.log) {
+        logger.log(entry.turn, entry.username, entry.actionType, entry.detail);
+    }
+
+    // Log the load action itself
+    logger.log(turnmgr.getCurrentTurn(), "SYSTEM", "LOAD", "Game loaded from " + file);
+
+    std::cout << "[INFO] Game loaded successfully!\n";
+    std::cout << "[INFO] Current turn: " << state.currentTurn << "/" << state.maxTurn << "\n";
+    if (state.activePlayerIdx >= 0 && state.activePlayerIdx < static_cast<int>(players.size())) {
+        std::cout << "[INFO] Active player: " << players[state.activePlayerIdx]->getUsername() << "\n";
+    }
+}
+
+void GameEngine::saveGame(const std::string& file) {
+    std::cout << "[INFO] Saving game to file: " << file << "\n";
+
+    GameState state;
+    state.currentTurn = turnmgr.getCurrentTurn();
+    state.maxTurn = turnmgr.getMaxTurn();
+
+    // Build player states
+    for (const auto& player : players) {
+        PlayerState ps;
+        ps.username = player->getUsername();
+        ps.balance = player->getBalance();
+
+        // Get position code from board
+        Tile* tile = board.getTile(player->getPosition());
+        ps.positionCode = tile != nullptr ? tile->getCode() : "GO";
+
+        // Get status
+        ps.status = playerStatusToString(player->getStatus());
+
+        // Check if bot
+        ps.isBot = player->isBot();
+
+        // Save hand cards
+        for (SkillCard* card : player->getHand()) {
+            CardState cs;
+            cs.type = card->getTypeName();
+            cs.value = card->getSkillValue();
+            cs.remainingDuration = card->getRemainingDuration();
+            ps.hand.push_back(cs);
+        }
+
+        state.players.push_back(ps);
+    }
+
+    // Build turn order
+    for (Player* player : turnmgr.getTurnOrder()) {
+        for (size_t i = 0; i < players.size(); ++i) {
+            if (players[i].get() == player) {
+                state.turnOrder.push_back(static_cast<int>(i));
+                break;
+            }
+        }
+    }
+
+    // Set active player index
+    Player* currentPlayer = turnmgr.getCurrentPlayer();
+    if (currentPlayer != nullptr) {
+        for (size_t i = 0; i < players.size(); ++i) {
+            if (players[i].get() == currentPlayer) {
+                state.activePlayerIdx = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+
+    // Copy log from TransactionLogger to state
+    state.log = logger.getAll();
+
+    // Log the save action itself
+    logger.log(turnmgr.getCurrentTurn(), "SYSTEM", "SAVE", "Game saved to " + file);
+
+    // Save using SaveLoadManager
+    SaveLoadManager saveLoadManager;
+    saveLoadManager.save(state, file);
+
+    std::cout << "[INFO] Game saved successfully!\n";
 }
 
