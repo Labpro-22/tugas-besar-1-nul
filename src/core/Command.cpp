@@ -217,6 +217,16 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 
 	out << "Dice set to: " << die1 << " and " << die2 << "\n"
 		<< "Result = " << std::to_string(diceTotal) << "\n";
+		out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
+	
+	int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
+	Tile* baseTile = ctx.board.getTile(nextPos);
+	if (baseTile == nullptr) {
+		throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(nextPos));
+	}
+
+	out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
+	baseTile->onLanded(ctx);
 }
 
 void Command::execPrintCert(TurnContext& ctx, std::ostream& out) const {
@@ -426,7 +436,7 @@ void Command::execHelp(std::ostream& out) const {
     out << "║ Dalam permainan, Anda dapat menggunakan perintah:                ║\n";
     out << "║   - ROLL_DICE      : Lempar dadu untuk bergerak                  ║\n";
     out << "║   - PRINT_BOARD    : Lihat papan permainan                       ║\n";
-    out << "║   - PRINT_PROP     : Lihat properti Anda                         ║\n";
+    out << "║   - PRINT_PROPERTY : Lihat properti Anda                         ║\n";
     out << "║   - MORTGAGE       : Gadai properti ke bank                      ║\n";
     out << "║   - BUILD          : Bangun rumah/hotel                          ║\n";
     out << "║   - dan banyak lagi...                                           ║\n";

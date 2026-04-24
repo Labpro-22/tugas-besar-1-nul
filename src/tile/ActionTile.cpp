@@ -3,6 +3,7 @@
 #include "player/Player.hpp"
 #include "board/Board.hpp"
 #include "tile/PropertyTile.hpp"
+#include "card/card.hpp"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -70,6 +71,7 @@ CardTile::CardTile(int idx, string cd, string nm)
 
 void CardTile::onLanded(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
+    cout << "flag 1: " << player.getUsername() << "\n";
     card->execute(&player, ctx);
 }
 

@@ -348,5 +348,4 @@ void Board::generateDefaultBoard() {
 }
 
 
-
 Board::~Board() = default;
