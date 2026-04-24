@@ -15,6 +15,8 @@
 
 #include "player/Player.hpp"
 #include "exception/CommandException.hpp"
+#include "card/ChanceCard.hpp"
+#include "card/CommunityChestCard.hpp"
 
 #include <limits>
 
@@ -22,6 +24,7 @@ GameEngine::GameEngine(int size)
     : board(Board{size})
         , turnmgr(TurnManager{})
         , chanceDeck(CardDeck<ChanceCard>{})
+        , communityDeck(CardDeck<CommunityChestCard>{})
         , skillDeck(CardDeck<SkillCard>{})
         , status(GameStatus::NOT_STARTED)
         , activeConfig(Config{})
@@ -37,6 +40,8 @@ GameEngine::GameEngine(int size)
     skillDeck.addCard(new LassoCard());
     skillDeck.addCard(new DemolitionCard());
     skillDeck.shuffle();
+        , players{std::vector<std::unique_ptr<Player>>{}} {
+    initializeCardDecks();
 }
 
 GameEngine::~GameEngine() = default;
@@ -276,5 +281,51 @@ void GameEngine::giveRandomSkillCardTo(Player& player) {
     }
 
     player.drawSCard(drawn);
+void GameEngine::initializeCardDecks() {
+    // Initialize Chance Cards (Kesempatan)
+    chanceDeck.addCard(new ChanceCard("Pergi ke stasiun terdekat", ChanceType::GO_TO_NEAREST_STATION));
+    chanceDeck.addCard(new ChanceCard("Mundur 3 petak", ChanceType::MOVE_BACK_3));
+    chanceDeck.addCard(new ChanceCard("Masuk Penjara", ChanceType::GO_TO_JAIL));
+    chanceDeck.shuffle();
+
+    // Initialize Community Chest Cards (Dana Umum)
+    communityDeck.addCard(new CommunityChestCard("Ulang Tahun! Dapat M100 dari setiap pemain", CommunityChestType::BIRTHDAY, 100));
+    communityDeck.addCard(new CommunityChestCard("Biaya Dokter. Bayar M700", CommunityChestType::DOCTOR_FEE, 700));
+    communityDeck.addCard(new CommunityChestCard("Kampanye Politik. Bayar M200 ke setiap pemain", CommunityChestType::POLITICAL_CAMPAIGN, 200));
+    communityDeck.shuffle();
+}
+
+ChanceCard* GameEngine::drawChanceCard() {
+    if (chanceDeck.size() == 0) {
+        chanceDeck.refillFromDiscard();
+    }
+    ChanceCard* card = chanceDeck.draw();
+    if (card != nullptr) {
+        std::cout << "[INFO] Mengambil kartu Kesempatan dari deck.\n";
+    }
+    return card;
+}
+
+CommunityChestCard* GameEngine::drawCommunityChestCard() {
+    if (communityDeck.size() == 0) {
+        communityDeck.refillFromDiscard();
+    }
+    CommunityChestCard* card = communityDeck.draw();
+    if (card != nullptr) {
+        std::cout << "[INFO] Mengambil kartu Dana Umum dari deck.\n";
+    }
+    return card;
+}
+
+void GameEngine::returnChanceCard(ChanceCard* card) {
+    if (card != nullptr) {
+        chanceDeck.addToDiscard(card);
+    }
+}
+
+void GameEngine::returnCommunityChestCard(CommunityChestCard* card) {
+    if (card != nullptr) {
+        communityDeck.addToDiscard(card);
+    }
 }
 

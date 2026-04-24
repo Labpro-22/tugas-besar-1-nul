@@ -8,6 +8,7 @@
 #include "exception/InsufficientFundsException.hpp" //nanti ganti ke yg general
 #include "exception/InvalidGameStateException.hpp"
 #include "property/Property.hpp"
+#include "property/RailroadProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "board/Board.hpp"
 #include "core/GameEngine.hpp"
@@ -172,6 +173,22 @@ void Player::mortgage(Property* p) {
 void Player::addProperty(Property* p) {
     if (p == nullptr) {
         throw InvalidGameStateException("Cannot add null property");
+    }
+    if (dynamic_cast<RailroadProperty*> (p) != nullptr){
+        (dynamic_cast<RailroadProperty*> (p))->setOwnedRailroadCounter(
+            [](const Player* owner) -> int {
+            if (owner == nullptr) return 0;
+            
+            int count = 0;
+            // Asumsi Player memiliki method getProperties() yang me-return vector<Property*>
+            for (Property* p : owner->getProperties()) {
+                // Cek apakah properti 'p' ini adalah sebuah stasiun
+                if (dynamic_cast<RailroadProperty*>(p) != nullptr) {
+                    count++;
+                }
+            }
+            return count;
+        });
     }
     p->setOwner(this);
     this->properties.push_back(p);

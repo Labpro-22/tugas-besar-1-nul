@@ -8,6 +8,7 @@
 #include "core/TurnManager.hpp"
 #include "card/DeckCard.hpp"
 #include "card/ChanceCard.hpp"
+#include "card/CommunityChestCard.hpp"
 #include "card/SkillCard.hpp"
 #include "config/Config.hpp"
 
@@ -26,7 +27,7 @@ private:
     Board board;
     TurnManager turnmgr;
     CardDeck<ChanceCard> chanceDeck;
-    // CardDeck<CommunityCard> communityDeck;
+    CardDeck<CommunityChestCard> communityDeck;
     CardDeck<SkillCard> skillDeck;
     GameStatus status;
     Config activeConfig;
@@ -54,4 +55,10 @@ public:
     int getGoSalary() const;
     int getStartingBalance() const;
     void giveRandomSkillCardTo(Player& player);
+    // Card deck methods
+    void initializeCardDecks();
+    ChanceCard* drawChanceCard();
+    CommunityChestCard* drawCommunityChestCard();
+    void returnChanceCard(ChanceCard* card);
+    void returnCommunityChestCard(CommunityChestCard* card);
 };

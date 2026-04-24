@@ -1,4 +1,6 @@
 #include "property/RailroadProperty.hpp"
+#include "property/Property.hpp"
+#include "player/Player.hpp"
 
 #include <utility>
 #include <iostream>
@@ -68,8 +70,15 @@ void RailroadProperty::setOwnedRailroadCounter(
 
 void RailroadProperty::printStatus(TurnContext& ctx){
     std::cout << "+================================+\n";
-    std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\t\t|\n";
-    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t\t|\n";
-    std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\t\t|\n";
+    std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\n";
+    std::string stat = "BANK";
+    if (getStatus() == PropertyStatus::OWNED){
+        stat = "OWNED BY [" + getOwner()->getUsername() + "]";
+    } else if (getStatus() == PropertyStatus::MORTGAGED){
+        stat = "MORTGAGED BY [" + getOwner()->getUsername() + "]";
+    }
+    std::cout << "| Status: " << stat << "\n";
+    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
+    std::cout << "| Sewa saat ini    : M" << getRent(ctx) << "\n";
     std::cout << "+================================+\n";
 }

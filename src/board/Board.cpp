@@ -326,7 +326,6 @@ void Board::generateDefaultBoard() {
     setTileAt(20, make_unique<FreeParkingTile>(20, "BBP", "Bebas Parkir"));
     addStreet(21, "MKS", "Makassar", 220, 110, "Merah", 150, 150, {18, 90, 250, 700, 875, 1050});
     
-    // PERBAIKAN: Menghilangkan argumen `true` pada CardTile
     setTileAt(22, make_unique<CardTile>(22, "KSP", "Kesempatan"));
     
     addStreet(23, "BLP", "Balikpapan", 220, 110, "Merah", 150, 150, {18, 90, 250, 700, 875, 1050});

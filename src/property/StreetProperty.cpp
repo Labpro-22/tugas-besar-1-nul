@@ -1,4 +1,6 @@
 #include "property/StreetProperty.hpp"
+#include "property/Property.hpp"
+#include "player/Player.hpp"
 
 #include <algorithm>
 #include <utility>
@@ -166,6 +168,13 @@ void StreetProperty::printStatus(TurnContext& ctx){
     //nanti perbaiki di trigger agar tunjukin kalau di daerah bukan sendiri
     std::cout << "+=============================================+\n";
     std::cout << "| [" << getColorGroup() << "] " << getName() << " (" << getCode() << ")\n";
+    std::string stat = "BANK";
+    if (getStatus() == PropertyStatus::OWNED){
+        stat = "OWNED BY [" + getOwner()->getUsername() + "]";
+    } else if (getStatus() == PropertyStatus::MORTGAGED){
+        stat = "MORTGAGED BY [" + getOwner()->getUsername() + "]";
+    }
+    std::cout << "| Status: " << stat << "\n";
     std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
     printRentTable();
     std::cout << "+=============================================+\n";

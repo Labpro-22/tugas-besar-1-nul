@@ -27,7 +27,10 @@ public:
     T* draw() {
         if (deck.empty()) {
             if (discard.empty()) return nullptr;
+            refillFromDiscard();
         }
+        
+        if (deck.empty()) return nullptr;
         
         T* drawnCard = deck.back();
         deck.pop_back();

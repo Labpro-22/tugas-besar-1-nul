@@ -4,6 +4,8 @@
 #include "player/Player.hpp"
 #include "board/Board.hpp"
 #include "tile/PropertyTile.hpp"
+#include "card/ChanceCard.hpp"
+#include "card/CommunityChestCard.hpp"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -67,11 +69,48 @@ void GoToJailTile::onLanded(TurnContext& ctx){
 }
 
 CardTile::CardTile(int idx, string cd, string nm)
-    : ActionTile(idx, cd, nm){}
+    : ActionTile(idx, cd, nm), cardType(CardTileType::CHANCE) {
+    // Determine card type based on code
+    if (cd == "DNU") {
+        cardType = CardTileType::COMMUNITY_CHEST;
+    } else if (cd == "KSP") {
+        cardType = CardTileType::CHANCE;
+    }
+}
+
+CardTile::CardTile(int idx, string cd, string nm, CardTileType type)
+    : ActionTile(idx, cd, nm), cardType(type) {}
+
+void CardTile::setCardType(CardTileType type) {
+    cardType = type;
+}
+
+CardTileType CardTile::getCardType() const {
+    return cardType;
+}
 
 void CardTile::onLanded(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
-    card->execute(&player, ctx);
+    
+    if (cardType == CardTileType::CHANCE) {
+        std::cout << "[" << player.getUsername() << "] landed on Chance Tile. Drawing a card...\n";
+        ChanceCard* card = ctx.drawChanceCard();
+        if (card != nullptr) {
+            card->execute(&player, ctx);
+            ctx.returnChanceCard(card);
+        } else {
+            std::cout << "[INFO] No Chance cards available in the deck.\n";
+        }
+    } else {
+        std::cout << "[" << player.getUsername() << "] landed on Community Chest Tile. Drawing a card...\n";
+        CommunityChestCard* card = ctx.drawCommunityChestCard();
+        if (card != nullptr) {
+            card->execute(&player, ctx);
+            ctx.returnCommunityChestCard(card);
+        } else {
+            std::cout << "[INFO] No Community Chest cards available in the deck.\n";
+        }
+    }
 }
 
 FestivalTile::FestivalTile(int idx, string cd, string nm)
@@ -80,6 +119,7 @@ FestivalTile::FestivalTile(int idx, string cd, string nm)
 void FestivalTile::onLanded(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
     cout << "[" << ctx.currentPlayer.getUsername() << "] landed on Festival Tile.\nChoose property to increase rent: \n";
+    bool hasProp = false;
     std::vector<std::unique_ptr<Tile>>& allTiles = ctx.board.getAllTiles();
     PropertyTile* proptile = nullptr;
     for (const auto& tile : allTiles) {
@@ -87,8 +127,13 @@ void FestivalTile::onLanded(TurnContext& ctx){
         if (proptile != nullptr) {
             if (proptile->getProperty()->getOwner() == &ctx.currentPlayer){
                 proptile->getProperty()->printStatus(ctx);
+                hasProp = true;
             }
         }
+    }
+    if (!hasProp){
+        cout << "[" << ctx.currentPlayer.getUsername() << "] doesn't have any property. Moving on...\n";
+        return;
     }
     std::string inp;
     while (true){
@@ -134,7 +179,7 @@ void TaxTile::applyPPH(Player& player){
     float taxPercent = 10; //nanti sesuaikan
     int inp;
     while (true){
-        cout << "2 options: pay flat for: " << taxFlat << " or " << taxPercent << "%% of your wealth?\n";
+        cout << "2 options: pay flat for: " << taxFlat << " or " << taxPercent << "%% of your wealth? (1-2)\n";
         cin >> inp;
         if (inp == 1 || inp == 2){
             break;
@@ -142,8 +187,10 @@ void TaxTile::applyPPH(Player& player){
     }
     if (inp == 1){
         player.deductCash(taxFlat);
+        cout << "[" << player.getUsername() << "] paid tax of M" << taxFlat << "\n";
     } else{
         player.deductCash(ceil(taxPercent*player.getBalance()));
+        cout << "[" << player.getUsername() << "] paid tax of M" << ceil(taxPercent*player.getBalance()) << "\n";
     }
 
 }
@@ -151,4 +198,5 @@ void TaxTile::applyPPH(Player& player){
 void TaxTile::applyPBM(Player& player){
     int taxFlat = 67; //nanti sesuaikan sama config
     player.deductCash(taxFlat);
+    cout << "[" << player.getUsername() << "] paid tax of M" << taxFlat << "\n";
 }
