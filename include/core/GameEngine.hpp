@@ -41,7 +41,7 @@ public:
     ~GameEngine();
 
     void newGame();
-    void loadGame();
+    void loadGameFromSave();
     void run();
     void loadGame(const std::string& file);
     void saveGame(const std::string& file);

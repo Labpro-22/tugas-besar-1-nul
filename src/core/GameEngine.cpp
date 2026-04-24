@@ -39,6 +39,7 @@
 #include <map>
 #include <cstdlib>
 #include <ctime>
+#include <random>
 
 GameEngine::GameEngine(int size)
     : board(Board{size})
@@ -175,106 +176,32 @@ bool GameEngine::executeBotTurn(TurnContext& ctx) {
     return true; // End bot's turn
 }
 
-void GameEngine::loadGame() {
+void GameEngine::loadGameFromSave() {
     clearPlayers();
 
-    std::cout << "[INFO] Loading Game...\n";
-    std::cout << "Pilih opsi:\n";
-    std::cout << "  1. Load dari file save game\n";
-    std::cout << "  2. Load dari konfigurasi board (default)\n";
-    std::cout << "> ";
-    
-    std::string choice;
-    std::getline(std::cin, choice);
-    
-    if (choice == "1") {
-        // Load dari file save game
-        std::cout << "Masukkan nama file save game: ";
-        std::string filename;
-        std::getline(std::cin, filename);
-        
-        if (!filename.empty()) {
-            try {
-                this->board.generateDefaultBoard();
-                loadGame(filename);
-                return;
-            } catch (const std::exception& e) {
-                std::cout << "[ERROR] Gagal load game: " << e.what() << "\n";
-                std::cout << "Menggunakan konfigurasi default...\n";
-            }
-        }
-    }
-    
-    // Load dari konfigurasi board (default behavior)
-    std::cout << "Input configuration filename\n" ;
-    std::cout << "> ";
-    std::string folder;
-    std::getline(std::cin, folder);
-    if (folder.empty()) {
-        this->board.generateDefaultBoard();
+    std::cout << "[INFO] Loading Game from Save File...\n";
+    std::cout << "Masukkan nama file save game: ";
+    std::string filename;
+    std::getline(std::cin, filename);
+
+    if (filename.empty()) {
+        std::cout << "[ERROR] Nama file tidak boleh kosong. Kembali ke menu...\n";
         return;
     }
 
-    std::cout << "\n";
-    std::cout << "[INFO] Loading configuration from folder: " << folder << "\n";
-    
     try {
-        ConfigLoader loader;
-        Config cfg = loader.loadAll(folder);
-        this->activeConfig = cfg;
-
-        this->board = Board(40);
-        this->board.buildFromConfig(this->activeConfig);
-    } catch (const std::exception& ex) {
-        std::cout << ex.what() << "\n";
         this->board.generateDefaultBoard();
+        loadGame(filename);
+    } catch (const std::exception& e) {
+        std::cout << "[ERROR] Gagal load game: " << e.what() << "\n";
+        std::cout << "Menggunakan konfigurasi default...\n";
+        // Fallback ke new game jika load gagal
+        this->newGame();
     }
-    int maxTurns;
-    std::cout << "\n";
-    std::cout << "[INFO] Memuat giliran maksimal permainan\n";
-    std::cout << "Masukkan batas jumlah giliran permainan (atau -1 untuk tanpa batas)\n";
-    std::cout << "> ";
-    std::cin >> maxTurns;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    this->turnmgr = TurnManager(maxTurns);
-
-    int numPlayers;
-    std::cout << "\n";
-    std::cout << "[INFO] Memuat pemain\n";
-    std::cout << "Masukkan jumlah pemain (2-6)\n";
-    std::cout << "> ";
-    std::cin >> numPlayers;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    
-    int numBots = 0;
-    std::cout << "Masukkan jumlah bot (0-" << numPlayers << "): ";
-    std::cin >> numBots;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    if (numBots < 0) numBots = 0;
-    if (numBots > numPlayers) numBots = numPlayers;
-    
-    int humanPlayers = numPlayers - numBots;
-    
-    // Create human players
-    for (int i = 0; i < humanPlayers; ++i) {
-        std::string username;
-        std::cout << "Masukkan nama pemain " << (i + 1) << ": ";
-        std::getline(std::cin, username);
-        players.push_back(new Player(username, 1500)); // saldo awal 1500
-        std::cout << "[INFO] Added human player: " << username << "\n";
-    }
-    
-    // Create bot players
-    for (int i = 0; i < numBots; ++i) {
-        std::string botName = "Bot" + std::to_string(i + 1);
-        players.push_back(new BotPlayer(botName, 1500));
-        std::cout << "[INFO] Added bot player: " << botName << "\n";
-    }
-    
-    turnmgr.setTurnOrder(this->getPlayers());
 }
 void GameEngine::newGame() {
-    std::cout << "[INFO] Generating default map\n\n";
+    std::cout << "\n[INFO] Starting New Game...\n";
+    std::cout << "[INFO] Generating default board\n";
     this->board.generateDefaultBoard();
 
     int maxTurns;
@@ -301,7 +228,7 @@ void GameEngine::newGame() {
     if (numBots > numPlayers) numBots = numPlayers;
     
     int numHumans = numPlayers - numBots;
-    
+
     // Create human players
     for (int i = 0; i < numHumans; ++i) {
         std::string username;
@@ -310,14 +237,22 @@ void GameEngine::newGame() {
         players.push_back(new Player(username, 1500)); // saldo awal 1500
         std::cout << "[INFO] Added human player: " << username << "\n";
     }
-    
+
     // Create bot players
     for (int i = 0; i < numBots; ++i) {
         std::string botName = "Bot" + std::to_string(i + 1);
         players.push_back(new BotPlayer(botName, 1500));
         std::cout << "[INFO] Added bot player: " << botName << "\n";
     }
-    
+
+    // Give each player 1 skill card at the start of the game
+    std::cout << "\n[INFO] Distributing initial skill cards to all players...\n";
+    for (Player* player : players) {
+        if (player != nullptr) {
+            giveRandomSkillCardTo(*player);
+        }
+    }
+
     turnmgr.setTurnOrder(this->getPlayers());
 }
 
@@ -363,10 +298,10 @@ void GameEngine::startMenu() {
     std::cout << "         N I M O N S P O L I\n";
     std::cout << "========================================\n";
     std::cout << "Pick an option:\n";
-    std::cout << "  1. NEW GAME  - Start a new game\n";
-    std::cout << "  2. LOAD GAME - Load a game\n";
-    std::cout << "  3. HELP      - Show the help display\n";
-    std::cout << "  4. EXIT      - Exit the game\n";
+    std::cout << "  1. NEW GAME       - Start a new game\n";
+    std::cout << "  2. LOAD SAVED GAME - Continue from save file\n";
+    std::cout << "  3. HELP           - Show the help display\n";
+    std::cout << "  4. EXIT           - Exit the game\n";
 
     while (true) {
         std::cout << "Enter a choice (1-4): ";
@@ -385,7 +320,7 @@ void GameEngine::startMenu() {
             this->newGame();
             break;
         } else if (choice == 2) {
-            this->loadGame();
+            this->loadGameFromSave();
             break;
         } else if (choice == 3) {
             break;
@@ -440,6 +375,47 @@ void GameEngine::initializeCardDecks() {
     communityDeck.addCard(new CommunityChestCard("Biaya Dokter. Bayar M700", CommunityChestType::DOCTOR_FEE, 700));
     communityDeck.addCard(new CommunityChestCard("Kampanye Politik. Bayar M200 ke setiap pemain", CommunityChestType::POLITICAL_CAMPAIGN, 200));
     communityDeck.shuffle();
+
+    // Initialize Skill Cards (Kartu Kemampuan Spesial)
+    // Random number generators for skill card values
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> moveDist(1, 6);        // MoveCard: 1-6 steps
+    std::uniform_int_distribution<> discountDist(10, 50);  // DiscountCard: 10-50%
+    std::uniform_int_distribution<> teleportDist(0, 39);   // TeleportCard: position 0-39
+
+    // 4 MoveCards with random steps
+    for (int i = 0; i < 4; ++i) {
+        skillDeck.addCard(new MoveCard(moveDist(gen)));
+    }
+
+    // 3 DiscountCards with random discount percentage
+    for (int i = 0; i < 3; ++i) {
+        skillDeck.addCard(new DiscountCard(discountDist(gen)));
+    }
+
+    // 2 ShieldCards
+    for (int i = 0; i < 2; ++i) {
+        skillDeck.addCard(new ShieldCard());
+    }
+
+    // 2 TeleportCards with random position
+    for (int i = 0; i < 2; ++i) {
+        skillDeck.addCard(new TeleportCard(teleportDist(gen)));
+    }
+
+    // 2 LassoCards
+    for (int i = 0; i < 2; ++i) {
+        skillDeck.addCard(new LassoCard());
+    }
+
+    // 2 DemolitionCards
+    for (int i = 0; i < 2; ++i) {
+        skillDeck.addCard(new DemolitionCard());
+    }
+
+    skillDeck.shuffle();
+    std::cout << "[INFO] Skill deck initialized with " << skillDeck.size() << " cards.\n";
 }
 
 ChanceCard* GameEngine::drawChanceCard() {
