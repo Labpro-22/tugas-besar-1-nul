@@ -6,15 +6,16 @@ class Player;
 class TurnContext;
 
 class TurnManager {
-  private:
+private:
     int currentTurn;
     int maxTurn;
     int activePlayerIndex;
+    int doubleGotten;
     bool hasActedThisTurn;  // Track if current player has taken any action
 
     std::vector<Player*> turnOrder;
 
-  public:
+public:
     explicit TurnManager(int maxTurn = -1);
     ~TurnManager() = default;
 
@@ -28,6 +29,10 @@ class TurnManager {
     int getCurrentTurn() const;
     int getMaxTurn() const;
     int getActivePlayerIndex() const;
+
+    int getDoubleGotten() const;
+    void incrementDoubleGotten();
+    void resetDoubleGotten();
     const std::vector<Player*>& getTurnOrder() const;
 
     void setCurrentTurn(int turn);

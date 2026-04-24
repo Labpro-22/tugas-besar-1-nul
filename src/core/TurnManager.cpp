@@ -64,6 +64,10 @@ int TurnManager::getActivePlayerIndex() const {
 
 int TurnManager::getDoubleGotten() const {return this->doubleGotten;}
 
+void TurnManager::incrementDoubleGotten(){this->doubleGotten++;}
+
+void TurnManager::resetDoubleGotten() {this->doubleGotten = 0;}
+
 const std::vector<Player*>& TurnManager::getTurnOrder() const { return this->turnOrder; }
 
 void TurnManager::setCurrentTurn(int turn) { this->currentTurn = turn; }
