@@ -5,6 +5,7 @@
 #include "core/TurnManager.hpp"
 #include <iostream>
 #include "core/AuctionManager.hpp"
+#include <limits>
 
 using namespace std;
 
@@ -50,6 +51,7 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
     while (true){
         cout << "[Y/N] Apakah Anda mau beli " << getName() << "? (Harga: " << getProperty()->getBuyPrice() << ")\n\n";
         cin >> ans;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear newline from buffer
         if (ans == "Y" || ans == "y"){
             player.buy(getProperty(), ctx);
             cout << "[" << player.getUsername() << "] baru saja membeli " << getName() << "\n";

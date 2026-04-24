@@ -196,6 +196,12 @@ void StreetProperty::demolish() {
 
     --buildingCount_;
 }
+
+// Restore building state from save file (deserialization helper)
+void StreetProperty::restoreBuildings(int count, bool hotel) {
+    buildingCount_ = count;
+    isHotel_ = hotel;
+}
 void StreetProperty::printStatus(TurnContext& ctx){
     //nanti perbaiki di trigger agar tunjukin kalau di daerah bukan sendiri
     std::cout << "+=============================================+\n";

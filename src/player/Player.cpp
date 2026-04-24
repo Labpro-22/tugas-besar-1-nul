@@ -55,6 +55,8 @@ int Player::getHandsAmount() const { return this->hand.size(); }
 
 const std::vector<Property*>& Player::getProperties() const { return this->properties; }
 
+const std::vector<SkillCard*>& Player::getHand() const { return this->hand; }
+
 int Player::getWealth() const {
     return 0; //pastiin
 }
@@ -118,6 +120,10 @@ void Player::moveForwardTo(int index, TurnContext& ctx) {
 void Player::moveBackwardTo(int index, TurnContext& ctx) {
     this->position = index;
     // ni nanti implement ngapain tilenya
+}
+
+void Player::setPosition(int pos) {
+    this->position = pos;
 }
 
 

@@ -9,4 +9,5 @@ public:
     LassoCard();
 
     void apply(TurnContext& ctx) override;
+    std::string getTypeName() const override { return "LassoCard"; }
 };

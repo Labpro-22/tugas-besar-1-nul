@@ -111,6 +111,15 @@ StateParser::parsePlayers(const std::vector<std::string>& lines) const {
         player.balance = balance;
         player.positionCode = head[2];
         player.status = head[3];
+
+        // Parse isBot flag (backward compatible - default to false if not present)
+        if (head.size() >= 5) {
+            int isBotFlag = 0;
+            if (tryParseInt(head[4], isBotFlag)) {
+                player.isBot = (isBotFlag != 0);
+            }
+        }
+
         player.hand = parseHand(handBlock);
 
         players.push_back(player);
