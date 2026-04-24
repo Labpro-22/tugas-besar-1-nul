@@ -12,6 +12,7 @@ class Dice;
 // Forward declarations for card decks
 class SkillCard;
 class ChanceCard;
+class CommunityChestCard;
 class GameEngine;
 class TurnManager;
 
@@ -32,6 +33,12 @@ public:
 
     TurnManager& getTurnMgr() const;
     const std::vector<Player*>& getAllPlayers() const;
+
+    // Card deck methods
+    ChanceCard* drawChanceCard();
+    CommunityChestCard* drawCommunityChestCard();
+    void returnChanceCard(ChanceCard* card);
+    void returnCommunityChestCard(CommunityChestCard* card);
 
     // current/max turn num
     // skillused, movedbycard, doublecount <- turncontext

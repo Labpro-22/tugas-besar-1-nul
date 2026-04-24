@@ -49,12 +49,20 @@ class GoToJailTile : public ActionTile{
         void onLanded(TurnContext& ctx) override;
 };
 
+enum class CardTileType {
+    CHANCE,         // Kartu Kesempatan
+    COMMUNITY_CHEST // Kartu Dana Umum
+};
+
 class CardTile : public ActionTile{
     private:
-        Card* card;
+        CardTileType cardType;
     public:
         CardTile(int idx, string cd, string nm);
+        CardTile(int idx, string cd, string nm, CardTileType type);
         void onLanded(TurnContext& ctx) override;
+        void setCardType(CardTileType type);
+        CardTileType getCardType() const;
 };
 
 class FestivalTile : public ActionTile{

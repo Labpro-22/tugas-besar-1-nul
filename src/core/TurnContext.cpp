@@ -20,3 +20,19 @@ TurnManager& TurnContext::getTurnMgr() const {
 const std::vector<Player*>& TurnContext::getAllPlayers() const {
     return this->gameEngine.getPlayers();
 }
+
+ChanceCard* TurnContext::drawChanceCard() {
+    return gameEngine.drawChanceCard();
+}
+
+CommunityChestCard* TurnContext::drawCommunityChestCard() {
+    return gameEngine.drawCommunityChestCard();
+}
+
+void TurnContext::returnChanceCard(ChanceCard* card) {
+    gameEngine.returnChanceCard(card);
+}
+
+void TurnContext::returnCommunityChestCard(CommunityChestCard* card) {
+    gameEngine.returnCommunityChestCard(card);
+}
