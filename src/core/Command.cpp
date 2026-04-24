@@ -155,6 +155,10 @@ const std::vector<std::string>& Command::args() const {
 }
 
 bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
+	if (ctx.dice.getDie1() == 0 && ctx.dice.getDie2() == 0) {
+		this->canEndTurn = false;
+	}
+
 	if (argc() == 0) {
 		out << "[WARN] No Command Written. Type in HELP for command list\n";
 		return false;
@@ -162,7 +166,15 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 
 	const std::string commandName = toUpperAscii(this->argv(0));
 
-	if (commandName == "END_TURN") return true;
+	if (commandName == "END_TURN") {
+		if (!this->canEndTurn) {
+			out << "You have to roll the dice!\n"; 
+			return false;
+		}
+		out << "[COMMAND] Ending turn...\n";
+		this->canEndTurn = false;
+		return true;
+	}
 	else if (commandName == "ROLL_DICE") execRollDice(ctx, out);
 	else if (commandName == "SET_DICE") execSetDice(ctx, out);
 	else if (commandName == "PRINT_BOARD" || commandName == "CETAK_PAPAN") execPrintBoard(ctx, out);
@@ -187,6 +199,7 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 		return;
 	}
 	int diceTotal = ctx.dice.getTotal();
+	this->canEndTurn = !ctx.dice.isDouble();
 
 	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
 		<< std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
@@ -202,6 +215,7 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 	baseTile->onLanded(ctx);
 
 	if (ctx.currentPlayer.isShieldActive()) ctx.currentPlayer.deactivateShield();
+	
 }
 
 void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
@@ -219,6 +233,7 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 	out << "[COMMAND] Setting dice...\n";
 	ctx.dice.setManual(die1, die2);
 	int diceTotal = ctx.dice.getTotal();
+	this->canEndTurn = !ctx.dice.isDouble();
 
 	out << "Dice set to: " << die1 << " and " << die2 << "\n";
 

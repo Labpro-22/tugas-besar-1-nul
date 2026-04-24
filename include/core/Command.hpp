@@ -8,6 +8,8 @@ class TurnContext;
 
 class Command {
 private:
+    mutable bool canEndTurn = false;
+
     std::string rawInput;
     std::vector<std::string> tokens;
     mutable std::vector<const char*> argvCache;
