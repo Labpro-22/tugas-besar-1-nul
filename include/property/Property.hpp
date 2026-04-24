@@ -30,7 +30,7 @@ class Property {
     void setStatus(PropertyStatus status);
 
     Player* getOwner() const;
-    void setOwner(Player* owner);
+    void setOwner(Player* owner, TurnContext& ctx);
 
     void mortgage();
     void redeem();

@@ -34,7 +34,7 @@ protected:
 
 public:
     // apakah mau diimplement ato jadi buysell aja as a whole
-    void addProperty(Property* p);
+    void addProperty(Property* p, TurnContext& ctx);
     void removeProperty(Property& p); //make sure lgi type p
 
 // public:
@@ -66,8 +66,8 @@ public:
     // void onLanded(TurnContext& ctx);
 
     // properties
-    void buy(Property* p);
-    void buy(Property* p, int buyAmount);
+    void buy(Property* p, TurnContext& ctx);
+    void buy(Property* p, int buyAmount, TurnContext& ctx);
     bool upgrade(TurnContext& ctx);
     void sell(Property& p);
     void mortgage(Property* p);

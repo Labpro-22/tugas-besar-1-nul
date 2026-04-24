@@ -118,9 +118,39 @@ void StreetProperty::setMonopolized(bool monopolized) {
     monopolized_ = monopolized;
 }
 
-// Checks if this street is eligible for adding buildings.
+// Evaluates if this street is eligible for adding buildings based on Monopoly even-build rules.
 bool StreetProperty::canBuild() const {
-    return status_ == PropertyStatus::OWNED && monopolized_ && !isHotel_;
+    // cek monopolized, dimiliki, dan bukan hotel
+    if (status_ != PropertyStatus::OWNED || !monopolized_ || isHotel_ || owner_ == nullptr) {
+        return false;
+    }
+
+    int minBuildCount = 5; // 5 adalah batas hotel
+    bool groupHasHotel = false; // Perbaikan: Flag untuk melacak apakah sudah ada hotel di grup warna ini
+    for (Property* p : owner_->getProperties()) {
+        StreetProperty* sp = dynamic_cast<StreetProperty*>(p);
+        
+        // Cari properti dengan warna yang sama
+        if (sp != nullptr && sp->getColorGroup() == this->getColorGroup()) {
+            int currentCount = sp->hasHotel() ? 5 : sp->getBuildingCount();
+            if (currentCount < minBuildCount) {
+                minBuildCount = currentCount;
+            }
+            if (sp->hasHotel()) {
+                groupHasHotel = true;
+            }
+        }
+    }
+
+    // even build
+    if (buildingCount_ < 4) {
+        return buildingCount_ == minBuildCount;
+        
+    } else if (buildingCount_ == 4) {
+        return minBuildCount >= 4 && !groupHasHotel;
+    }
+
+    return false;
 }
 
 // Adds one house level up to level 4.
@@ -133,6 +163,7 @@ void StreetProperty::buildHouse() {
         throw InvalidGameStateException( // saran: ganti jadi tanyain mau upgrade jadi hotel atau ngga
             "House count already at max for non-hotel state");
     }
+    owner_->deductCash(housePrice_);
     ++buildingCount_;
 }
 
@@ -146,6 +177,7 @@ void StreetProperty::upgradeToHotel() {
         throw InvalidGameStateException(
             "Need exactly 4 houses before upgrading to hotel");
     }
+    owner_->deductCash(housePrice_);
     buildingCount_ = 5;
     isHotel_ = true;
 }
@@ -175,6 +207,7 @@ void StreetProperty::printStatus(TurnContext& ctx){
         stat = "MORTGAGED BY [" + getOwner()->getUsername() + "]";
     }
     std::cout << "| Status: " << stat << "\n";
+    std::cout << (getBuildingCount() > 4 ? "| Building: Hotel\n" : "| Number of houses: " + std::to_string(getBuildingCount()) + "\n");
     std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
     printRentTable();
     std::cout << "+=============================================+\n";

@@ -51,10 +51,10 @@ GoToJailTile::GoToJailTile(int idx, string cd, string nm)
 
 void GoToJailTile::onLanded(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
-    std::vector<std::unique_ptr<Tile>>& allTiles = ctx.board.getAllTiles();
+    std::vector<Tile*>& allTiles = ctx.board.getAllTiles();
     JailTile* targetJail = nullptr;
-    for (const auto& tile : allTiles) {
-        targetJail = dynamic_cast<JailTile*>(tile.get());
+    for (Tile* tile : allTiles) {
+        targetJail = dynamic_cast<JailTile*>(tile);
         if (targetJail != nullptr) {
             break; 
         }
@@ -120,10 +120,10 @@ void FestivalTile::onLanded(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
     cout << "\nChoose property to increase rent: \n";
     bool hasProp = false;
-    std::vector<std::unique_ptr<Tile>>& allTiles = ctx.board.getAllTiles();
+    std::vector<Tile*>& allTiles = ctx.board.getAllTiles();
     PropertyTile* proptile = nullptr;
-    for (const auto& tile : allTiles) {
-        proptile = dynamic_cast<PropertyTile*>(tile.get());
+    for (Tile* tile : allTiles) {
+        proptile = dynamic_cast<PropertyTile*>(tile);
         if (proptile != nullptr) {
             if (proptile->getProperty()->getOwner() == &ctx.currentPlayer){
                 proptile->getProperty()->printStatus(ctx);

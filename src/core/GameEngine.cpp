@@ -28,11 +28,20 @@ GameEngine::GameEngine(int size)
         , skillDeck(CardDeck<SkillCard>{})
         , status(GameStatus::NOT_STARTED)
         , activeConfig(Config{})
-        , players{std::vector<std::unique_ptr<Player>>{}}{ 
+        , players{std::vector<Player*>{}}{
     initializeCardDecks();
 }
 
-GameEngine::~GameEngine() = default;
+GameEngine::~GameEngine() {
+    clearPlayers();
+}
+
+void GameEngine::clearPlayers() {
+    for (Player* player : players) {
+        delete player;
+    }
+    players.clear();
+}
 
 void GameEngine::run() {
     this->printBanner();
@@ -71,6 +80,8 @@ void GameEngine::run() {
 }
 
 void GameEngine::loadGame() {
+    clearPlayers();
+
     std::cout << "[INFO] Loading Game...\n";
     std::cout << "Input configuration folder\n" ;
     std::cout << "> ";
@@ -123,13 +134,15 @@ void GameEngine::loadGame() {
         const int startingBalance = (this->activeConfig.misc.startingBalance > 0)
             ? this->activeConfig.misc.startingBalance
             : 1500;
-        players.push_back(std::make_unique<Player>(username, startingBalance));
+        players.push_back(new Player(username, startingBalance));
     }
     turnmgr.setTurnOrder(this->getPlayers());
 
 }
 
 void GameEngine::newGame() {
+    clearPlayers();
+
     std::cout << "[INFO] Generating default map\n\n";
     this->board.generateDefaultBoard();
 
@@ -152,21 +165,13 @@ void GameEngine::newGame() {
         std::string username;
         std::cout << "Enter player " << (i + 1) << "'s name: ";
         std::getline(std::cin, username);
-        players.push_back(std::make_unique<Player>(username, 1500)); // saldo awal 1500
+        players.push_back(new Player(username, 1500)); // saldo awal 1500
     }
     turnmgr.setTurnOrder(this->getPlayers());
 }
 
-// ini pake pointer, tapi gameengine pake unique_ptr,
-// jdi mesti cek lagi apakah smuany pen diubah jdi unique_ptr
-// ato ga
 std::vector<Player*> GameEngine::getPlayers() const {
-    std::vector<Player*> result;
-    result.reserve(players.size());
-    for (const auto& player : players) {
-        result.push_back(player.get());
-    }
-    return result;
+    return players;
 }
 
 

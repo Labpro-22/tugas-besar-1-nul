@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -32,7 +31,8 @@ private:
     GameStatus status;
     Config activeConfig;
 
-    std::vector<std::unique_ptr<Player>> players;
+    std::vector<Player*> players;
+    void clearPlayers();
 
 public:
     explicit GameEngine(int size);

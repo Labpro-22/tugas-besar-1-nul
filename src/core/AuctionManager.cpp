@@ -141,13 +141,13 @@ AuctionWinner AuctionManager::runAuction(Property& prop,
                 // reached, the last player asked must place a minimum valid
                 // bid.
                 if (winner == nullptr && consecutivePasses >= activeCount - 1) {
-                    highestBid = 0;
-                    winner = current;
-                    lastWinningBid_ = highestBid;
+                    highestBid = 1;
+                    // winner = current;
+                    // lastWinningBid_ = highestBid;
                     std::cout << "[LELANG] Tidak ada bid. "
                               << current->getUsername()
-                              << " wajib bid minimum 0.\n";
-                    return AuctionWinner(*winner, prop, 0);
+                              << " wajib bid minimum 1.\nLelang dilanjutkan...\n";
+                    // return AuctionWinner(*winner, prop, 0);
                 }
 
                 if (winner != nullptr && consecutivePasses >= activeCount - 1) {
