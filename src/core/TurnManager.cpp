@@ -1,10 +1,12 @@
 #include "core/TurnManager.hpp"
-#include "core/TurnContext.hpp"
 #include "core/Dice.hpp"
+#include "core/GameEngine.hpp"
+#include "core/TurnContext.hpp"
 #include "player/Player.hpp"
 
 TurnManager::TurnManager(int maxTurn)
-    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), turnOrder() {}
+    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1),
+      activePlayerIndex(-1), turnOrder() {}
 
 void TurnManager::setTurnOrder(const std::vector<Player*>& players) {
     this->turnOrder.clear();
@@ -18,7 +20,8 @@ void TurnManager::setTurnOrder(const std::vector<Player*>& players) {
 }
 
 void TurnManager::addPlayerToOrder(Player* player) {
-    if (player == nullptr) return;
+    if (player == nullptr)
+        return;
     this->turnOrder.push_back(player);
     if (this->activePlayerIndex < 0) {
         this->activePlayerIndex = 0;
@@ -31,30 +34,42 @@ void TurnManager::resetTurns() {
 }
 
 void TurnManager::nextTurn(TurnContext& ctx) {
-    if (this->turnOrder.empty()) return;
+    if (this->turnOrder.empty())
+        return;
 
     ctx.dice.reset();
-    this->activePlayerIndex = (this->activePlayerIndex + 1) % this->turnOrder.size();
+    this->activePlayerIndex =
+        (this->activePlayerIndex + 1) % this->turnOrder.size();
     this->currentTurn++;
     // ctx.currentPlayer = *this->turnOrder[this->activePlayerIndex];
 }
 
 Player* TurnManager::getCurrentPlayer() {
-    if (this->turnOrder.empty()) return nullptr;
+    if (this->turnOrder.empty())
+        return nullptr;
     return this->turnOrder[this->activePlayerIndex];
 }
 
-int TurnManager::getCurrentTurn() const { return this->currentTurn; }
+int TurnManager::getCurrentTurn() const {
+    return this->currentTurn;
+}
 
-int TurnManager::getMaxTurn() const { return this->maxTurn; }
+int TurnManager::getMaxTurn() const {
+    return this->maxTurn;
+}
 
-int TurnManager::getActivePlayerIndex() const { return this->activePlayerIndex; }
+int TurnManager::getActivePlayerIndex() const {
+    return this->activePlayerIndex;
+}
 
-const std::vector<Player*>& TurnManager::getTurnOrder() const { return this->turnOrder; }
+const std::vector<Player*>& TurnManager::getTurnOrder() const {
+    return this->turnOrder;
+}
 
-bool TurnManager::isGameOver() const { 
-    if (maxTurn < 0) return false; // nanti bikin kalo smua ud bangkrut
-    return this->currentTurn >= this->maxTurn; 
+bool TurnManager::isGameOver() const {
+    if (maxTurn < 0)
+        return false; // nanti bikin kalo smua ud bangkrut
+    return this->currentTurn >= this->maxTurn;
 }
 
 std::vector<Player*> TurnManager::determineWinner() {
@@ -63,7 +78,8 @@ std::vector<Player*> TurnManager::determineWinner() {
 
     // coba nnt siapa tau bs pake operator banding player
     for (Player* player : this->turnOrder) {
-        if (player == nullptr) continue;
+        if (player == nullptr)
+            continue;
         int wealth = player->getWealth();
         if (wealth > maxWealth) {
             winners.clear();

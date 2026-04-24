@@ -1,6 +1,6 @@
 #include "card/DiscountCard.hpp"
-#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
+#include "player/Player.hpp"
 #include "exception/InvalidGameStateException.hpp"
 
 DiscountCard::DiscountCard(int discount) 
@@ -12,8 +12,9 @@ DiscountCard::DiscountCard(int discount)
 }
 
 void DiscountCard::apply(TurnContext& ctx) {
-  Player& player = ctx.currentPlayer;
-  std::cout << "[MENGGUNAKAN] DiscountCard: Diskon " << discountPercent << "% aktif untuk 1 giliran.\n";
-    
-  player.setDiscountRate(discountPercent);
+    Player& player = ctx.currentPlayer;
+    std::cout << "[MENGGUNAKAN] DiscountCard: Diskon " << discountPercent
+              << "% aktif untuk 1 giliran.\n";
+
+    player.setDiscountRate(discountPercent);
 }

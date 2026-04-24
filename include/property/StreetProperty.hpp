@@ -15,9 +15,9 @@ class StreetProperty : public Property {
                    int housePrice,
                    int hotelPrice,
                    std::vector<int> rentTable,
-                  PropertyStatus ps = PropertyStatus::BANK,
-                  int festivalMul = 1,
-                int festivalDur = 0);
+                   PropertyStatus ps = PropertyStatus::BANK,
+                   int festivalMul = 1,
+                   int festivalDur = 0);
 
     int getRent(const TurnContext& ctx) const override;
     int sellToBank();
@@ -40,7 +40,6 @@ class StreetProperty : public Property {
     void buildHouse();
     void upgradeToHotel();
     void demolish();
-
 
     void printStatus(TurnContext& ctx) override;
     void printRentTable();

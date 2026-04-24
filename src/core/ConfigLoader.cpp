@@ -278,10 +278,12 @@ MiscConfig ConfigLoader::loadMisc(const std::string& file) const {
     }
 }
 
-std::vector<ActionTileData> ConfigLoader::loadActionTiles(const std::string& file) const {
+std::vector<ActionTileData>
+ConfigLoader::loadActionTiles(const std::string& file) const {
     std::ifstream in(file);
     if (!in.is_open()) {
-        throw ConfigException("Failed to open action tiles config file: " + file);
+        throw ConfigException("Failed to open action tiles config file: " +
+                              file);
     }
 
     std::vector<ActionTileData> result;
@@ -304,7 +306,8 @@ std::vector<ActionTileData> ConfigLoader::loadActionTiles(const std::string& fil
         if (tokens.size() < 5) {
             throw ConfigException("Invalid action tile row at line " +
                                   std::to_string(lineNumber) +
-                                  ": expected at least 5 columns (ID KODE NAMA JENIS_PETAK WARNA)");
+                                  ": expected at least 5 columns (ID KODE NAMA "
+                                  "JENIS_PETAK WARNA)");
         }
 
         ActionTileData tile;
@@ -312,10 +315,11 @@ std::vector<ActionTileData> ConfigLoader::loadActionTiles(const std::string& fil
         // Parse ID
         if (!tryParseInt(tokens[0], tile.id)) {
             if (tokens[0] == "ID") {
-                continue;  // Skip header row
+                continue; // Skip header row
             }
             throw ConfigException("Invalid action tile ID at line " +
-                                  std::to_string(lineNumber) + ": '" + tokens[0] + "'");
+                                  std::to_string(lineNumber) + ": '" +
+                                  tokens[0] + "'");
         }
 
         tile.code = tokens[1];

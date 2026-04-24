@@ -5,7 +5,7 @@
 class TurnContext;
 
 class DemolitionCard : public SkillCard {
-public:
+  public:
     DemolitionCard();
 
     void apply(TurnContext& ctx) override;

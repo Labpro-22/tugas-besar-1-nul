@@ -39,7 +39,7 @@
 // private:
 //     // Configuration
 //     Config config;
-    
+
 //     // Game state
 //     GameStatus status;
 //     std::vector<Player*> players;
@@ -47,92 +47,95 @@
 //     int currentTurnNumber;
 //     int currentPlayerIndex;
 //     Board* board;
-    
+
 //     // Components
 //     Dice dice;
 //     AuctionManager auctionManager;
 //     TransactionLogger logger;
 //     TurnContext* currentContext;
-    
+
 //     // Double tracking
 //     int consecutiveDoubles;
-    
+
 //     // Skill card deck
 //     std::vector<SkillCard*> skillDeck;
 //     std::vector<SkillCard*> skillDiscardPile;
-    
+
 //     // Tiles
 //     std::vector<Tile*> tiles;
 
 // public:
 //     GameManager();
 //     ~GameManager();
-    
+
 //     // Initialization
 //     void initialize(Config cfg);
-//     void setupNewGame(int numPlayers, const std::vector<std::string>& usernames);
-    
+//     void setupNewGame(int numPlayers, const std::vector<std::string>&
+//     usernames);
+
 //     /**
 //      * Setup new game with bot players
 //      * @param humanPlayerNames Names of human players
 //      * @param numBots Number of bot players to add
-//      * @param botDifficulty Difficulty level for bots (1=Easy, 2=Medium, 3=Hard)
+//      * @param botDifficulty Difficulty level for bots (1=Easy, 2=Medium,
+//      3=Hard)
 //      */
-//     void setupNewGameWithBots(const std::vector<std::string>& humanPlayerNames, 
+//     void setupNewGameWithBots(const std::vector<std::string>&
+//     humanPlayerNames,
 //                               int numBots, int botDifficulty);
-//     void setupLoadedGame(const std::vector<std::string>& usernames, 
+//     void setupLoadedGame(const std::vector<std::string>& usernames,
 //                          const std::vector<int>& balances,
 //                          const std::vector<int>& positions,
 //                          const std::vector<std::string>& statuses,
 //                          int currentTurn, int currentPlayerIdx);
-    
+
 //     // Game flow
 //     void startGame();
 //     void runGameLoop();
 //     void processTurn();
 //     bool nextTurn();
 //     void endGame();
-    
+
 //     // Dice operations
 //     void rollDice();
 //     void setManualDice(int d1, int d2);
 //     int getLastDiceTotal() const;
 //     bool wasLastRollDouble() const;
-    
+
 //     // Player movement
 //     void moveCurrentPlayer(int steps);
 //     void movePlayerToTile(int tileIndex);
-    
+
 //     // Property operations
 //     void handlePropertyLanding(Property* prop);
 //     void buyProperty(Property* prop);
 //     void auctionProperty(Property* prop);
 //     void mortgageProperty(Property* prop);
 //     void redeemProperty(Property* prop);
-    
+
 //     // Building operations
 //     void buildHouse(const std::string& propertyCode);
 //     void sellHouse(const std::string& propertyCode);
 //     void upgradeToHotel(const std::string& propertyCode);
-    
+
 //     // Skill card operations
 //     void drawSkillCard();
 //     void useSkillCard(int cardIndex);
 //     void discardSkillCard(int cardIndex);
-    
+
 //     // Jail operations
 //     void handleJailTurn();
 //     void payJailFine();
 //     void useJailCard();
 //     void tryJailRoll();
-    
+
 //     // Bankruptcy
 //     void handleBankruptcy(Player* player, int debtAmount, Player* creditor);
-    
+
 //     // Save/Load
 //     void saveGame(const std::string& filename);
 //     void loadGame(const std::string& filename);
-    
+
 //     // Getters
 //     GameStatus getStatus() const;
 //     Player* getCurrentPlayer() const;
@@ -142,18 +145,18 @@
 //     const std::vector<Player*>& getAllPlayers() const;
 //     TransactionLogger& getLogger();
 //     Config& getConfig();
-    
+
 //     // Display
 //     void printBoard();
 //     void printProperty(const std::string& code);
 //     void printPlayerProperties();
 //     void printLog(int count = 0);
-    
+
 //     // Helper methods
 //     void distributeSkillCards();
 //     void checkGameEnd();
 //     void declareWinner();
-    
+
 // private:
 //     void initializeBoard();
 //     void buildTiles();

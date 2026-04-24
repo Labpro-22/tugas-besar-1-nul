@@ -12,9 +12,10 @@ struct LiquidationOption {
 
     Property* property;
     Type type;
-    int cashValue;  
+    int cashValue;
 
-    LiquidationOption(Property* prop, Type t, int value): property(prop), type(t), cashValue(value) {}
+    LiquidationOption(Property* prop, Type t, int value)
+        : property(prop), type(t), cashValue(value) {}
 };
 
 class BankruptcyManager {

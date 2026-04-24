@@ -9,7 +9,8 @@
 #include <iostream>
 #include <limits>
 
-ChanceCard::ChanceCard(std::string desc, ChanceType t) : Card(std::move(desc)), type(t) {}
+ChanceCard::ChanceCard(std::string desc, ChanceType t)
+    : Card(std::move(desc)), type(t) {}
 
 void ChanceCard::execute(Player* player, TurnContext& ctx) {
     std::cout << "[Kartu Kesempatan] " << description << "\n";

@@ -1,8 +1,8 @@
 #include "card/MoveCard.hpp"
-#include "player/Player.hpp"
 #include "core/TurnContext.hpp"
 #include "tile/Tile.hpp"
 #include "board/Board.hpp"
+#include "player/Player.hpp"
 #include "exception/InvalidGameStateException.hpp"
 
 MoveCard::MoveCard(int stp) : SkillCard("MoveCard: Maju " + std::to_string(stp) + " Petak", 0), steps(stp) {

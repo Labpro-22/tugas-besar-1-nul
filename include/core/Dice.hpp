@@ -4,13 +4,13 @@
 #include <ctime>
 
 class Dice {
-private:
+  private:
     int die1;
     int die2;
     int doubleCount;
     bool canRoll;
 
-public:
+  public:
     explicit Dice() : die1(0), die2(0), doubleCount(0), canRoll(true) {};
     ~Dice() = default;
 

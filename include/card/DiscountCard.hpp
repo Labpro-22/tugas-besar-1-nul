@@ -5,10 +5,10 @@
 class TurnContext;
 
 class DiscountCard : public SkillCard {
-private:
+  private:
     int discountPercent;
 
-public:
+  public:
     DiscountCard(int discount);
 
     void apply(TurnContext& ctx) override;

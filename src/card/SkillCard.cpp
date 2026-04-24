@@ -1,19 +1,21 @@
 #include "card/SkillCard.hpp"
-#include "player/Player.hpp"
 #include "exception/InvalidGameStateException.hpp"
 #include "exception/CardSlotFullException.hpp"
 
 #include <iostream>
 #include <limits>
+#include "player/Player.hpp"
 
-SkillCard::SkillCard(std::string desc, int duration) : Card(std::move(desc)), remainingDuration(duration) {}
+SkillCard::SkillCard(std::string desc, int duration)
+    : Card(std::move(desc)), remainingDuration(duration) {}
 
 int SkillCard::getDuration() const {
     return remainingDuration;
 }
 
 void SkillCard::decreaseDuration() {
-    if (remainingDuration > 0) remainingDuration--;
+    if (remainingDuration > 0)
+        remainingDuration--;
 }
 
 void SkillCard::execute(Player* player, TurnContext& ctx) {
