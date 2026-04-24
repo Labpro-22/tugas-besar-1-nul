@@ -5,7 +5,7 @@
 
 #include "property/Property.hpp"
 
-class Player;
+class TurnContext;
 
 struct LiquidationOption {
     enum Type { SELL, MORTGAGE };
@@ -20,10 +20,10 @@ struct LiquidationOption {
 class BankruptcyManager {
   public:
 
-    static int calculateMaxLiquidationFunds(Player* player);
-    static int calculateSellValue(Property* property);
-    static bool canCoverDebt(Player* player, int debtAmount);
-    static std::vector<LiquidationOption> getAvailableLiquidationOptions(Player* player);
-    static void performForcedLiquidation(Player* player, int debtAmount);
-    static void declareBankrupt(Player* player);
+    static int calculateMaxLiquidationFunds(TurnContext& ctx);
+    static int calculateSellValue(TurnContext& ctx, Property* property);
+    static bool canCoverDebt(TurnContext& ctx, int debtAmount);
+    static std::vector<LiquidationOption> getAvailableLiquidationOptions(TurnContext& ctx);
+    static void performForcedLiquidation(TurnContext& ctx, int debtAmount);
+    static void declareBankrupt(TurnContext& ctx);
 };
