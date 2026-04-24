@@ -28,19 +28,7 @@ GameEngine::GameEngine(int size)
         , skillDeck(CardDeck<SkillCard>{})
         , status(GameStatus::NOT_STARTED)
         , activeConfig(Config{})
-        , players{std::vector<std::unique_ptr<Player>>{}} {
-
-    skillDeck.addCard(new MoveCard(1));
-    skillDeck.addCard(new MoveCard(2));
-    skillDeck.addCard(new MoveCard(3));
-    skillDeck.addCard(new DiscountCard(25));
-    skillDeck.addCard(new DiscountCard(50));
-    skillDeck.addCard(new ShieldCard());
-    skillDeck.addCard(new TeleportCard(0));
-    skillDeck.addCard(new LassoCard());
-    skillDeck.addCard(new DemolitionCard());
-    skillDeck.shuffle();
-        , players{std::vector<std::unique_ptr<Player>>{}} {
+        , players{std::vector<std::unique_ptr<Player>>{}}{ 
     initializeCardDecks();
 }
 
@@ -281,6 +269,8 @@ void GameEngine::giveRandomSkillCardTo(Player& player) {
     }
 
     player.drawSCard(drawn);
+}
+
 void GameEngine::initializeCardDecks() {
     // Initialize Chance Cards (Kesempatan)
     chanceDeck.addCard(new ChanceCard("Pergi ke stasiun terdekat", ChanceType::GO_TO_NEAREST_STATION));
