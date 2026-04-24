@@ -36,3 +36,13 @@ void TurnContext::returnChanceCard(ChanceCard* card) {
 void TurnContext::returnCommunityChestCard(CommunityChestCard* card) {
     gameEngine.returnCommunityChestCard(card);
 }
+
+bool TurnContext::canEndTurn() const {
+    // Jika pemain di penjara, harus sudah melakukan aksi (bayar/lempar dadu)
+    if (currentPlayer.isInJail()) {
+        return hasTakenJailAction;
+    }
+
+    // Jika tidak di penjara, harus sudah lempar dadu
+    return hasRolled;
+}
