@@ -9,6 +9,7 @@
 #include "exception/InvalidGameStateException.hpp"
 #include "property/Property.hpp"
 #include "property/RailroadProperty.hpp"
+#include "property/StreetProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "board/Board.hpp"
 #include "core/GameEngine.hpp"
@@ -147,6 +148,64 @@ void Player::buy(Property* p, int buyAmount) {
     }
     this->deductCash(buyAmount);
     this->addProperty(p);
+}
+
+bool Player::upgrade(TurnContext& ctx){
+    vector<StreetProperty*>* street_props = nullptr;
+    for (Property* prop : properties){
+        StreetProperty* sp = dynamic_cast<StreetProperty*> (prop);
+        if (sp != nullptr){
+            if (sp->isMonopolized()){
+                street_props->push_back(sp);
+            }
+        }
+    }
+    if (street_props == nullptr){
+        std::cout << "Tidak ada properti untuk di-upgrade, silahkan pilih opsi lain\n";
+        return false;
+    } else{
+        std::cout << "Properti yang sudah dimonopoli: \n";
+        for (StreetProperty* sprop : *street_props){
+            sprop->printStatus(ctx);
+        }
+
+        std::cout << "Properti yang dapat di-upgrade: \n";
+        int ctr = 1;
+        for (StreetProperty* sprop : *street_props){
+            if (sprop->canBuild()){
+                cout << ctr << ". " << sprop->getCode() << "\n";
+            }
+            ctr++;
+        }
+        if (ctr == 0){
+            cout << "Tidak ada properti yang dapat diupgrade\n";
+            return false;
+        } else{
+            cout << "Masukkan kode properti yang ingin diupgrade: ";
+            string cd;
+            while (true){
+                cin >> cd;
+                for (StreetProperty* sprop : *street_props){
+                    if (cd == sprop->getCode()){
+                        if (!sprop->canBuild()){
+                            cout << "Properti ini tidak bisa diupgrade\n";
+                            continue;
+                        }
+                        if (sprop->getBuildingCount() < 4){
+                            sprop->buildHouse();
+                            return true;
+                        } else{
+                            sprop->upgradeToHotel();
+                            return true;
+                        }
+                    }
+                }
+                cout << "Properti tidak ditemukan. Silahkan masukkan kode properti lain.\n";
+            }
+
+        }
+    }
+
 }
 
 void Player::sell(Property& p) { 

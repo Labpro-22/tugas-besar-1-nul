@@ -172,6 +172,7 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	else if (commandName == "PROFILE") execProfile(ctx, out);
 	else if (commandName == "USE_SKILL") execUseSkill(ctx, out);
 	else if (commandName == "HELP") execHelp(out);
+	else if (commandName == "BUILD") execUpgrade(ctx, out);
 	else out << "[WARN] Unrecognized command: " << commandName << "\n";
 	return false;
 }
@@ -500,7 +501,7 @@ void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execUpgrade(TurnContext& ctx, std::ostream& out) const {
-
+	ctx.currentPlayer.upgrade(ctx);
 }
 
 void Command::execSave(TurnContext& ctx, std::ostream& out) const {

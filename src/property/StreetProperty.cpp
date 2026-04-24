@@ -130,7 +130,7 @@ void StreetProperty::buildHouse() {
             "Cannot build house on this street property");
     }
     if (buildingCount_ >= 4) {
-        throw InvalidGameStateException(
+        throw InvalidGameStateException( // saran: ganti jadi tanyain mau upgrade jadi hotel atau ngga
             "House count already at max for non-hotel state");
     }
     ++buildingCount_;

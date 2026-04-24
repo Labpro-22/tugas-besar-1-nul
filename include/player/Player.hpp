@@ -68,6 +68,7 @@ public:
     // properties
     void buy(Property* p);
     void buy(Property* p, int buyAmount);
+    bool upgrade(TurnContext& ctx);
     void sell(Property& p);
     void mortgage(Property* p);
 
