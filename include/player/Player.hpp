@@ -16,9 +16,6 @@ enum class PlayerStatus {
 
 class Player {
 protected:
-    /* misc */
-    // const int* boardSizeSource; // non-owning pointer (ngikut RAII krn ga manage lgsg)
-
     /* general */
     std::string username;
     PlayerStatus status;
@@ -29,7 +26,7 @@ protected:
     /* skills */
     bool usedSkillThisTurn;
     int discountRate; // DiscountCard
-    bool isShieldActive; // ShieldCard
+    bool hasShield; // ShieldCard
 
     /* containers */
     std::vector<Property*> properties;
@@ -50,6 +47,7 @@ public:
     PlayerStatus getStatus() const;
     int getBalance() const;
     bool isInJail() const;
+    bool isShieldActive() const;
     int getDiscountRate() const;
     int getPosition() const;
     int getPropertiesAmount() const;
@@ -84,6 +82,7 @@ public:
     void useSCard(int idx, TurnContext& ctx);
     void setDiscountRate(int discount);
     void activateShield();
+    void deactivateShield();
 
     // jail
     void enterJail();

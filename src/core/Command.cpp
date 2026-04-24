@@ -78,7 +78,7 @@ std::pair<std::string, std::string> tileColorCodeAndAnsi(Tile* tile) {
 			const std::string group = toUpperAscii(street->getColorGroup());
 			if (group == "COKLAT") return {"CK", "\033[33m"};
 			if (group == "BIRU MUDA") return {"BM", "\033[94m"};
-			if (group == "PINK") return {"PK", "\033[95m"};
+			if (group == "MERAH MUDA") return {"PK", "\033[95m"};
 			if (group == "ORANGE") return {"OR", "\033[91m"};
 			if (group == "MERAH") return {"MR", "\033[31m"};
 			if (group == "KUNING") return {"KN", "\033[93m"};
@@ -168,6 +168,9 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	else if (commandName == "PRINT_BOARD" || commandName == "CETAK_PAPAN") execPrintBoard(ctx, out);
 	else if (commandName == "PRINT_PROP_CERT") execPrintCert(ctx, out);
 	else if (commandName == "PRINT_PROPERTY") execPrintProperty(ctx, out);
+	else if (commandName == "MORTGAGE") execMortgage(ctx, out);
+	else if (commandName == "PROFILE") execProfile(ctx, out);
+	else if (commandName == "USE_SKILL") execUseSkill(ctx, out);
 	else if (commandName == "HELP") execHelp(out);
 	else out << "[WARN] Unrecognized command: " << commandName << "\n";
 	return false;
@@ -197,6 +200,8 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 
 	out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
 	baseTile->onLanded(ctx);
+
+	if (ctx.currentPlayer.isShieldActive()) ctx.currentPlayer.deactivateShield();
 }
 
 void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
@@ -217,6 +222,21 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 
 	out << "Dice set to: " << die1 << " and " << die2 << "\n"
 		<< "Result = " << std::to_string(diceTotal) << "\n";
+
+	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
+		<< std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
+	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
+	
+	int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
+	Tile* baseTile = ctx.board.getTile(nextPos);
+	if (baseTile == nullptr) {
+		throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(nextPos));
+	}
+
+	out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
+	baseTile->onLanded(ctx);
+
+	if (ctx.currentPlayer.isShieldActive()) ctx.currentPlayer.deactivateShield();
 }
 
 void Command::execPrintCert(TurnContext& ctx, std::ostream& out) const {
@@ -376,8 +396,102 @@ void Command::execPrintProperty(TurnContext& ctx, std::ostream& out) const {
 
 }
 
-void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
+void Command::execProfile(TurnContext& ctx, std::ostream& out) const {
+	Player& currentPlayer = ctx.currentPlayer;
+	const auto& properties = currentPlayer.getProperties();
 
+	int totalHousesOwned = 0;
+	int totalHotelsOwned = 0;
+
+	for (Property* property : properties) {
+		if (property == nullptr) {
+			continue;
+		}
+
+		StreetProperty* streetProperty = dynamic_cast<StreetProperty*>(property);
+		if (streetProperty == nullptr) {
+			continue;
+		}
+
+		if (streetProperty->hasHotel()) {
+			++totalHotelsOwned;
+		} else {
+			totalHousesOwned += streetProperty->getBuildingCount();
+		}
+	}
+
+	out << "=== PLAYER PROFILE ===\n";
+	out << "Name                   : " << currentPlayer.getUsername() << "\n";
+	out << "Balance                : M" << formatMoneyId(currentPlayer.getBalance()) << "\n";
+	out << "Total properties owned : " << currentPlayer.getPropertiesAmount() << "\n";
+	out << "Total houses owned     : " << totalHousesOwned << "\n";
+	out << "Total hotels owned     : " << totalHotelsOwned << "\n";
+}
+
+void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
+	Player& currentPlayer = ctx.currentPlayer;
+	if (currentPlayer.getPropertiesAmount() == 0) {
+		out << "[WARN] You do not own any properties to mortgage.\n";
+		return;
+	}
+
+	std::string propertyCode;
+	if (argc() >= 2 && argv(1) != nullptr) {
+		propertyCode = argv(1);
+	} else {
+		out << "[COMMAND] Input property code to mortgage: ";
+		std::getline(std::cin, propertyCode);
+	}
+
+	if (propertyCode.empty()) {
+		out << "[WARN] Property code cannot be empty.\n";
+		return;
+	}
+
+	Tile* tile = ctx.board.getTileByCode(propertyCode);
+	if (tile == nullptr) {
+		out << "[WARN] Property with code '" << propertyCode << "' not found.\n";
+		return;
+	}
+
+	PropertyTile* propertyTile = dynamic_cast<PropertyTile*>(tile);
+	if (propertyTile == nullptr) {
+		out << "[WARN] Tile with code '" << propertyCode << "' is not a property tile.\n";
+		return;
+	}
+
+	Property* tileProperty = propertyTile->getProperty();
+	if (tileProperty == nullptr) {
+		throw InvalidGameStateException("Property data is unavailable for tile code: " + propertyCode);
+	}
+
+	const auto& ownedProperties = currentPlayer.getProperties();
+	auto ownedIt = std::find(ownedProperties.begin(), ownedProperties.end(), tileProperty);
+	if (ownedIt == ownedProperties.end()) {
+		out << "[WARN] You do not own property '" << tileProperty->getName() << "'.\n";
+		return;
+	}
+
+	if (tileProperty->getOwner() != &currentPlayer) {
+		throw InvalidGameStateException(
+			"Ownership mismatch detected: player property list and tile owner are inconsistent for " +
+			tileProperty->getCode());
+	}
+
+	if (tileProperty->getStatus() == PropertyStatus::MORTGAGED) {
+		out << "[WARN] Property '" << tileProperty->getName() << "' is already mortgaged.\n";
+		return;
+	}
+
+	currentPlayer.mortgage(tileProperty);
+
+	if (tileProperty->getStatus() != PropertyStatus::MORTGAGED) {
+		throw InvalidGameStateException(
+			"Mortgage status update failed for property code: " + tileProperty->getCode());
+	}
+
+	out << "[INFO] Property '" << tileProperty->getName() << "' has been mortgaged.\n";
+	out << "[INFO] You received M" << formatMoneyId(tileProperty->getMortgageValue()) << ".\n";
 }
 
 void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
@@ -401,7 +515,32 @@ void Command::execPrintLog(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {
-	
+	out << "[COMMAND] Checking skill cards in hand...\n";
+	if (ctx.currentPlayer.getHandsAmount() == 0) {
+		out << "No cards found in hand\n";
+		return;
+	}
+
+	ctx.currentPlayer.showHands();
+
+	std::string selectedIndexText;
+	if (argc() >= 2 && argv(1) != nullptr) {
+		selectedIndexText = argv(1);
+	} else {
+		out << "Enter your desired skill card's index\n";
+		out << "> ";
+		std::getline(std::cin, selectedIndexText);
+	}
+
+	int selectedIndex = 0;
+	try {
+		selectedIndex = std::stoi(selectedIndexText);
+	} catch (const std::exception&) {
+		throw InvalidGameStateException("Skill card index must be a valid integer");
+	}
+
+	ctx.currentPlayer.useSCard(selectedIndex, ctx);
+	out << "[INFO] Skill card index " << selectedIndex << " used successfully\n";	
 }
 
 void Command::execHelp(std::ostream& out) const {
@@ -542,19 +681,14 @@ void Command::execPrintBoard(TurnContext& ctx, std::ostream& out) const {
 		: ("TURN " + std::to_string(currentTurnHuman) + " / INF");
 
 	std::vector<std::string> centerLines = {
-		"==================================",
 		"||          NIMONSPOLI          ||",
-		"==================================",
 		"",
 		turnText,
-		"",
-		"----------------------------------",
 		"LEGENDA KEPEMILIKAN & STATUS",
 		"P1-P4 : Properti milik pemain",
 		"^     : Rumah",
 		"*     : Hotel",
 		"(1)   : Bidak pemain",
-		"----------------------------------",
 		"KODE WARNA:",
 		"[CK]=Coklat  [MR]=Merah",
 		"[BM]=Biru Muda [KN]=Kuning",

@@ -64,9 +64,14 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx){
 
 void StreetTile::triggerRentPayment(TurnContext& ctx){
     Player& player = ctx.currentPlayer;
-    cout << "[" << player.getUsername() << "] mendarat di [" << getProperty()->getName() << "] milik [" << getProperty()->getOwner()->getUsername() << "].\n\n";
+    if (player.isShieldActive()) {
+        cout << "You have an active shield! No rent paid\n";
+        return;
+    }
+
+    cout << "You landed in [" << getProperty()->getName() << "] owned by [" << getProperty()->getOwner()->getUsername() << "].\n\n";
     getProperty()->printStatus(ctx);
-    cout << "Uang anda tersisa: <M" << player.getBalance() - getProperty()->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player
+    cout << "Money left: <M" << player.getBalance() - getProperty()->getRent(ctx) << ">.\n\n"; //nanti implement dari player, biar bisa kurangi balance player
 }
 
 void RailroadTile::onLanded(TurnContext& ctx){

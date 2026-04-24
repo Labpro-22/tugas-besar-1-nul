@@ -10,6 +10,7 @@
 #include "card/ChanceCard.hpp"
 #include "card/CommunityChestCard.hpp"
 #include "card/SkillCard.hpp"
+#include "config/Config.hpp"
 
 class Player;
 class TurnContext;
@@ -29,6 +30,7 @@ private:
     CardDeck<CommunityChestCard> communityDeck;
     CardDeck<SkillCard> skillDeck;
     GameStatus status;
+    Config activeConfig;
 
     std::vector<std::unique_ptr<Player>> players;
 
@@ -50,6 +52,9 @@ public:
     void displayPlayers() const;
     std::vector<Player*> getPlayers() const;
 
+    int getGoSalary() const;
+    int getStartingBalance() const;
+    void giveRandomSkillCardTo(Player& player);
     // Card deck methods
     void initializeCardDecks();
     ChanceCard* drawChanceCard();
