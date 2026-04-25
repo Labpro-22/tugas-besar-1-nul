@@ -21,6 +21,10 @@ if(PROJECT_SOURCES STREQUAL "")
     message(FATAL_ERROR "No source files found in ${SRC_DIR}")
 endif()
 
+# Find Raylib
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(RAYLIB REQUIRED raylib)
+
 set(MAIN_SOURCE "${SRC_DIR}/main.cpp")
 set(CORE_SOURCES ${PROJECT_SOURCES})
 list(REMOVE_ITEM CORE_SOURCES "${MAIN_SOURCE}")
@@ -30,12 +34,18 @@ add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         "${CMAKE_SOURCE_DIR}/include"
+        ${RAYLIB_INCLUDE_DIRS}
 )
 
 target_compile_options(${PROJECT_NAME}
     PRIVATE
         -Wall
         -Wextra
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        ${RAYLIB_LIBRARIES}
 )
 
 if(TEST_SOURCES)
@@ -53,12 +63,18 @@ if(TEST_SOURCES)
         target_include_directories(${TEST_TARGET}
             PRIVATE
                 "${CMAKE_SOURCE_DIR}/include"
+                ${RAYLIB_INCLUDE_DIRS}
         )
 
         target_compile_options(${TEST_TARGET}
             PRIVATE
                 -Wall
                 -Wextra
+        )
+
+        target_link_libraries(${TEST_TARGET}
+            PRIVATE
+                ${RAYLIB_LIBRARIES}
         )
 
         list(APPEND ALL_TEST_TARGETS ${TEST_TARGET})
