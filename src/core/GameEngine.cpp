@@ -37,6 +37,7 @@
 
 #include <limits>
 #include <fstream>
+#include <cstring>
 #include <map>
 #include <cstdlib>
 #include <ctime>
@@ -109,6 +110,48 @@ void GameEngine::run() {
 }
 
 #if NIMONSPOLI_HAS_RAYLIB
+static void DrawCenteredText(const char* text, int y, int fontSize, Color color) {
+    int sw = GetScreenWidth();
+    int textW = MeasureText(text, fontSize);
+    DrawText(text, (sw - textW) / 2, y, fontSize, color);
+}
+
+static void DrawWrappedText(const std::string& text, int x, int y, int maxWidth, int fontSize, Color color, int lineHeight) {
+    std::string currentLine;
+    std::string word;
+    int currentY = y;
+
+    for (size_t i = 0; i <= text.size(); ++i) {
+        char ch = (i < text.size()) ? text[i] : ' ';
+        if (ch == ' ' || ch == '\n' || i == text.size()) {
+            if (!word.empty()) {
+                int lineW = MeasureText((currentLine + " " + word).c_str(), fontSize);
+                if (!currentLine.empty() && lineW > maxWidth) {
+                    DrawText(currentLine.c_str(), x, currentY, fontSize, color);
+                    currentY += lineHeight;
+                    currentLine = word;
+                } else {
+                    if (!currentLine.empty()) currentLine += " ";
+                    currentLine += word;
+                }
+                word.clear();
+            }
+            if (ch == '\n') {
+                if (!currentLine.empty()) {
+                    DrawText(currentLine.c_str(), x, currentY, fontSize, color);
+                    currentY += lineHeight;
+                    currentLine.clear();
+                }
+            }
+        } else {
+            word += ch;
+        }
+    }
+    if (!currentLine.empty()) {
+        DrawText(currentLine.c_str(), x, currentY, fontSize, color);
+    }
+}
+
 static void RenderSplashScreen(GUIRenderer& /*renderer*/, const char* message) {
     BeginDrawing();
     ClearBackground(Color{25, 25, 35, 255});
@@ -151,7 +194,8 @@ static void RenderSplashScreen(GUIRenderer& /*renderer*/, const char* message) {
 
 static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
                             TurnManager& turnmgr, Board& board,
-                            Dice& gameDice, int& animatingDiceFrames) {
+                            Dice& gameDice, int& animatingDiceFrames,
+                            bool showHelpOverlay = false) {
     Player* currentPlayer = turnmgr.getCurrentPlayer();
     if (currentPlayer == nullptr) return;
 
@@ -213,13 +257,47 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
     DrawText("[R] Roll  [E] End Turn  [P] Profile  [B] Build  [M] Mortgage  [S] Save  [F12] Screenshot  [ESC] Exit",
              20, GetScreenHeight() - 55, 12, GRAY);
 
+    // Draw in-game help overlay if requested
+    if (showHelpOverlay) {
+        int sw = GetScreenWidth();
+        int sh = GetScreenHeight();
+        DrawRectangle(0, 0, sw, sh, Color{0, 0, 0, 180});
+        DrawRectangle(sw / 2 - 300, 60, 600, sh - 120, Color{30, 30, 42, 240});
+        DrawRectangleLinesEx(Rectangle{sw / 2.0f - 300, 60.0f, 600.0f, sh - 120.0f}, 2.0f, Color{100, 100, 120, 255});
+        DrawCenteredText("P A N D U A N", 80, 32, Color{255, 200, 50, 255});
+        std::string helpText =
+            "Nimonspoli adalah permainan papan strategi yang terinspirasi dari Monopoly. "
+            "Pemain bergerak mengelilingi papan, membeli properti, membangun rumah/hotel, dan memungut sewa.\n\n"
+            "TUJUAN:\nMenjadi pemain terkaya atau satu-satunya yang tersisa setelah pemain lain bangkrut.\n\n"
+            "MODE BOT:\n- Anda bisa bermain melawan 1-3 bot/komputer\n- Bot akan mengambil keputusan secara otomatis\n\n"
+            "PERINTAH GERAK:\n"
+            "- ROLL_DICE    : Lempar dadu untuk bergerak\n"
+            "- SET_DICE X Y : Atur dadu manual (contoh: SET_DICE 3 5)\n"
+            "- END_TURN     : Akhiri giliran (wajib lempar dadu dulu!)\n\n"
+            "PERINTAH INFO:\n"
+            "- PRINT_BOARD    : Lihat papan permainan\n"
+            "- PRINT_PROPERTY : Lihat properti Anda\n"
+            "- PRINT_PROP_CERT [KODE] : Lihat akta properti\n"
+            "- PROFILE        : Lihat profil pemain\n"
+            "- PRINT_LOG      : Lihat log transaksi\n\n"
+            "PERINTAH AKSI:\n"
+            "- MORTGAGE  : Gadai properti ke bank\n"
+            "- BUILD     : Bangun rumah/hotel di properti\n"
+            "- USE_SKILL : Gunakan kartu kemampuan\n\n"
+            "PERINTAH LAIN:\n"
+            "- SAVE : Simpan permainan\n"
+            "- HELP : Tampilkan panduan ini";
+        DrawWrappedText(helpText, sw / 2 - 280, 120, 560, 14, LIGHTGRAY, 20);
+        DrawCenteredText("Press ESC or H to close", sh - 100, 16, GRAY);
+    }
+
     EndDrawing();
 }
 
 static bool HandleGameInput(GUIRenderer& renderer, GameEngine& engine,
                             TurnManager& turnmgr, Board& board,
                             Dice& gameDice, int& animatingDiceFrames,
-                            Command& cmd, bool& goNext) {
+                            Command& cmd, bool& goNext, bool& showHelp) {
     auto snapshot = renderer.InspectBoardDisplay();
     float controlsX = snapshot.rightPanel.x + 15;
     float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 240;
@@ -282,8 +360,7 @@ static bool HandleGameInput(GUIRenderer& renderer, GameEngine& engine,
         catch (const std::exception& exc) { std::cout << exc.what() << "\n"; }
     }
     else if (IsKeyPressed(KEY_H) || helpClicked) {
-        try { cmd.parse("HELP"); cmd.dispatch(ctx); }
-        catch (const std::exception& exc) { std::cout << exc.what() << "\n"; }
+        showHelp = true;
     }
     else if (IsKeyPressed(KEY_F12)) {
         TakeScreenshot("nimonspoli_screenshot.png");
@@ -294,6 +371,422 @@ static bool HandleGameInput(GUIRenderer& renderer, GameEngine& engine,
     }
 
     return false;
+}
+#endif
+
+#if NIMONSPOLI_HAS_RAYLIB
+enum class GUIScreen {
+    MAIN_MENU,
+    NEW_GAME,
+    LOAD_GAME,
+    HELP_SCREEN,
+    GAME
+};
+
+struct GUITextInput {
+    std::string text;
+    bool active = false;
+    float backspaceHoldTime = 0.0f;
+
+    void Update() {
+        if (!active) return;
+
+        int key = GetCharPressed();
+        while (key > 0) {
+            if (key >= 32 && key <= 125) {
+                text.push_back(static_cast<char>(key));
+            }
+            key = GetCharPressed();
+        }
+
+        if (IsKeyPressed(KEY_BACKSPACE)) {
+            if (!text.empty()) text.pop_back();
+            backspaceHoldTime = 0.0f;
+        } else if (IsKeyDown(KEY_BACKSPACE)) {
+            backspaceHoldTime += GetFrameTime();
+            if (backspaceHoldTime > 0.4f) {
+                static float repeatAcc = 0.0f;
+                repeatAcc += GetFrameTime();
+                if (repeatAcc > 0.05f) {
+                    repeatAcc = 0.0f;
+                    if (!text.empty()) text.pop_back();
+                }
+            }
+        } else {
+            backspaceHoldTime = 0.0f;
+        }
+    }
+
+    void Draw(float x, float y, float width, float height, const char* label, const char* hint = nullptr) const {
+        if (label && strlen(label) > 0) {
+            DrawText(label, static_cast<int>(x), static_cast<int>(y - 22), 16, DARKGRAY);
+        }
+        Color bg = active ? Color{240, 248, 255, 255} : WHITE;
+        DrawRectangleRec(Rectangle{x, y, width, height}, bg);
+        DrawRectangleLinesEx(Rectangle{x, y, width, height}, 2.0f, active ? DARKBLUE : GRAY);
+
+        const char* displayText = text.empty() && hint != nullptr ? hint : text.c_str();
+        Color textColor = text.empty() && hint != nullptr ? GRAY : BLACK;
+        DrawText(displayText, static_cast<int>(x + 10), static_cast<int>(y + height / 2 - 10), 20, textColor);
+
+        if (active && static_cast<int>(GetTime() * 2.5f) % 2 == 0) {
+            int textW = MeasureText(text.c_str(), 20);
+            DrawLine(static_cast<int>(x + 10 + textW), static_cast<int>(y + 6),
+                     static_cast<int>(x + 10 + textW), static_cast<int>(y + height - 6), BLACK);
+        }
+    }
+
+    bool CheckClick(float x, float y, float width, float height) {
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            Vector2 mouse = GetMousePosition();
+            bool inside = CheckCollisionPointRec(mouse, Rectangle{x, y, width, height});
+            active = inside;
+            return inside;
+        }
+        return false;
+    }
+};
+
+static bool RenderGUIButton(const char* text, float x, float y, float width, float height,
+                            Color bgColor, Color textColor, Color hoverColor) {
+    Rectangle bounds = {x, y, width, height};
+    Vector2 mousePos = GetMousePosition();
+    bool isHovered = CheckCollisionPointRec(mousePos, bounds);
+    bool isClicked = isHovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+
+    Color currentBg = isHovered ? hoverColor : bgColor;
+    DrawRectangleRec(bounds, currentBg);
+    DrawRectangleLinesEx(bounds, 2.0f, Color{60, 60, 60, 255});
+
+    int fontSize = static_cast<int>(height * 0.4f);
+    int textWidth = MeasureText(text, fontSize);
+    float textX = x + (width - textWidth) * 0.5f;
+    float textY = y + (height - fontSize) * 0.5f;
+    DrawText(text, static_cast<int>(textX), static_cast<int>(textY), fontSize, textColor);
+
+    return isClicked;
+}
+
+static bool RenderMainMenu(GUIScreen& currentScreen) {
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+
+    BeginDrawing();
+    ClearBackground(Color{25, 25, 35, 255});
+
+    DrawCenteredText("N I M O N S P O L I", sh / 2 - 180, 64, Color{255, 200, 50, 255});
+    DrawCenteredText("Board Game", sh / 2 - 110, 28, LIGHTGRAY);
+
+    float btnWidth = 300.0f;
+    float btnHeight = 55.0f;
+    float btnX = (sw - btnWidth) / 2.0f;
+    float startY = sh / 2 - 30;
+    float spacing = 20.0f;
+
+    bool newGame = RenderGUIButton("New Game", btnX, startY, btnWidth, btnHeight,
+                                   Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255});
+    bool loadGame = RenderGUIButton("Load Saved Game", btnX, startY + btnHeight + spacing, btnWidth, btnHeight,
+                                    Color{33, 150, 243, 255}, WHITE, Color{100, 180, 255, 255});
+    bool help = RenderGUIButton("Help", btnX, startY + 2 * (btnHeight + spacing), btnWidth, btnHeight,
+                                Color{255, 152, 0, 255}, WHITE, Color{255, 180, 80, 255});
+    bool exitGame = RenderGUIButton("Exit", btnX, startY + 3 * (btnHeight + spacing), btnWidth, btnHeight,
+                                    Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255});
+
+    EndDrawing();
+
+    if (newGame) currentScreen = GUIScreen::NEW_GAME;
+    else if (loadGame) currentScreen = GUIScreen::LOAD_GAME;
+    else if (help) currentScreen = GUIScreen::HELP_SCREEN;
+    else if (exitGame || WindowShouldClose()) return true;
+
+    return false;
+}
+
+struct NewGameState {
+    int step = 0;
+    GUITextInput maxTurnsInput;
+    GUITextInput numPlayersInput;
+    GUITextInput numBotsInput;
+    std::vector<GUITextInput> playerNameInputs;
+    std::string errorMessage;
+};
+
+static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+
+    // Only update the input field(s) for the current step to prevent
+    // previously-active fields from swallowing keystrokes.
+    if (state.step == 0) {
+        state.maxTurnsInput.Update();
+    } else if (state.step == 1) {
+        state.numPlayersInput.Update();
+    } else if (state.step == 2) {
+        state.numBotsInput.Update();
+    } else if (state.step == 3) {
+        for (auto& input : state.playerNameInputs) {
+            input.Update();
+        }
+    }
+
+    BeginDrawing();
+    ClearBackground(Color{30, 30, 42, 255});
+
+    DrawCenteredText("New Game Setup", 40, 36, WHITE);
+
+    float fieldWidth = 400.0f;
+    float fieldHeight = 45.0f;
+    float fieldX = (sw - fieldWidth) / 2.0f;
+    float startY = 120;
+
+    if (state.step == 0) {
+        DrawCenteredText("Enter maximum turns (-1 for unlimited)", startY - 10, 20, LIGHTGRAY);
+        state.maxTurnsInput.Draw(fieldX, startY + 30, fieldWidth, fieldHeight, "", "-1");
+
+        if (RenderGUIButton("Next", fieldX + fieldWidth - 100, startY + 100, 100, 40,
+                            Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
+            if (state.maxTurnsInput.text.empty()) {
+                state.errorMessage = "Please enter a value";
+            } else {
+                try {
+                    int val = std::stoi(state.maxTurnsInput.text);
+                    if (val < -1) {
+                        state.errorMessage = "Must be -1 or greater";
+                    } else {
+                        state.errorMessage.clear();
+                        state.step = 1;
+                    }
+                } catch (...) {
+                    state.errorMessage = "Invalid number";
+                }
+            }
+        }
+    } else if (state.step == 1) {
+        DrawCenteredText("Enter number of players (2-6)", startY - 10, 20, LIGHTGRAY);
+        state.numPlayersInput.Draw(fieldX, startY + 30, fieldWidth, fieldHeight, "", "2");
+
+        if (RenderGUIButton("Back", fieldX, startY + 100, 100, 40,
+                            Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255})) {
+            state.step = 0;
+        }
+        if (RenderGUIButton("Next", fieldX + fieldWidth - 100, startY + 100, 100, 40,
+                            Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
+            if (state.numPlayersInput.text.empty()) {
+                state.errorMessage = "Please enter a value";
+            } else {
+                try {
+                    int val = std::stoi(state.numPlayersInput.text);
+                    if (val < 2 || val > 6) {
+                        state.errorMessage = "Must be between 2 and 6";
+                    } else {
+                        state.errorMessage.clear();
+                        state.step = 2;
+                    }
+                } catch (...) {
+                    state.errorMessage = "Invalid number";
+                }
+            }
+        }
+    } else if (state.step == 2) {
+        int numPlayers = std::stoi(state.numPlayersInput.text);
+        std::string labelText = "Enter number of bots (0-" + std::to_string(numPlayers) + ")";
+        DrawCenteredText(labelText.c_str(), startY - 10, 20, LIGHTGRAY);
+        state.numBotsInput.Draw(fieldX, startY + 30, fieldWidth, fieldHeight, "", "0");
+
+        if (RenderGUIButton("Back", fieldX, startY + 100, 100, 40,
+                            Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255})) {
+            state.step = 1;
+        }
+        if (RenderGUIButton("Next", fieldX + fieldWidth - 100, startY + 100, 100, 40,
+                            Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
+            if (state.numBotsInput.text.empty()) {
+                state.errorMessage = "Please enter a value";
+            } else {
+                try {
+                    int val = std::stoi(state.numBotsInput.text);
+                    if (val < 0 || val > numPlayers) {
+                        state.errorMessage = "Must be between 0 and " + std::to_string(numPlayers);
+                    } else {
+                        state.errorMessage.clear();
+                        int numHumans = numPlayers - val;
+                        state.playerNameInputs.resize(numHumans);
+                        state.step = 3;
+                    }
+                } catch (...) {
+                    state.errorMessage = "Invalid number";
+                }
+            }
+        }
+    } else if (state.step == 3) {
+        int numHumans = static_cast<int>(state.playerNameInputs.size());
+        std::string titleText = "Enter names for " + std::to_string(numHumans) + " human player(s)";
+        DrawCenteredText(titleText.c_str(), startY - 10, 20, LIGHTGRAY);
+
+        float nameFieldY = startY + 20;
+        float nameFieldWidth = 350.0f;
+        float nameFieldHeight = 40.0f;
+        float nameFieldX = (sw - nameFieldWidth) / 2.0f;
+
+        for (int i = 0; i < numHumans; ++i) {
+            std::string label = "Player " + std::to_string(i + 1);
+            int labelW = MeasureText(label.c_str(), 18);
+            DrawText(label.c_str(), static_cast<int>(nameFieldX - labelW - 15), static_cast<int>(nameFieldY + 8), 18, LIGHTGRAY);
+            state.playerNameInputs[i].Draw(nameFieldX, nameFieldY, nameFieldWidth, nameFieldHeight, "");
+            nameFieldY += 55.0f;
+            if (nameFieldY > sh - 150) break;
+        }
+
+        if (RenderGUIButton("Back", nameFieldX, nameFieldY + 20, 100, 40,
+                            Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255})) {
+            state.step = 2;
+            state.playerNameInputs.clear();
+        }
+        if (RenderGUIButton("Start Game", nameFieldX + nameFieldWidth - 140, nameFieldY + 20, 140, 40,
+                            Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
+            bool allFilled = true;
+            for (const auto& input : state.playerNameInputs) {
+                if (input.text.empty()) {
+                    allFilled = false;
+                    break;
+                }
+            }
+            if (!allFilled) {
+                state.errorMessage = "Please fill in all player names";
+            } else {
+                state.errorMessage.clear();
+                return true;
+            }
+        }
+    }
+
+    if (!state.errorMessage.empty()) {
+        int errW = MeasureText(state.errorMessage.c_str(), 18);
+        DrawText(state.errorMessage.c_str(), (sw - errW) / 2, sh - 80, 18, Color{255, 100, 100, 255});
+    }
+
+    // Handle clicks to activate/deactivate input fields
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (state.step == 0) state.maxTurnsInput.CheckClick(fieldX, startY + 30, fieldWidth, fieldHeight);
+        else if (state.step == 1) state.numPlayersInput.CheckClick(fieldX, startY + 30, fieldWidth, fieldHeight);
+        else if (state.step == 2) state.numBotsInput.CheckClick(fieldX, startY + 30, fieldWidth, fieldHeight);
+        else if (state.step == 3) {
+            float nameFieldY = startY + 20;
+            float nameFieldWidth = 350.0f;
+            float nameFieldHeight = 40.0f;
+            float nameFieldX = (sw - nameFieldWidth) / 2.0f;
+            for (size_t i = 0; i < state.playerNameInputs.size(); ++i) {
+                state.playerNameInputs[i].CheckClick(nameFieldX, nameFieldY, nameFieldWidth, nameFieldHeight);
+                nameFieldY += 55.0f;
+            }
+        }
+    }
+
+    EndDrawing();
+    return false;
+}
+
+struct LoadGameState {
+    GUITextInput filenameInput;
+    std::string errorMessage;
+};
+
+static bool RenderLoadGameScreen(LoadGameState& state, GameEngine& engine, bool& backToMenu) {
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+
+    state.filenameInput.Update();
+
+    BeginDrawing();
+    ClearBackground(Color{30, 30, 42, 255});
+
+    DrawCenteredText("Load Saved Game", 40, 36, WHITE);
+
+    float fieldWidth = 400.0f;
+    float fieldHeight = 45.0f;
+    float fieldX = (sw - fieldWidth) / 2.0f;
+    float fieldY = sh / 2 - 50;
+
+    DrawCenteredText("Enter save filename", fieldY - 40, 20, LIGHTGRAY);
+    state.filenameInput.Draw(fieldX, fieldY, fieldWidth, fieldHeight, "", "savegame.txt");
+
+    if (RenderGUIButton("Back", fieldX, fieldY + 80, 100, 40,
+                        Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255})) {
+        backToMenu = true;
+    }
+    if (RenderGUIButton("Load", fieldX + fieldWidth - 100, fieldY + 80, 100, 40,
+                        Color{33, 150, 243, 255}, WHITE, Color{100, 180, 255, 255})) {
+        if (state.filenameInput.text.empty()) {
+            state.errorMessage = "Please enter a filename";
+        } else {
+            try {
+                engine.getBoard().generateDefaultBoard();
+                engine.loadGame(state.filenameInput.text);
+                state.errorMessage.clear();
+                return true;
+            } catch (const std::exception& e) {
+                state.errorMessage = std::string("Failed to load: ") + e.what();
+            }
+        }
+    }
+
+    if (!state.errorMessage.empty()) {
+        int errW = MeasureText(state.errorMessage.c_str(), 16);
+        DrawText(state.errorMessage.c_str(), (sw - errW) / 2, fieldY + 150, 16, Color{255, 100, 100, 255});
+    }
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        state.filenameInput.CheckClick(fieldX, fieldY, fieldWidth, fieldHeight);
+    }
+
+    EndDrawing();
+    return false;
+}
+
+static void RenderHelpScreen(bool& backToMenu) {
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+
+    BeginDrawing();
+    ClearBackground(Color{25, 25, 35, 255});
+
+    DrawCenteredText("P A N D U A N", 30, 40, Color{255, 200, 50, 255});
+
+    std::string helpText =
+        "Nimonspoli adalah permainan papan strategi yang terinspirasi dari Monopoly. "
+        "Pemain bergerak mengelilingi papan, membeli properti, membangun rumah/hotel, dan memungut sewa.\n\n"
+        "TUJUAN:\n"
+        "Menjadi pemain terkaya atau satu-satunya yang tersisa setelah pemain lain bangkrut.\n\n"
+        "MODE BOT:\n"
+        "- Anda bisa bermain melawan 1-3 bot/komputer\n"
+        "- Bot akan mengambil keputusan secara otomatis\n\n"
+        "PERINTAH GERAK:\n"
+        "- ROLL_DICE    : Lempar dadu untuk bergerak\n"
+        "- SET_DICE X Y : Atur dadu manual (contoh: SET_DICE 3 5)\n"
+        "- END_TURN     : Akhiri giliran (wajib lempar dadu dulu!)\n\n"
+        "PERINTAH INFO:\n"
+        "- PRINT_BOARD    : Lihat papan permainan\n"
+        "- PRINT_PROPERTY : Lihat properti Anda\n"
+        "- PRINT_PROP_CERT [KODE] : Lihat akta properti\n"
+        "- PROFILE        : Lihat profil pemain\n"
+        "- PRINT_LOG      : Lihat log transaksi\n\n"
+        "PERINTAH AKSI:\n"
+        "- MORTGAGE  : Gadai properti ke bank\n"
+        "- BUILD     : Bangun rumah/hotel di properti\n"
+        "- USE_SKILL : Gunakan kartu kemampuan\n\n"
+        "PERINTAH LAIN:\n"
+        "- SAVE : Simpan permainan\n"
+        "- HELP : Tampilkan panduan ini";
+
+    DrawWrappedText(helpText, 60, 90, sw - 120, 16, LIGHTGRAY, 22);
+
+    float btnWidth = 120.0f;
+    float btnHeight = 40.0f;
+    if (RenderGUIButton("Back", (sw - btnWidth) / 2.0f, sh - 80, btnWidth, btnHeight,
+                        Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255})) {
+        backToMenu = true;
+    }
+
+    EndDrawing();
 }
 #endif
 
@@ -322,18 +815,86 @@ void GameEngine::runGUI() {
         return;
     }
 
-    // Show splash screen while console menu is active
-    // Render frames for a moment to show the window is alive
+    // Show splash screen briefly
     double splashStart = GetTime();
     while (GetTime() - splashStart < 1.5 && !WindowShouldClose()) {
         RenderSplashScreen(renderer, "Starting game");
     }
 
-    // Console-based menu (window exists but console handles input)
-    this->printBanner();
-    this->startMenu();
+    // GUI Menu System - replaces console-based menu in GUI mode
+    GUIScreen currentScreen = GUIScreen::MAIN_MENU;
+    NewGameState newGameState;
+    LoadGameState loadGameState;
 
-    // Show splash again briefly after menu
+    // Menu loop
+    while (!WindowShouldClose() && currentScreen != GUIScreen::GAME) {
+        if (currentScreen == GUIScreen::MAIN_MENU) {
+            if (RenderMainMenu(currentScreen)) {
+                renderer.Shutdown();
+                return; // Exit requested
+            }
+        }
+        else if (currentScreen == GUIScreen::NEW_GAME) {
+            bool ready = RenderNewGameSetup(newGameState, *this);
+            if (ready) {
+                // Create the game from GUI inputs
+                int maxTurns = std::stoi(newGameState.maxTurnsInput.text);
+                int numPlayers = std::stoi(newGameState.numPlayersInput.text);
+                int numBots = std::stoi(newGameState.numBotsInput.text);
+                int numHumans = numPlayers - numBots;
+
+                board.generateDefaultBoard();
+                turnmgr = TurnManager(maxTurns);
+
+                clearPlayers();
+                for (int i = 0; i < numHumans; ++i) {
+                    players.push_back(new Player(newGameState.playerNameInputs[i].text, 1500));
+                }
+                for (int i = 0; i < numBots; ++i) {
+                    std::string botName = "Bot" + std::to_string(i + 1);
+                    players.push_back(new BotPlayer(botName, 1500));
+                }
+                for (Player* player : players) {
+                    if (player != nullptr) {
+                        giveRandomSkillCardTo(*player);
+                    }
+                }
+                turnmgr.setTurnOrder(getPlayers());
+                currentScreen = GUIScreen::GAME;
+            }
+            if (IsKeyPressed(KEY_ESCAPE) && newGameState.step == 0) {
+                currentScreen = GUIScreen::MAIN_MENU;
+                newGameState = NewGameState{};
+            }
+        }
+        else if (currentScreen == GUIScreen::LOAD_GAME) {
+            bool backToMenu = false;
+            bool loaded = RenderLoadGameScreen(loadGameState, *this, backToMenu);
+            if (loaded) {
+                currentScreen = GUIScreen::GAME;
+            } else if (backToMenu) {
+                currentScreen = GUIScreen::MAIN_MENU;
+                loadGameState = LoadGameState{};
+            }
+            if (IsKeyPressed(KEY_ESCAPE)) {
+                currentScreen = GUIScreen::MAIN_MENU;
+            }
+        }
+        else if (currentScreen == GUIScreen::HELP_SCREEN) {
+            bool backToMenu = false;
+            RenderHelpScreen(backToMenu);
+            if (backToMenu || IsKeyPressed(KEY_ESCAPE)) {
+                currentScreen = GUIScreen::MAIN_MENU;
+            }
+        }
+    }
+
+    if (WindowShouldClose()) {
+        renderer.Shutdown();
+        return;
+    }
+
+    // Show splash again briefly before game
     splashStart = GetTime();
     while (GetTime() - splashStart < 1.0 && !WindowShouldClose()) {
         RenderSplashScreen(renderer, "Loading board");
@@ -343,6 +904,7 @@ void GameEngine::runGUI() {
     Command cmd;
     bool goNext = false;
     int animatingDiceFrames = 0;
+    bool showInGameHelp = false;
 
     // Main game loop
     while (!turnmgr.isGameOver()) {
@@ -363,7 +925,6 @@ void GameEngine::runGUI() {
 
             TurnContext ctx(*currentPlayer, gameDice, board, *this);
 
-            // Start dice animation BEFORE executing turn
             renderer.SetDiceValues(1, 1);
             renderer.StartDiceRoll(
                 (std::rand() % 6) + 1,
@@ -371,7 +932,6 @@ void GameEngine::runGUI() {
             );
             animatingDiceFrames = 90;
 
-            // Play animation for a moment
             double animStart = GetTime();
             while (GetTime() - animStart < 1.2 && !WindowShouldClose()) {
                 GameState state = buildGameState();
@@ -384,13 +944,11 @@ void GameEngine::runGUI() {
 
             goNext = executeBotTurn(ctx);
 
-            // After bot turn, set actual dice values and animate to final
             if (gameDice.getDie1() > 0 && gameDice.getDie2() > 0) {
                 renderer.StartDiceRoll(gameDice.getDie1(), gameDice.getDie2());
                 animatingDiceFrames = 90;
             }
 
-            // Render a few frames to show the final dice state
             double postTurnStart = GetTime();
             while (GetTime() - postTurnStart < 0.5 && !WindowShouldClose()) {
                 RenderGameFrame(renderer, *this, turnmgr, board, gameDice, animatingDiceFrames);
@@ -415,17 +973,23 @@ void GameEngine::runGUI() {
             lastPrintedTurn = turnmgr.getCurrentTurn();
         }
 
-        // Render frame
-        RenderGameFrame(renderer, *this, turnmgr, board, gameDice, animatingDiceFrames);
+        // Render frame (with optional help overlay)
+        RenderGameFrame(renderer, *this, turnmgr, board, gameDice, animatingDiceFrames, showInGameHelp);
 
         // Decrement animation counter
         if (animatingDiceFrames > 0) {
             animatingDiceFrames--;
         }
 
+        // Toggle off in-game help overlay
+        if (showInGameHelp && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_H))) {
+            showInGameHelp = false;
+            continue;
+        }
+
         // Handle input
         bool shouldExit = HandleGameInput(renderer, *this, turnmgr, board,
-                                          gameDice, animatingDiceFrames, cmd, goNext);
+                                          gameDice, animatingDiceFrames, cmd, goNext, showInGameHelp);
         if (shouldExit) {
             break;
         }
