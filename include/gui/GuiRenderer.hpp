@@ -114,6 +114,26 @@ class GUIRenderer {
     static std::unordered_map<std::string, std::string>
     BuildDefaultTileVisualMap();
 
+    // Button helper structure
+    struct Button {
+        Rectangle bounds;
+        std::string text;
+        Color bgColor;
+        Color textColor;
+        bool hovered;
+        bool clicked;
+    };
+
+    // Draw a button and return true if clicked
+    bool DrawButton(const std::string& text, float x, float y, float width, float height,
+                    Color bgColor, Color textColor, Color hoverColor) const;
+
+    // Draw game control buttons
+    void DrawGameControls(float x, float y, bool canRoll, bool canEndTurn) const;
+
+    // Check if a button was clicked (to be called after drawing)
+    bool IsButtonClicked(float x, float y, float width, float height) const;
+
   private:
     static constexpr int kBoardMargin = 24;
     static constexpr int kOuterPadding = 16;

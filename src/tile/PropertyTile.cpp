@@ -247,7 +247,7 @@ bool StreetTile::triggerBankruptcy(TurnContext& ctx, int debtAmount) {
 void RailroadTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     if (property->getStatus() == PropertyStatus::BANK) {
-        autoAcquire(player);
+        autoAcquire(player, ctx);
     } else if (property->getStatus() == PropertyStatus::OWNED) {
 
         if (property->getOwner() != &player) {

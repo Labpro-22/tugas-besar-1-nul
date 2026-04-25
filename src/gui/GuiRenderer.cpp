@@ -1061,3 +1061,98 @@ bool GUIRenderer::ContainsInsensitive(const std::string& value,
                                       const std::string& needle) {
     return ToLower(value).find(ToLower(needle)) != std::string::npos;
 }
+
+bool GUIRenderer::DrawButton(const std::string& text, float x, float y, float width, float height,
+                             Color bgColor, Color textColor, Color hoverColor) const {
+#if NIMONSPOLI_HAS_RAYLIB
+    Rectangle bounds = {x, y, width, height};
+    Vector2 mousePos = GetMousePosition();
+    bool isHovered = CheckCollisionPointRec(mousePos, bounds);
+    bool isClicked = isHovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+    
+    Color currentBg = isHovered ? hoverColor : bgColor;
+    
+    // Draw button background with rounded corners
+    DrawRectangleRec(bounds, currentBg);
+    DrawRectangleLinesEx(bounds, 2.0f, Color{80, 80, 80, 255});
+    
+    // Draw text centered
+    int fontSize = static_cast<int>(height * 0.4f);
+    int textWidth = MeasureText(text.c_str(), fontSize);
+    float textX = x + (width - textWidth) * 0.5f;
+    float textY = y + (height - fontSize) * 0.5f;
+    DrawText(text.c_str(), static_cast<int>(textX), static_cast<int>(textY), fontSize, textColor);
+    
+    return isClicked;
+#else
+    (void)text;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)bgColor;
+    (void)textColor;
+    (void)hoverColor;
+    return false;
+#endif
+}
+
+void GUIRenderer::DrawGameControls(float x, float y, bool canRoll, bool canEndTurn) const {
+#if NIMONSPOLI_HAS_RAYLIB
+    float buttonWidth = 120.0f;
+    float buttonHeight = 40.0f;
+    float spacing = 10.0f;
+    
+    Color rollColor = canRoll ? Color{76, 175, 80, 255} : Color{150, 150, 150, 255};
+    Color endTurnColor = canEndTurn ? Color{33, 150, 243, 255} : Color{150, 150, 150, 255};
+    
+    // Draw button labels with keyboard shortcuts
+    DrawText("Controls:", static_cast<int>(x), static_cast<int>(y - 25), 16, DARKGRAY);
+    
+    // Roll Dice button
+    DrawButton("Roll Dice [R]", x, y, buttonWidth, buttonHeight,
+               rollColor, WHITE, Color{100, 200, 100, 255});
+    
+    // End Turn button
+    DrawButton("End Turn [E]", x + buttonWidth + spacing, y, buttonWidth, buttonHeight,
+               endTurnColor, WHITE, Color{100, 180, 255, 255});
+    
+    // Profile button
+    DrawButton("Profile [P]", x, y + buttonHeight + spacing, buttonWidth, buttonHeight,
+               Color{255, 152, 0, 255}, WHITE, Color{255, 180, 80, 255});
+    
+    // Build button
+    DrawButton("Build [B]", x + buttonWidth + spacing, y + buttonHeight + spacing, buttonWidth, buttonHeight,
+               Color{156, 39, 176, 255}, WHITE, Color{200, 100, 220, 255});
+    
+    // Mortgage button
+    DrawButton("Mortgage [M]", x, y + 2 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+               Color{244, 67, 54, 255}, WHITE, Color{255, 120, 100, 255});
+    
+    // Save button
+    DrawButton("Save [S]", x + buttonWidth + spacing, y + 2 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+               Color{96, 125, 139, 255}, WHITE, Color{140, 160, 170, 255});
+    
+    // Help button
+    DrawButton("Help [H]", x, y + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+               Color{0, 150, 136, 255}, WHITE, Color{80, 200, 180, 255});
+    
+    // Exit button
+    DrawButton("Exit [ESC]", x + buttonWidth + spacing, y + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+               Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255});
+#endif
+}
+
+bool GUIRenderer::IsButtonClicked(float x, float y, float width, float height) const {
+#if NIMONSPOLI_HAS_RAYLIB
+    Rectangle bounds = {x, y, width, height};
+    Vector2 mousePos = GetMousePosition();
+    return CheckCollisionPointRec(mousePos, bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+#else
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    return false;
+#endif
+}

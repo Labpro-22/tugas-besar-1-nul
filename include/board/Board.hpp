@@ -35,8 +35,11 @@ class Board{
         Board& operator=(const Board&) = delete;
         
         std::vector<Property*> getAllProperties();
+        const std::vector<Property*> getAllProperties() const;
         Tile* getTile(int idx);
+        const Tile* getTile(int idx) const;
         Tile* getTileByCode(std::string cd);
+        const Tile* getTileByCode(std::string cd) const;
         void setTileAt(int idx, Tile* tile);
         int getPlacedTileCount() const;
         std::vector<Tile*>& getAllTiles();
