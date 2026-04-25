@@ -15,6 +15,7 @@
 #include "core/TurnManager.hpp"
 #include "states/GameState.hpp"
 #include "gui/GuiRenderer.hpp"
+#include "gui/GuiPanelManager.hpp"
 
 class Player;
 class TurnContext;
@@ -35,6 +36,8 @@ class GameEngine {
 
     std::vector<Player*> players;
     void clearPlayers();
+
+    GuiPanels::PanelManager* panelManager = nullptr;
 
   public:
     explicit GameEngine(int size);
@@ -78,4 +81,8 @@ class GameEngine {
 
     // Get board reference
     Board& getBoard();
+
+    // GUI panel manager
+    void setPanelManager(GuiPanels::PanelManager* pm);
+    GuiPanels::PanelManager* getPanelManager() const;
 };

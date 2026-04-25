@@ -3,8 +3,7 @@
 #include "core/TurnContext.hpp"
 #include "player/Player.hpp"
 #include "property/StreetProperty.hpp"
-#include "core/TurnContext.hpp"
-#include "core/GameEngine.hpp"
+#include "gui/GuiPanelManager.hpp"
 #include "exception/InvalidGameStateException.hpp"
 
 #include <iostream>
@@ -33,6 +32,28 @@ void DemolitionCard::apply(TurnContext& ctx) {
         return;
     }
 
+    // GUI mode: auto-select first candidate
+    if (ctx.gameEngine.getPanelManager()) {
+        Player* targetPlayer = candidates.front();
+        const auto& properties = targetPlayer->getProperties();
+        for (Property* prop : properties) {
+            StreetProperty* sp = dynamic_cast<StreetProperty*>(prop);
+            if (sp != nullptr && sp->getBuildingCount() > 0) {
+                try {
+                    sp->demolish();
+                    std::cout << "\n[BERHASIL] Properti '" << sp->getName()
+                              << "' telah dihancurkan!\n";
+                } catch (const std::exception& e) {
+                    std::cout << "[GAGAL] " << e.what() << "\n";
+                }
+                return;
+            }
+        }
+        std::cout << "[INFO] Pemain " << targetPlayer->getUsername()
+                  << " tidak memiliki properti dengan bangunan untuk dihancurkan.\n";
+        return;
+    }
+
     std::cout << "\n=== Daftar Pemain Lain ===\n";
     for (size_t i = 0; i < candidates.size(); ++i) {
         std::cout << i + 1 << ". " << candidates[i]->getUsername() << "\n";
@@ -54,6 +75,26 @@ void DemolitionCard::apply(TurnContext& ctx) {
 
     const auto& properties = targetPlayer->getProperties();
     std::vector<size_t> demolishableIndices;
+
+    // GUI mode: auto-select first candidate and first demolishable property
+    if (ctx.gameEngine.getPanelManager()) {
+        for (size_t i = 0; i < properties.size(); ++i) {
+            StreetProperty* sp = dynamic_cast<StreetProperty*>(properties[i]);
+            if (sp != nullptr && sp->getBuildingCount() > 0) {
+                try {
+                    sp->demolish();
+                    std::cout << "\n[BERHASIL] Properti '" << sp->getName()
+                              << "' telah dihancurkan!\n";
+                } catch (const std::exception& e) {
+                    std::cout << "[GAGAL] " << e.what() << "\n";
+                }
+                return;
+            }
+        }
+        std::cout << "[INFO] Pemain " << targetPlayer->getUsername()
+                  << " tidak memiliki properti dengan bangunan untuk dihancurkan.\n";
+        return;
+    }
 
     for (size_t i = 0; i < properties.size(); ++i) {
         Property* prop = properties[i];

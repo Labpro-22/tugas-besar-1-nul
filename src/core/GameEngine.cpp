@@ -66,6 +66,14 @@ void GameEngine::clearPlayers() {
     players.clear();
 }
 
+void GameEngine::setPanelManager(GuiPanels::PanelManager* pm) {
+    panelManager = pm;
+}
+
+GuiPanels::PanelManager* GameEngine::getPanelManager() const {
+    return panelManager;
+}
+
 void GameEngine::run() {
     this->printBanner();
     this->startMenu();
@@ -195,11 +203,14 @@ static void RenderSplashScreen(GUIRenderer& /*renderer*/, const char* message) {
 static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
                             TurnManager& turnmgr, Board& board,
                             Dice& gameDice, int& animatingDiceFrames,
-                            bool showHelpOverlay = false) {
+                            bool showHelpOverlay = false,
+                            GuiPanels::PanelManager* panelMgr = nullptr,
+                            TurnContext* persistentCtx = nullptr) {
     Player* currentPlayer = turnmgr.getCurrentPlayer();
     if (currentPlayer == nullptr) return;
 
-    TurnContext ctx(*currentPlayer, gameDice, board, engine);
+    TurnContext localCtx(*currentPlayer, gameDice, board, engine);
+    TurnContext& ctx = persistentCtx ? *persistentCtx : localCtx;
     GameState state = engine.buildGameState();
 
     // Update dice animation
@@ -291,13 +302,20 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
         DrawCenteredText("Press ESC or H to close", sh - 100, 16, GRAY);
     }
 
+    // Render active GUI panel on top of everything
+    if (panelMgr && panelMgr->isActive()) {
+        panelMgr->updateAndRender();
+    }
+
     EndDrawing();
 }
 
 static bool HandleGameInput(GUIRenderer& renderer, GameEngine& engine,
                             TurnManager& turnmgr, Board& board,
                             Dice& gameDice, int& animatingDiceFrames,
-                            Command& cmd, bool& goNext, bool& showHelp) {
+                            Command& cmd, bool& goNext, bool& showHelp,
+                            TurnContext& ctx,
+                            GuiPanels::PanelManager* panelMgr = nullptr) {
     auto snapshot = renderer.InspectBoardDisplay();
     float controlsX = snapshot.rightPanel.x + 15;
     float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 240;
@@ -317,7 +335,10 @@ static bool HandleGameInput(GUIRenderer& renderer, GameEngine& engine,
     Player* currentPlayer = turnmgr.getCurrentPlayer();
     if (currentPlayer == nullptr) return true;
 
-    TurnContext ctx(*currentPlayer, gameDice, board, engine);
+    // Prevent ending turn while a blocking panel is active
+    if (panelMgr && panelMgr->isBlocking()) {
+        return false;
+    }
 
     if (IsKeyPressed(KEY_R) || rollClicked) {
         try {
@@ -335,10 +356,6 @@ static bool HandleGameInput(GUIRenderer& renderer, GameEngine& engine,
         try {
             cmd.parse("END_TURN");
             goNext = cmd.dispatch(ctx);
-            if (goNext) {
-                turnmgr.nextTurn(ctx);
-                return true; // Frame handled, skip rest
-            }
         } catch (const std::exception& exc) {
             std::cout << exc.what() << "\n";
         }
@@ -815,6 +832,10 @@ void GameEngine::runGUI() {
         return;
     }
 
+    // GUI Panel Manager for in-game interactions
+    GuiPanels::PanelManager panelManager;
+    setPanelManager(&panelManager);
+
     // Show splash screen briefly
     double splashStart = GetTime();
     while (GetTime() - splashStart < 1.5 && !WindowShouldClose()) {
@@ -912,6 +933,8 @@ void GameEngine::runGUI() {
             break;
         }
 
+        goNext = false; // Reset turn-advance flag at start of each turn
+
         Player* currentPlayer = turnmgr.getCurrentPlayer();
         if (currentPlayer == nullptr) {
             std::cout << "[WARN] No active player found. Stopping game loop.\n";
@@ -960,56 +983,77 @@ void GameEngine::runGUI() {
             continue;
         }
 
-        // Human player turn - render continuously and handle input
-        TurnContext ctx(*currentPlayer, gameDice, board, *this);
+        // Human player turn - persist TurnContext across frames
+        {
+            TurnContext ctx(*currentPlayer, gameDice, board, *this);
+            bool humanTurnDone = false;
 
-        // Only print turn info once per human turn (not every frame)
-        static Player* lastPrintedPlayer = nullptr;
-        static int lastPrintedTurn = -1;
-        if (currentPlayer != lastPrintedPlayer || turnmgr.getCurrentTurn() != lastPrintedTurn) {
-            std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1)
-                      << ": " << currentPlayer->getUsername() << " ===\n";
-            lastPrintedPlayer = currentPlayer;
-            lastPrintedTurn = turnmgr.getCurrentTurn();
-        }
+            while (!humanTurnDone && !WindowShouldClose()) {
+                // Only print turn info once per human turn
+                static Player* lastPrintedPlayer = nullptr;
+                static int lastPrintedTurn = -1;
+                if (currentPlayer != lastPrintedPlayer || turnmgr.getCurrentTurn() != lastPrintedTurn) {
+                    std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1)
+                              << ": " << currentPlayer->getUsername() << " ===\n";
+                    lastPrintedPlayer = currentPlayer;
+                    lastPrintedTurn = turnmgr.getCurrentTurn();
+                }
 
-        // Render frame (with optional help overlay)
-        RenderGameFrame(renderer, *this, turnmgr, board, gameDice, animatingDiceFrames, showInGameHelp);
+                // Render frame (with optional help overlay and panels)
+                RenderGameFrame(renderer, *this, turnmgr, board, gameDice, animatingDiceFrames, showInGameHelp, &panelManager, &ctx);
 
-        // Decrement animation counter
-        if (animatingDiceFrames > 0) {
-            animatingDiceFrames--;
-        }
+                // Decrement animation counter
+                if (animatingDiceFrames > 0) {
+                    animatingDiceFrames--;
+                }
 
-        // Toggle off in-game help overlay
-        if (showInGameHelp && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_H))) {
-            showInGameHelp = false;
-            continue;
-        }
+                // Toggle off in-game help overlay
+                if (showInGameHelp && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_H))) {
+                    showInGameHelp = false;
+                    continue;
+                }
 
-        // Handle input
-        bool shouldExit = HandleGameInput(renderer, *this, turnmgr, board,
-                                          gameDice, animatingDiceFrames, cmd, goNext, showInGameHelp);
-        if (shouldExit) {
-            break;
-        }
+                // If a blocking panel is active, skip normal input this frame
+                if (panelManager.isBlocking()) {
+                    continue;
+                }
 
-        // Support console fallback input with Enter key
-        if (IsKeyPressed(KEY_ENTER)) {
-            std::cout << "\n> ";
-            std::string input;
-            std::getline(std::cin, input);
-            if (!input.empty()) {
-                try {
-                    cmd.parse(input);
-                    goNext = cmd.dispatch(ctx);
-                    if (goNext) {
-                        turnmgr.nextTurn(ctx);
-                        lastPrintedPlayer = nullptr;
-                        lastPrintedTurn = -1;
+                // Handle input
+                bool shouldExit = HandleGameInput(renderer, *this, turnmgr, board,
+                                                  gameDice, animatingDiceFrames, cmd, goNext, showInGameHelp, ctx, &panelManager);
+                if (shouldExit) {
+                    renderer.Shutdown();
+                    return;
+                }
+
+                if (goNext) {
+                    turnmgr.nextTurn(ctx);
+                    lastPrintedPlayer = nullptr;
+                    lastPrintedTurn = -1;
+                    humanTurnDone = true;
+                    break;
+                }
+
+                // Support console fallback input with Enter key
+                if (IsKeyPressed(KEY_ENTER)) {
+                    std::cout << "\n> ";
+                    std::string input;
+                    std::getline(std::cin, input);
+                    if (!input.empty()) {
+                        try {
+                            cmd.parse(input);
+                            goNext = cmd.dispatch(ctx);
+                            if (goNext) {
+                                turnmgr.nextTurn(ctx);
+                                lastPrintedPlayer = nullptr;
+                                lastPrintedTurn = -1;
+                                humanTurnDone = true;
+                                break;
+                            }
+                        } catch (const std::exception& exc) {
+                            std::cout << exc.what() << "\n";
+                        }
                     }
-                } catch (const std::exception& exc) {
-                    std::cout << exc.what() << "\n";
                 }
             }
         }
