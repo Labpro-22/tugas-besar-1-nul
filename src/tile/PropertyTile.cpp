@@ -1,9 +1,11 @@
 #include "tile/PropertyTile.hpp"
 #include "core/TurnContext.hpp"
+#include "core/GameEngine.hpp"
 #include "core/BankruptcyManager.hpp"
 #include "exception/BankruptcyException.hpp"
 #include "player/Player.hpp"
 #include "property/Property.hpp"
+#include "gui/GuiPanelManager.hpp"
 #include <iostream>
 #include <limits>
 #include <vector>
@@ -54,6 +56,18 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
     cout << "[" << player.getUsername() << "] mendarat di [" << getName()
          << "].\n\n";
     getProperty()->printStatus(ctx);
+
+    // GUI mode: show buy panel (only for human players)
+    if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
+        ctx.gameEngine.getPanelManager()->showPropertyBuy(player, *getProperty(), ctx);
+        return;
+    }
+
+    // Bot players skip CLI input and do not buy
+    if (player.isBot()) {
+        return;
+    }
+
     string ans;
     while (true) {
         cout << "[Y/N] Apakah Anda mau beli " << getName()
@@ -63,7 +77,7 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
         if (ans == "Y" || ans == "y"){
             player.buy(getProperty(), ctx);
             cout << "[" << player.getUsername() << "] baru saja membeli " << getName() << "\n";
-            cout << "Uang [" << player.getUsername() << "] tersisa: " << player.getBalance() << "\n\n"; 
+            cout << "Uang [" << player.getUsername() << "] tersisa: " << player.getBalance() << "\n\n";
             break;
         } else if (ans == "N" || ans == "n"){
             AuctionManager am;
@@ -71,7 +85,7 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
             AuctionWinner aw = am.runAuction(*(getProperty()), tm.getTurnOrder(), tm.getActivePlayerIndex());
             aw.winner.buy(&aw.prop_won, aw.buyAmount, ctx);
             cout << "[" << aw.winner.getUsername() << "] baru saja membeli " << aw.prop_won.getName() << "\n";
-            cout << "Uang [" << aw.winner.getUsername() << "] tersisa: " << aw.winner.getBalance() << "\n\n"; 
+            cout << "Uang [" << aw.winner.getUsername() << "] tersisa: " << aw.winner.getBalance() << "\n\n";
             break;
         } else {
             cout << "input tidak valid. Throw input invalid exception.\n";
@@ -91,16 +105,19 @@ void StreetTile::triggerRentPayment(TurnContext& ctx) {
     if (owner == nullptr) {
         return;
     }
-    cout << "You landed in [" << getProperty()->getName() << "] owned by [" << getProperty()->getOwner()->getUsername() << "].\n\n";
-    getProperty()->printStatus(ctx);
-    player.deductCash(getProperty()->getRent(ctx));
-    cout << "Money left: <M" << player.getBalance() << ">.\n\n";
 
     const int rent = property->getRent(ctx);
     cout << "You landed in [" << property->getName() << "] owned by [" << owner->getUsername() << "].\n\n";
     property->printStatus(ctx);
 
     if (player.getBalance() < rent) {
+        // GUI mode: show bankruptcy panel with rent info (only for human players)
+        if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
+            ctx.gameEngine.getPanelManager()->showBankruptcy(ctx, rent);
+            ctx.gameEngine.getPanelManager()->getBankruptcyState().pendingRent = rent;
+            ctx.gameEngine.getPanelManager()->getBankruptcyState().rentOwner = owner;
+            return;
+        }
         const bool canContinue = triggerBankruptcy(ctx, rent);
         if (!canContinue) {
             return;
@@ -115,6 +132,12 @@ void StreetTile::triggerRentPayment(TurnContext& ctx) {
 
 bool StreetTile::triggerBankruptcy(TurnContext& ctx, int debtAmount) {
     Player& player = ctx.currentPlayer;
+
+    // GUI mode: show bankruptcy panel (only for human players)
+    if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
+        ctx.gameEngine.getPanelManager()->showBankruptcy(ctx, debtAmount);
+        return false; // Defer to panel; caller should not continue immediately
+    }
 
     while (player.getBalance() < debtAmount) {
         auto options = BankruptcyManager::getAvailableLiquidationOptions(ctx);

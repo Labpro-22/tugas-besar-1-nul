@@ -6,6 +6,7 @@
 #include "tile/PropertyTile.hpp"
 #include "card/ChanceCard.hpp"
 #include "card/CommunityChestCard.hpp"
+#include "gui/GuiPanelManager.hpp"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -116,6 +117,18 @@ FestivalTile::FestivalTile(int idx, string cd, string nm)
 
 void FestivalTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
+
+    // GUI mode: show festival panel (only for human players)
+    if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
+        ctx.gameEngine.getPanelManager()->showFestival(player, ctx);
+        return;
+    }
+
+    // Bot players skip festival selection
+    if (player.isBot()) {
+        return;
+    }
+
     cout << "\nChoose property to increase rent: \n";
     bool hasProp = false;
     std::vector<Tile*>& allTiles = ctx.board.getAllTiles();
@@ -168,6 +181,11 @@ TaxTile::TaxTile(int idx, string cd, string nm, TaxType type)
 void TaxTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     if (taxType == TaxType::PPH) { // is PPH
+        // GUI mode: show tax panel (only for human players)
+        if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
+            ctx.gameEngine.getPanelManager()->showTax(player, 67, 10.0f);
+            return;
+        }
         applyPPH(player);
     } else if (taxType == TaxType::PBM) { // is PBM
         applyPBM(player);
@@ -177,6 +195,14 @@ void TaxTile::onLanded(TurnContext& ctx) {
 void TaxTile::applyPPH(Player& player) {
     int taxFlat = 67;      // nanti sesuaikan
     float taxPercent = 10; // nanti sesuaikan
+
+    // Bot players auto-pay flat tax
+    if (player.isBot()) {
+        player.deductCash(taxFlat);
+        cout << "[" << player.getUsername() << "] paid tax of M" << taxFlat << "\n";
+        return;
+    }
+
     int inp;
     while (true){
         cout << "2 options: pay flat for: " << taxFlat << " or " << taxPercent << "%% of your wealth? (1-2)\n";

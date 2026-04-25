@@ -2,6 +2,8 @@
 #include "board/Board.hpp"
 #include "player/Player.hpp"
 #include "core/TurnContext.hpp"
+#include "core/GameEngine.hpp"
+#include "gui/GuiPanelManager.hpp"
 #include "exception/InvalidGameStateException.hpp"
 
 #include <iostream>
@@ -41,6 +43,15 @@ void LassoCard::apply(TurnContext& ctx) {
     if (candidates.empty()) {
         std::cout
             << "[INFO] Tidak ada pemain di depan dalam jangkauan 8 tile.\n\n";
+        return;
+    }
+
+    // GUI mode: auto-select first candidate
+    if (ctx.gameEngine.getPanelManager()) {
+        Player* target = candidates.front();
+        target->moveBackwardTo(currentPos, ctx);
+        std::cout << "\n[INFO] " << target->getUsername()
+                  << " berhasil ditarik ke posisi: " << currentPos << "\n";
         return;
     }
 

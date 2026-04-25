@@ -83,6 +83,10 @@ std::vector<Property*> Board::getAllProperties(){
     return properties;
 }
 
+const std::vector<Property*> Board::getAllProperties() const {
+    return properties;
+}
+
 Tile* Board::getTile(int idx){
     if (idx < 0 || idx >= size) {
         return nullptr;
@@ -91,7 +95,36 @@ Tile* Board::getTile(int idx){
     return tiles[static_cast<size_t>(idx)];
 };
 
+const Tile* Board::getTile(int idx) const {
+    if (idx < 0 || idx >= size) {
+        return nullptr;
+    }
+
+    return tiles[static_cast<size_t>(idx)];
+};
+
 Tile* Board::getTileByCode(string cd) {
+    auto mapped = codeToIndex.find(cd);
+    if (mapped != codeToIndex.end()) {
+        return getTile(mapped->second);
+    }
+
+    auto it = find_if(tiles.begin(), tiles.end(), 
+        // fungsi lambda
+        [cd](Tile* tile) {
+            return tile != nullptr && tile->getCode() == cd; 
+        }
+    );
+
+    // jika pencarian berhasil
+    if (it != tiles.end()) {
+        return *it;
+    }
+
+    return nullptr; // null jika tidak ditemukan
+}
+
+const Tile* Board::getTileByCode(string cd) const {
     auto mapped = codeToIndex.find(cd);
     if (mapped != codeToIndex.end()) {
         return getTile(mapped->second);

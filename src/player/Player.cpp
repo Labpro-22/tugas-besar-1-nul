@@ -164,7 +164,18 @@ bool Player::upgrade(TurnContext& ctx) {
     if (eligible_props.empty()) {
         std::cout << "Tidak ada properti yang dapat diupgrade saat ini (pastikan sudah monopoli dan memenuhi syarat pemerataan).\n";
         return false;
-    } 
+    }
+
+    // GUI mode: show upgrade panel (only for human players)
+    if (!this->isBot() && ctx.gameEngine.getPanelManager()) {
+        ctx.gameEngine.getPanelManager()->showUpgrade(*this, ctx);
+        return true;
+    }
+
+    // Bot players skip CLI upgrade
+    if (this->isBot()) {
+        return false;
+    }
 
     std::cout << "Properti yang dapat di-upgrade: \n";
     int ctr = 1;
@@ -175,11 +186,11 @@ bool Player::upgrade(TurnContext& ctx) {
 
     std::cout << "Masukkan kode properti yang ingin diupgrade: ";
     std::string cd;
-    
+
     while (true) {
         std::cin >> cd;
         bool found = false;
-        
+
         for (StreetProperty* sprop : eligible_props) {
             if (cd == sprop->getCode()) {
                 found = true;
@@ -198,7 +209,7 @@ bool Player::upgrade(TurnContext& ctx) {
                 }
             }
         }
-        
+
         if (!found) {
             std::cout << "Properti tidak valid. Silakan masukkan kode properti lain: ";
         }

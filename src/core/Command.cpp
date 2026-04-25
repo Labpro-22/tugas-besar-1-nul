@@ -345,6 +345,12 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execPrintCert(TurnContext& ctx, std::ostream& out) const {
+    // GUI mode: show property cert panel
+    if (auto* pm = ctx.gameEngine.getPanelManager()) {
+        pm->showPropertyCert(ctx.board);
+        return;
+    }
+
     std::string propertyCode;
 
     if (argc() >= 2 && argv(1) != nullptr) {
@@ -409,6 +415,12 @@ void Command::execPrintCert(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execPrintProperty(TurnContext& ctx, std::ostream& out) const {
+    // GUI mode: show properties list panel
+    if (auto* pm = ctx.gameEngine.getPanelManager()) {
+        pm->showPropertiesList(ctx.currentPlayer);
+        return;
+    }
+
     Player& curPlayer = ctx.currentPlayer;
     const auto& properties = curPlayer.getProperties();
 
@@ -417,6 +429,32 @@ void Command::execPrintProperty(TurnContext& ctx, std::ostream& out) const {
         out << "You don't have any properties.\n";
         return;
     }
+
+	out << "=== Properties of: " << curPlayer.getUsername() << " ===\n";
+	out << "\nStreet Properties\n";
+	for (Property* prop : properties){
+		if (prop->getOwner() == &ctx.currentPlayer && dynamic_cast<StreetProperty*> (prop) != nullptr){
+			prop->printStatus(ctx);
+			cout << "\n";
+		}
+	}
+
+	out << "\nRailroad Properties\n";
+	for (Property* prop : properties){
+		if (prop->getOwner() == &ctx.currentPlayer && dynamic_cast<RailroadProperty*> (prop) != nullptr){
+			prop->printStatus(ctx);
+			cout << "\n";
+		}
+	}
+
+	out << "\nUtility Properties\n";
+	for (Property* prop : properties){
+		if (prop->getOwner() == &ctx.currentPlayer && dynamic_cast<UtilityProperty*> (prop) != nullptr){
+			prop->printStatus(ctx);
+			cout << "\n";
+		}
+	}
+}
 
 	// struct PropertyLine {
 	// 	std::string name;
@@ -466,47 +504,15 @@ void Command::execPrintProperty(TurnContext& ctx, std::ostream& out) const {
 	// 	totalWealth += prop->getBuyPrice();
 	// }
 
-	out << "=== Properties of: " << curPlayer.getUsername() << " ===\n";
-	// for (const std::string& groupName : groupOrder) {
-	// 	out << "\n[" << groupName << "]\n";
-	// 	const auto& lines = grouped[groupName];
-	// 	for (const PropertyLine& line : lines) {
-	// 		out << "  - " << line.name << " (" << line.code << ")";
-	// 		if (!line.buildingInfo.empty()) {
-	// 			out << "  " << line.buildingInfo;
-	// 		}
-	// 		out << "  M" << line.baseValue << "  " << line.statusText << "\n";
-	// 	}
-	// }
-
-	out << "\nStreet Properties\n";
-	for (Property* prop : properties){
-		if (prop->getOwner() == &ctx.currentPlayer && dynamic_cast<StreetProperty*> (prop) != nullptr){
-			prop->printStatus(ctx);
-			cout << "\n";
-		}
-	}
-
-	out << "\nRailroad Properties\n";
-	for (Property* prop : properties){
-		if (prop->getOwner() == &ctx.currentPlayer && dynamic_cast<RailroadProperty*> (prop) != nullptr){
-			prop->printStatus(ctx);
-			cout << "\n";
-		}
-	}
-
-	out << "\nUtility Properties\n";
-	for (Property* prop : properties){
-		if (prop->getOwner() == &ctx.currentPlayer && dynamic_cast<UtilityProperty*> (prop) != nullptr){
-			prop->printStatus(ctx);
-			cout << "\n";
-		}
-	}
-
     // out << "\nTotal kekayaan properti: M" << formatMoneyId(totalWealth) << "\n";
-}
 
 void Command::execProfile(TurnContext& ctx, std::ostream& out) const {
+	// GUI mode: show profile panel
+	if (auto* pm = ctx.gameEngine.getPanelManager()) {
+		pm->showProfile(ctx.currentPlayer);
+		return;
+	}
+
 	Player& currentPlayer = ctx.currentPlayer;
 	const auto& properties = currentPlayer.getProperties();
 
@@ -542,6 +548,12 @@ void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
 	Player& currentPlayer = ctx.currentPlayer;
 	if (currentPlayer.getPropertiesAmount() == 0) {
 		out << "[WARN] You do not own any properties to mortgage.\n";
+		return;
+	}
+
+	// GUI mode: show mortgage panel
+	if (auto* pm = ctx.gameEngine.getPanelManager()) {
+		pm->showMortgage(currentPlayer);
 		return;
 	}
 
@@ -605,7 +617,68 @@ void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
+    Player& currentPlayer = ctx.currentPlayer;
 
+    // GUI mode: show dismortgage panel
+    if (auto* pm = ctx.gameEngine.getPanelManager()) {
+        pm->showDismortgage(currentPlayer);
+        return;
+    }
+
+    std::string propertyCode;
+    if (argc() >= 2 && argv(1) != nullptr) {
+        propertyCode = argv(1);
+    } else {
+        out << "[COMMAND] Input property code to dismortgage: ";
+        std::getline(std::cin, propertyCode);
+    }
+
+    if (propertyCode.empty()) {
+        out << "[WARN] Property code cannot be empty.\n";
+        return;
+    }
+
+    Tile* tile = ctx.board.getTileByCode(propertyCode);
+    if (tile == nullptr) {
+        out << "[WARN] Property with code '" << propertyCode << "' not found.\n";
+        return;
+    }
+
+    PropertyTile* propertyTile = dynamic_cast<PropertyTile*>(tile);
+    if (propertyTile == nullptr) {
+        out << "[WARN] Tile with code '" << propertyCode << "' is not a property tile.\n";
+        return;
+    }
+
+    Property* tileProperty = propertyTile->getProperty();
+    if (tileProperty == nullptr) {
+        throw InvalidGameStateException("Property data is unavailable for tile code: " + propertyCode);
+    }
+
+    const auto& ownedProperties = currentPlayer.getProperties();
+    auto ownedIt = std::find(ownedProperties.begin(), ownedProperties.end(), tileProperty);
+    if (ownedIt == ownedProperties.end()) {
+        out << "[WARN] You do not own property '" << tileProperty->getName() << "'.\n";
+        return;
+    }
+
+    if (tileProperty->getOwner() != &currentPlayer) {
+        throw InvalidGameStateException(
+            "Ownership mismatch detected: player property list and tile owner are inconsistent for " +
+            tileProperty->getCode());
+    }
+
+    if (tileProperty->getStatus() != PropertyStatus::MORTGAGED) {
+        out << "[WARN] Property '" << tileProperty->getName() << "' is not mortgaged.\n";
+        return;
+    }
+
+    int cost = static_cast<int>(std::ceil(tileProperty->getMortgageValue() * 1.1f));
+    currentPlayer.deductCash(cost);
+    tileProperty->redeem();
+
+    out << "[INFO] Property '" << tileProperty->getName() << "' has been dismortgaged.\n";
+    out << "[INFO] You paid M" << formatMoneyId(cost) << ".\n";
 }
 
 void Command::execUpgrade(TurnContext& ctx, std::ostream& out) const {
@@ -616,6 +689,12 @@ void Command::execSave(TurnContext& ctx, std::ostream& out) const {
     // Check if player has already taken any action this turn (spec requirement)
     if (ctx.gameEngine.getTurnManager().getHasActedThisTurn()) {
         out << "[ERROR] Simpan hanya dapat dilakukan di awal giliran, sebelum melakukan aksi apapun.\n";
+        return;
+    }
+
+    // GUI mode: show save panel
+    if (auto* pm = ctx.gameEngine.getPanelManager()) {
+        pm->showSave(ctx.gameEngine);
         return;
     }
 
@@ -645,6 +724,11 @@ void Command::execSave(TurnContext& ctx, std::ostream& out) const {
 // }
 
 void Command::execPrintLog(TurnContext& ctx, std::ostream& out) const {
+    // GUI mode: show log panel
+    if (auto* pm = ctx.gameEngine.getPanelManager()) {
+        pm->showLog(ctx.gameEngine.getLogger());
+        return;
+    }
     ctx.gameEngine.printLogs();
 }
 
@@ -652,6 +736,12 @@ void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {
 	out << "[COMMAND] Checking skill cards in hand...\n";
 	if (ctx.currentPlayer.getHandsAmount() == 0) {
 		out << "No cards found in hand\n";
+		return;
+	}
+
+	// GUI mode: show skill card panel
+	if (auto* pm = ctx.gameEngine.getPanelManager()) {
+		pm->showSkillCard(ctx.currentPlayer, ctx);
 		return;
 	}
 
@@ -674,7 +764,7 @@ void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {
 	}
 
 	ctx.currentPlayer.useSCard(selectedIndex, ctx);
-	out << "[INFO] Skill card index " << selectedIndex << " used successfully\n";	
+	out << "[INFO] Skill card index " << selectedIndex << " used successfully\n";
 }
 
 void Command::execHelp(std::ostream& out) const {

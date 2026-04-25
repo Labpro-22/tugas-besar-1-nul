@@ -18,9 +18,9 @@ class Tile {
 
   public:
     Tile(int idx, string cd, string nm);
-    int getIndex();
-    string getCode();
-    string getName();
-    string getDisplay();
+    int getIndex() const;
+    string getCode() const;
+    string getName() const;
+    string getDisplay() const;
     virtual void onLanded(TurnContext& ctx) = 0;
 };

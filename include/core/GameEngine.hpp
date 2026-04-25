@@ -13,6 +13,9 @@
 #include "card/SkillCard.hpp"
 #include "config/Config.hpp"
 #include "core/TurnManager.hpp"
+#include "states/GameState.hpp"
+#include "gui/GuiRenderer.hpp"
+#include "gui/GuiPanelManager.hpp"
 
 class Player;
 class TurnContext;
@@ -34,6 +37,8 @@ class GameEngine {
     std::vector<Player*> players;
     void clearPlayers();
 
+    GuiPanels::PanelManager* panelManager = nullptr;
+
   public:
     explicit GameEngine(int size);
     ~GameEngine();
@@ -41,6 +46,7 @@ class GameEngine {
     void newGame();
     void loadGameFromSave();
     void run();
+    void runGUI();  // Run with GUI visualization
     void loadGame(const std::string& file);
     void saveGame(const std::string& file);
     void executeCommand(TurnContext& ctx);
@@ -69,4 +75,14 @@ class GameEngine {
     TransactionLogger& getLogger();
     void logAction(const std::string& user, const std::string& action, const std::string& detail);
     void printLogs(int n = -1);
+
+    // Build GameState for GUI rendering
+    GameState buildGameState() const;
+
+    // Get board reference
+    Board& getBoard();
+
+    // GUI panel manager
+    void setPanelManager(GuiPanels::PanelManager* pm);
+    GuiPanels::PanelManager* getPanelManager() const;
 };
