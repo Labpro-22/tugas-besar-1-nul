@@ -38,5 +38,5 @@ void TurnContext::returnCommunityChestCard(CommunityChestCard* card) {
 }
 
 bool TurnContext::canEndTurn() const {
-    return this->getTurnMgr().getHasActedThisTurn();
+    return this->getTurnMgr().getHasActedThisTurn() && !dice.isDouble(); 
 }

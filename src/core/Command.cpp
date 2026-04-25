@@ -209,6 +209,30 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 	// Mark that player has taken action (rolling dice)
 	ctx.gameEngine.getTurnManager().markActionTaken();
 
+	if (ctx.dice.isDouble()) {
+        ctx.gameEngine.getTurnManager().incrementDoubleGotten();
+        int currentDoubles = ctx.gameEngine.getTurnManager().getDoubleGotten();
+
+        if (currentDoubles >= 3) {
+            out << "Go to jail because going over speed limit\n"; // hubungkan ke gotojail nanti
+            
+            // Log tindakan ke TransactionLogger
+            ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "PENJARA", "3x Double (Speeding)");
+            
+            // Proses masuk penjara dan pindah posisi ke Tile 10 (Jail)
+            ctx.currentPlayer.enterJail();
+            ctx.currentPlayer.moveForwardTo(10, ctx); 
+            
+            // Reset counter karena giliran berakhir secara paksa
+            ctx.gameEngine.getTurnManager().resetDoubleGotten();
+            return; 
+        }
+        out << "[INFO] Double! Anda mendapatkan kesempatan melempar lagi.\n";
+    } else {
+        // Perbaikan: Reset counter jika lemparan saat ini bukan double
+        ctx.gameEngine.getTurnManager().resetDoubleGotten();
+    }
+
 	// Set flag untuk validasi END_TURN
 	if (ctx.currentPlayer.isInJail()) {
 		ctx.hasTakenJailAction = true;  // Pemain di penjara sudah mencoba lempar dadu
@@ -218,23 +242,6 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 
 	int diceTotal = ctx.dice.getTotal();
 	this->canEndTurn = !ctx.dice.isDouble();
-
-//     out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
-//         << std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
-//     out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by "
-//         << diceTotal << " steps\n";
-
-//     int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
-//     Tile* baseTile = ctx.board.getTile(nextPos);
-//     if (baseTile == nullptr) {
-//         throw InvalidGameStateException(
-//             "Player moved to an invalid tile index: " +
-//             std::to_string(nextPos));
-//     }
-
-//     out << ctx.currentPlayer.getUsername() << " landed in "
-//         << baseTile->getName() << "\n";
-//     baseTile->onLanded(ctx);
 
 	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
 		<< std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
@@ -263,6 +270,10 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
+    if (!ctx.dice.canRoll){
+		out << "[WARN] You cannot roll the dice anymore this turn.\n";
+		return;
+	}
     if (argc() < 3) {
         throw InvalidGameStateException(
             "SET_DICE command requires exactly 2 arguments for die values");
@@ -280,6 +291,29 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 
 	// Mark that player has taken action (setting dice)
 	ctx.gameEngine.getTurnManager().markActionTaken();
+	if (ctx.dice.isDouble()) {
+        ctx.gameEngine.getTurnManager().incrementDoubleGotten();
+        int currentDoubles = ctx.gameEngine.getTurnManager().getDoubleGotten();
+
+        if (currentDoubles >= 3) {
+            out << "Go to jail because going over speed limit\n"; // hubungkan ke gotojail nanti
+            
+            // Log tindakan ke TransactionLogger
+            ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "PENJARA", "3x Double (Speeding)");
+            
+            // Proses masuk penjara dan pindah posisi ke Tile 10 (Jail)
+            ctx.currentPlayer.enterJail();
+            ctx.currentPlayer.moveForwardTo(10, ctx); 
+            
+            // Reset counter karena giliran berakhir secara paksa
+            ctx.gameEngine.getTurnManager().resetDoubleGotten();
+            return; 
+        }
+        out << "[INFO] Double! Anda mendapatkan kesempatan melempar lagi.\n";
+    } else {
+        // Perbaikan: Reset counter jika lemparan saat ini bukan double
+        ctx.gameEngine.getTurnManager().resetDoubleGotten();
+    }
 
 	// Set flag untuk validasi END_TURN
 	if (ctx.currentPlayer.isInJail()) {
