@@ -138,10 +138,23 @@ void Player::buy(Property* p, TurnContext& ctx) {
     if (p == nullptr) {
         throw InvalidGameStateException("Cannot buy null property");
     }
+
+    // Jika uang tidak cukup, properti langsung masuk mekanisme lelang.
     if (this->getBalance() < p->getBuyPrice()) {
-        throw InsufficientFundsException("Not enough money to buy " +
-                                         p->getName());
+        cout << "You don't have enough balance! Running auction...\n";
+        AuctionManager am;
+        TurnManager& tm = ctx.getTurnMgr();
+        AuctionWinner aw = am.runAuction(*p, tm.getTurnOrder(), tm.getActivePlayerIndex());
+        aw.winner.buy(&aw.prop_won, aw.buyAmount, ctx);
+        cout << "\n";
+        cout << "[" << aw.winner.getUsername() << "] just won the auction for " << aw.prop_won.getName() << "\n";
+        cout << "[" << aw.winner.getUsername() << "]'s remaining money: " << aw.winner.getBalance() << "\n\n";
+        return;
+    } else{
+        cout << "[" << ctx.currentPlayer.getUsername() << "] just bought " << p->getName() << "\n";
+        cout << "[" << ctx.currentPlayer.getUsername() << "]'s remaining money: " << ctx.currentPlayer.getBalance() << "\n\n";
     }
+
     this->deductCash(p->getBuyPrice());
     this->addProperty(p, ctx);
 }
@@ -151,22 +164,14 @@ void Player::buy(Property* p, int buyAmount, TurnContext& ctx) {
     if (p == nullptr) {
         throw InvalidGameStateException("Cannot buy null property");
     }
-    // if (this->getBalance() < p->getBuyPrice()) {
-    //     throw InsufficientFundsException("AUCTION: Not enough money to buy " + 
-    //                                      p->getName()); //should never appear due to auction characteristics
-    // }
-    try{
-        this->deductCash(buyAmount);
-    } catch (NimonspoliException* e){
-        cout << e->what() << "\n";
-        AuctionManager am;
-        TurnManager tm = ctx.getTurnMgr();
-        AuctionWinner aw = am.runAuction(*p, tm.getTurnOrder(), tm.getActivePlayerIndex());
-        aw.winner.buy(&aw.prop_won, aw.buyAmount, ctx);
-        cout << "\n";
-        cout << "[" << aw.winner.getUsername() << "] just won the auction for " << aw.prop_won.getName() << "\n";
-        cout << "[" << aw.winner.getUsername() << "]'s remaining money: " << aw.winner.getBalance() << "\n\n";
+    if (buyAmount < 0) {
+        throw InvalidGameStateException("AUCTION: Buy amount must be non-negative");
     }
+    if (this->getBalance() < buyAmount) {
+        throw InsufficientFundsException("AUCTION: Not enough money to buy " + 
+                                         p->getName()); //should never appear due to auction characteristics
+    }
+    this->deductCash(buyAmount);
     this->addProperty(p, ctx);
 }
 
