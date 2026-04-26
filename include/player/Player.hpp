@@ -8,17 +8,10 @@ class Property;
 class SkillCard;
 class TurnContext;
 
-enum class PlayerStatus {
-    ACTIVE,
-    JAILED,
-    BANKRUPT
-};
+enum class PlayerStatus { ACTIVE, JAILED, BANKRUPT };
 
 class Player {
 protected:
-    /* misc */
-    const int* boardSizeSource; // non-owning pointer (ngikut RAII krn ga manage lgsg)
-
     /* general */
     std::string username;
     PlayerStatus status;
@@ -29,18 +22,18 @@ protected:
     /* skills */
     bool usedSkillThisTurn;
     int discountRate; // DiscountCard
-    bool isShieldActive; // ShieldCard
+    bool hasShield; // ShieldCard
 
     /* containers */
     std::vector<Property*> properties;
     std::vector<SkillCard*> hand;
 
-private:
+  public:
     // apakah mau diimplement ato jadi buysell aja as a whole
-    void addProperty(Property* p);
+    void addProperty(Property* p, TurnContext& ctx);
     void removeProperty(Property& p); //make sure lgi type p
 
-public:
+    // public:
     // ctor dtor
     Player(std::string username, int balance);
     ~Player();
@@ -50,43 +43,62 @@ public:
     PlayerStatus getStatus() const;
     int getBalance() const;
     bool isInJail() const;
+    bool isShieldActive() const;
     int getDiscountRate() const;
     int getPosition() const;
     int getPropertiesAmount() const;
     int getHandsAmount() const;
     int getWealth() const;
+    int getJailTurns() const;
     const std::vector<Property*>& getProperties() const;
+    const std::vector<SkillCard*>& getHand() const;
 
     // op
     bool operator>=(const Player& other);
     bool operator<(const Player& other);
 
     // moving
-    void setBoardSizeSource(const int* sizeSource);
-    void clearBoardSizeSource();
-    void move(int steps);
-    void moveForwardTo(int index);
-    void moveBackwardTo(int index);
-    void onLanded(TurnContext& ctx);
+    int move(int steps, TurnContext& ctx);
+    void moveForwardTo(int index, TurnContext& ctx);
+    void moveBackwardTo(int index, TurnContext& ctx);
+    void setPosition(int pos);
+    // void onLanded(TurnContext& ctx);
 
     // properties
-    void buy(Property* p);
+    void buy(Property* p, TurnContext& ctx);
+    void buy(Property* p, int buyAmount, TurnContext& ctx);
+    bool upgrade(TurnContext& ctx);
     void sell(Property& p);
     void mortgage(Property* p);
+
+    // cash management and bankruptcy
+    void payRent(Property* p, TurnContext& ctx);
+    void addCash(int amount);
+    void deductCash(int amount);
+    void setBankruptStatus();
+    bool checkBankruptcy(int requiredAmount);
+    bool payDebt(int amount, TurnContext& ctx);
 
     // hands or cards
     void drawSCard(SkillCard* deck);
     void discardSCard(int idx);
     void useSCard(int idx, TurnContext& ctx);
     void setDiscountRate(int discount);
+    void resetDiscountRate();
     void activateShield();
+    void deactivateShield();
+    void resetTurnSkills(bool end = false);
 
     // jail
     void enterJail();
     void exitJail();
+    void decrementjailTurns();
 
     // action
-    void decideAction(TurnContext& ctx);
+    virtual void decideAction(TurnContext& ctx);
+
+    // Check if player is a bot (for polymorphism)
+    virtual bool isBot() const;
 
     // printing
     void showProperties();

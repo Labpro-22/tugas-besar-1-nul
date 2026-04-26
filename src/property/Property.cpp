@@ -1,19 +1,58 @@
 // #include "property/Property.hpp"
 #include "../../include/property/Property.hpp"
+#include "player/Player.hpp"
+#include "property/StreetProperty.hpp"
+#include "core/TurnContext.hpp"
+#include "board/Board.hpp"
 
-#include <utility>
 #include <iostream>
+#include <utility>
 
 #include "../../include/exception/InvalidGameStateException.hpp"
+
+namespace {
+void recomputeStreetMonopolyForColor(TurnContext& ctx, const std::string& targetColor) {
+    std::vector<StreetProperty*> sameColorStreets;
+    sameColorStreets.reserve(4);
+
+    for (Property* p : ctx.board.getAllProperties()) {
+        StreetProperty* sp = dynamic_cast<StreetProperty*>(p);
+        if (sp != nullptr && sp->getColor() == targetColor) {
+            sameColorStreets.push_back(sp);
+        }
+    }
+
+    if (sameColorStreets.empty()) {
+        return;
+    }
+
+    Player* candidateOwner = sameColorStreets.front()->getOwner();
+    bool monopolized = candidateOwner != nullptr;
+
+    for (StreetProperty* sp : sameColorStreets) {
+        if (sp->getOwner() != candidateOwner) {
+            monopolized = false;
+            break;
+        }
+    }
+
+    for (StreetProperty* sp : sameColorStreets) {
+        sp->setMonopolized(monopolized);
+    }
+}
+}
 
 // Initializes common property state and validates basic invariants.
 Property::Property(std::string code,
                    std::string name,
                    int buyPrice,
                    int mortgageValue,
-                   PropertyStatus status)
+                   PropertyStatus status,
+                   int festivalMult,
+                   int festivalDur)
     : code_(std::move(code)), name_(std::move(name)), status_(status),
-      owner_(nullptr), buyPrice_(buyPrice), mortgageValue_(mortgageValue) {
+      owner_(nullptr), buyPrice_(buyPrice), mortgageValue_(mortgageValue),
+      festivalMult_(1), festivalDur_(0) {
     if (code_.empty()) {
         throw InvalidGameStateException("Property code cannot be empty");
     }
@@ -62,14 +101,23 @@ Player* Property::getOwner() const {
 }
 
 // Sets owner and synchronizes status between BANK and OWNED.
-void Property::setOwner(Player* owner) {
+void Property::setOwner(Player* owner, TurnContext& ctx) {
     owner_ = owner;
 
+    // Update status dasar kepemilikan
     if (owner_ == nullptr) {
         status_ = PropertyStatus::BANK;
     } else if (status_ == PropertyStatus::BANK) {
         status_ = PropertyStatus::OWNED;
     }
+
+    // Cek apakah properti ini adalah StreetProperty
+    StreetProperty* currentStreet = dynamic_cast<StreetProperty*>(this);
+    if (currentStreet == nullptr) {
+        return;
+    }
+
+    recomputeStreetMonopolyForColor(ctx, currentStreet->getColor());
 }
 
 // Moves property from OWNED to MORTGAGED.
@@ -89,14 +137,49 @@ void Property::redeem() {
     status_ = PropertyStatus::OWNED;
 }
 
-// Returns cash value and resets ownership to bank.
 int Property::sellToBank() {
+    if (status_ != PropertyStatus::OWNED) {
+        throw InvalidGameStateException("Can only sell owned property to bank");
+    }
     owner_ = nullptr;
     status_ = PropertyStatus::BANK;
-    return mortgageValue_;
+    return buyPrice_;
 }
 
 // Compares properties by unique code identity.
 bool Property::operator==(const Property& other) const {
     return code_ == other.code_;
+}
+
+// Applies festival effect with capped stack and duration reset.
+void Property::applyFestival() {
+    if (status_ != PropertyStatus::OWNED) {
+        throw InvalidGameStateException(
+            "Festival can only be applied to owned street property");
+    }
+
+    festivalMult_ = std::min(festivalMult_ * 2, 8);
+    festivalDur_ = 3;
+}
+
+// Ticks festival duration each owner turn and clears effect when expired.
+void Property::decreaseFestivalDuration() {
+    if (festivalDur_ <= 0) {
+        return;
+    }
+
+    --festivalDur_;
+    if (festivalDur_ == 0) {
+        festivalMult_ = 1;
+    }
+}
+
+// Returns current festival rent multiplier.
+int Property::getFestivalMultiplier() const {
+    return festivalMult_;
+}
+
+// Returns remaining owner turns of festival effect.
+int Property::getFestivalDuration() const {
+    return festivalDur_;
 }

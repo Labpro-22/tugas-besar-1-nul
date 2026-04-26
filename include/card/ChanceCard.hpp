@@ -1,18 +1,18 @@
-#include "card.hpp"
 #pragma once
-enum class ChanceType {
-    GO_TO_NEAREST_STATION,
-    MOVE_BACK_3,
-    GO_TO_JAIL
-};
 
+#include "card.hpp"
+
+class Player;
+class TurnContext;
+
+enum class ChanceType { GO_TO_NEAREST_STATION, MOVE_BACK_3, GO_TO_JAIL };
 
 class ChanceCard : public Card {
-private:
+  private:
     ChanceType type;
 
-public:
-    ChanceCard(std::string desc, ChanceType t) ;
+  public:
+    ChanceCard(std::string desc, ChanceType t);
 
-    void execute(Player* player, TurnContext& ctx) override ;
+    void execute(Player* player, TurnContext& ctx) override;
 };

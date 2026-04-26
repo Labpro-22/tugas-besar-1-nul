@@ -12,7 +12,10 @@ class UtilityProperty : public Property {
                     std::string name,
                     int buyPrice,
                     int mortgageValue,
-                    std::map<int, int> multiplierTable);
+                    std::map<int, int> multiplierTable,
+                    PropertyStatus status = PropertyStatus::BANK,
+                    int festivalMult = 1,
+                    int festivalDur = 0);
 
     int getRent(const TurnContext& ctx) const override;
 
@@ -21,7 +24,8 @@ class UtilityProperty : public Property {
     // Integration hooks to avoid depending on full Player/TurnContext
     // implementation.
     void setOwnedUtilityCounter(std::function<int(const Player*)> counter);
-    void setDiceTotalExtractor(std::function<int(const TurnContext&)> extractor);
+    void
+    setDiceTotalExtractor(std::function<int(const TurnContext&)> extractor);
     void printStatus(TurnContext& ctx) override;
 
   private:

@@ -1,7 +1,9 @@
 #include "property/RailroadProperty.hpp"
+#include "property/Property.hpp"
+#include "player/Player.hpp"
 
-#include <utility>
 #include <iostream>
+#include <utility>
 
 #include "exception/InvalidGameStateException.hpp"
 
@@ -10,8 +12,17 @@ RailroadProperty::RailroadProperty(std::string code,
                                    std::string name,
                                    int buyPrice,
                                    int mortgageValue,
-                                   std::map<int, int> rentTable)
-    : Property(std::move(code), std::move(name), buyPrice, mortgageValue),
+                                   std::map<int, int> rentTable,
+                                   PropertyStatus status,
+                                   int festivalMult,
+                                   int festivalDur)
+    : Property(std::move(code),
+               std::move(name),
+               buyPrice,
+               mortgageValue,
+               status,
+               festivalMult,
+               festivalDur),
       rentTable_(std::move(rentTable)) {
     if (rentTable_.empty()) {
         throw InvalidGameStateException("Railroad rent table cannot be empty");
@@ -63,10 +74,17 @@ void RailroadProperty::setOwnedRailroadCounter(
     ownedRailroadCounter_ = std::move(counter);
 }
 
-void RailroadProperty::printStatus(TurnContext& ctx){
+void RailroadProperty::printStatus(TurnContext& ctx) {
     std::cout << "+================================+\n";
-    std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\t\t|\n";
-    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t\t|\n";
-    std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\t\t|\n";
+    std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\n";
+    std::string stat = "BANK";
+    if (getStatus() == PropertyStatus::OWNED){
+        stat = "OWNED BY [" + getOwner()->getUsername() + "]";
+    } else if (getStatus() == PropertyStatus::MORTGAGED){
+        stat = "MORTGAGED BY [" + getOwner()->getUsername() + "]";
+    }
+    std::cout << "| Status: " << stat << "\n";
+    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
+    std::cout << "| Sewa saat ini    : M" << getRent(ctx) << "\n";
     std::cout << "+================================+\n";
 }

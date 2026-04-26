@@ -1,85 +1,82 @@
-#ifndef ACTION_TILE_HPP
-#define ACTION_TILE_HPP
-
 #pragma once
 
-#include "../board/Board.hpp" //nanti dihapus kalau ga dibutuhkan
 #include "Tile.hpp"
+#include "card/card.hpp"
 #include <iostream>
 #include <vector>
 
-
-// =================================== dummy classes =====================================
 class Player;
-
 class TurnContext;
-
-class CardType{
-    //dummy data
-};
-
 class StreetProperty;
+class Property;
 
-enum class TaxType{
-    PPH,
-    PPN
+enum class TaxType { PPH, PBM };
+
+class ActionTile : public Tile {
+  public:
+    ActionTile(int idx, string cd, string nm);
+    virtual void onLanded(TurnContext& ctx);
 };
 
-// ======================================================================================
-
-class ActionTile : public Tile{
-    public:
-        virtual void onLanded(Player* player, TurnContext& ctx);
+class GoTile : public ActionTile {
+  public:
+    GoTile(int idx, string cd, string nm);
 };
 
-class GoTile : public ActionTile{
-    public:
-        void onLanded(Player* player, TurnContext& ctx) override;
-        void paySalary(Player* player);
+class JailTile : public ActionTile {
+  private:
+    vector<Player*> inmates;
+    vector<Player*> visitors;
+
+  public:
+    JailTile(int idx, string cd, string nm);
+    void onLanded(TurnContext& ctx) override;
+    void addInmate(Player& player);
+    void removeInmate(Player& player);
+    bool isInmate(Player& player);
 };
 
-class JailTile : public ActionTile{
-    private:
-        vector<Player*> inmates;
-        vector<Player*> visitors;
-    public:
-        void onLanded(Player* player, TurnContext& ctx) override;
-        void addInmate(Player* player);
-        void removeInmate(Player* player);
-        bool isInmate(Player* player);
+class FreeParkingTile : public ActionTile {
+  public:
+    FreeParkingTile(int idx, string cd, string nm);
 };
 
-class FreeParkingTile : public ActionTile{
-    public:
-        void onLanded(Player* player, TurnContext& ctx) override;
+class GoToJailTile : public ActionTile {
+  public:
+    GoToJailTile(int idx, string cd, string nm);
+    void onLanded(TurnContext& ctx) override;
 };
 
-class GoToJailTile : public ActionTile{
-    public:
-        void onLanded(Player* player, TurnContext& ctx) override;
+enum class CardTileType {
+    CHANCE,         // Kartu Kesempatan
+    COMMUNITY_CHEST // Kartu Dana Umum
 };
 
 class CardTile : public ActionTile{
     private:
-        CardType type;
+        CardTileType cardType;
     public:
-        void onLanded(Player* player, TurnContext& ctx) override;
+        CardTile(int idx, string cd, string nm);
+        CardTile(int idx, string cd, string nm, CardTileType type);
+        void onLanded(TurnContext& ctx) override;
+        void setCardType(CardTileType type);
+        CardTileType getCardType() const;
 };
 
-class FestivalTile : public ActionTile{
-    public:
-        void onLanded(Player* player, TurnContext& ctx) override;
-        void applyFestival(Player* player, StreetProperty* prop);
+class FestivalTile : public ActionTile {
+  public:
+    FestivalTile(int idx, string cd, string nm);
+    void onLanded(TurnContext& ctx) override;
+    void applyFestival(Player& player, Property& prop, TurnContext& ctx);
 };
 
-class TaxTile : public ActionTile{
-    private:
-        TaxType taxType;
-    public: 
-        void onLanded(Player* player, TurnContext& ctx) override;
-        void applyPPH(Player* player);
-        void applyPPN(Player* player);
+class TaxTile : public ActionTile {
+  private:
+    TaxType taxType;
+
+  public:
+    TaxTile(int idx, string cd, string nm, TaxType type);
+    void onLanded(TurnContext& ctx) override;
+    void applyPPH(Player& player, TurnContext& ctx);
+    void applyPBM(Player& player, TurnContext& ctx);
 };
-
-
-#endif

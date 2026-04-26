@@ -1,4 +1,8 @@
 #include "property/UtilityProperty.hpp"
+#include "property/Property.hpp"
+#include "player/Player.hpp"
+#include "core/Dice.hpp"
+#include "core/TurnContext.hpp"
 
 #include <iostream>
 #include <utility>
@@ -10,8 +14,17 @@ UtilityProperty::UtilityProperty(std::string code,
                                  std::string name,
                                  int buyPrice,
                                  int mortgageValue,
-                                 std::map<int, int> multiplierTable)
-    : Property(std::move(code), std::move(name), buyPrice, mortgageValue),
+                                 std::map<int, int> multiplierTable,
+                                 PropertyStatus status,
+                                 int festivalMult,
+                                 int festivalDur)
+    : Property(std::move(code),
+               std::move(name),
+               buyPrice,
+               mortgageValue,
+               status,
+               festivalMult,
+               festivalDur),
       multiplierTable_(std::move(multiplierTable)) {
     if (multiplierTable_.empty()) {
         throw InvalidGameStateException(
@@ -32,13 +45,11 @@ int UtilityProperty::getRent(const TurnContext& ctx) const {
         throw InvalidGameStateException(
             "Utility owned-count provider is not set");
     }
-    if (!diceTotalExtractor_) {
-        throw InvalidGameStateException(
-            "Utility dice-total provider is not set");
-    }
 
     const int ownedUtilities = ownedUtilityCounter_(owner_);
-    const int diceTotal = diceTotalExtractor_(ctx);
+
+    const int diceTotal = diceTotalExtractor_ ? diceTotalExtractor_(ctx)
+                                              : ctx.dice.getTotal();
     return getRentFromOwnedCountAndDice(ownedUtilities, diceTotal);
 }
 
@@ -77,10 +88,30 @@ void UtilityProperty::setDiceTotalExtractor(
     diceTotalExtractor_ = std::move(extractor);
 }
 
-void UtilityProperty::printStatus(TurnContext& ctx){
+void UtilityProperty::printStatus(TurnContext& ctx) {
     std::cout << "+================================+\n";
-    std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\t\t|\n";
-    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\t\t|\n";
-    std::cout << "| Sewa dasar    : M" << getRent(ctx) << "\t\t|\n";
+    std::cout << "| [" <<  "] " << getName() << " (" << getCode() << ")\n";
+    std::string stat = "BANK";
+    if (getStatus() == PropertyStatus::OWNED){
+        stat = "OWNED BY [" + getOwner()->getUsername() + "]";
+    } else if (getStatus() == PropertyStatus::MORTGAGED){
+        stat = "MORTGAGED BY [" + getOwner()->getUsername() + "]";
+    }
+    std::cout << "| Status: " << stat << "\n";
+    std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
+    std::string faktorPengaliText = "-";
+    if (getStatus() == PropertyStatus::OWNED && getOwner() != nullptr && ownedUtilityCounter_) {
+        const int ownedUtilities = ownedUtilityCounter_(getOwner());
+        auto it = multiplierTable_.find(ownedUtilities);
+        if (it == multiplierTable_.end()) {
+            it = multiplierTable_.find(static_cast<int>(multiplierTable_.size()));
+        }
+        if (it != multiplierTable_.end()) {
+            faktorPengaliText = std::to_string(it->second);
+        }
+    }
+
+    std::cout << "| Sewa saat ini    : <banyak dadu ketika mendarat> x M"
+              << faktorPengaliText << "\n";
     std::cout << "+================================+\n";
 }

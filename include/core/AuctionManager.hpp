@@ -5,11 +5,18 @@
 class Player;
 class Property;
 
+class AuctionWinner{
+  public:
+    Player& winner;
+    Property& prop_won;
+    int buyAmount;
+
+    AuctionWinner(Player& player, Property& prop, int amount);
+};
+
 class AuctionManager {
   public:
-    // Runs auction from the player after startIdx and returns winner or
-    // nullptr.
-    Player* runAuction(Property* prop,
+    AuctionWinner runAuction(Property& prop,
                        const std::vector<Player*>& players,
                        int startIdx);
 

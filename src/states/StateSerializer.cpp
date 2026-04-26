@@ -35,7 +35,8 @@ std::string StateSerializer::serializePlayers(
 
     for (const PlayerState& player : players) {
         out << player.username << ' ' << player.balance << ' '
-            << player.positionCode << ' ' << player.status << '\n';
+            << player.positionCode << ' ' << player.status << ' '
+            << (player.isBot ? 1 : 0) << '\n';
         out << serializeHand(player.hand);
     }
 

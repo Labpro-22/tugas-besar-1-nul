@@ -1,12 +1,31 @@
 #pragma once
 
-class Player;
+#include <string>
+#include <vector>
+
+#include "property/Property.hpp"
+
+class TurnContext;
+
+struct LiquidationOption {
+    enum Type { SELL, MORTGAGE };
+
+    Property* property;
+    Type type;
+    int cashValue;
+
+    LiquidationOption(Property* prop, Type t, int value)
+        : property(prop), type(t), cashValue(value) {}
+};
 
 class BankruptcyManager {
-public:
-    void check(Player& player, int debt, Player* creditor = nullptr);
+  public:
 
-    void liquidate(Player* player, int debt);
-
-    void declare(Player* player, Player* creditor);
+    static int calculateMaxLiquidationFunds(TurnContext& ctx);
+    static int calculateSellValue(TurnContext& ctx, Property* property);
+    static bool canCoverDebt(TurnContext& ctx, int debtAmount);
+    static std::vector<LiquidationOption> getAvailableLiquidationOptions(TurnContext& ctx);
+    static bool resolveDebtByLiquidation(TurnContext& ctx, int debtAmount);
+    static void performForcedLiquidation(TurnContext& ctx, int debtAmount);
+    static void declareBankrupt(TurnContext& ctx);
 };
