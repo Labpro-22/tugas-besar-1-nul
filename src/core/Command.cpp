@@ -512,7 +512,15 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 		throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(nextPos));
 	}
 
-	// out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
+
+    std::string logDetail = "Lempar: " + std::to_string(ctx.dice.getDie1()) + "+" +
+	                        std::to_string(ctx.dice.getDie2()) + "=" + std::to_string(diceTotal);
+	ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "DADU", logDetail);
+
+	// Log movement
+	logDetail = "Mendarat di " + baseTile->getName() + " (" + baseTile->getCode() + ")";
+	ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "GERAK", logDetail);
+
     if (handleGoToJailLanding(baseTile, ctx, out)) {
         return;
     }
