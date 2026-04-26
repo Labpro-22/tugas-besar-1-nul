@@ -121,17 +121,29 @@ GUIRenderer::BuildDefaultTileVisualMap() {
         {"go", "tile-go"},
         {"start", "tile-go"},
         {"mulai", "tile-go"},
+        {"pen", "tile-jail"},
+        {"jail", "tile-jail"},
+        {"penjara", "tile-jail"},
+        {"bbp", "tile-free-parking"},
+        {"free-parking", "tile-free-parking"},
+        {"bebas parkir", "tile-free-parking"},
+        {"ppj", "tile-go-to-jail"},
+        {"gotojail", "tile-go-to-jail"},
+        {"pergi ke penjara", "tile-go-to-jail"},
         {"stasiun", "tile-stasiun"},
         {"railroad", "tile-stasiun"},
         {"rr", "tile-stasiun"},
         {"pln", "tile-pln"},
         {"pam", "tile-pam"},
         {"festival", "tile-festival"},
-        {"chance", "tile-kesempatan"},
         {"kesempatan", "tile-kesempatan"},
-        {"community", "tile-kesempatan"},
+        {"chance", "tile-kesempatan"},
         {"danaumum", "tile-kesempatan"},
         {"dana-umum", "tile-kesempatan"},
+        {"pph", "tile-tax"},
+        {"pbm", "tile-tax"},
+        {"pajak", "tile-tax"},
+        {"tax", "tile-tax"},
     };
 }
 
@@ -368,19 +380,39 @@ void GUIRenderer::DrawTileBase(const int index, const GameState& state) const {
     bool isStreet = IsStreetTile(index, property);
     bool isCorner = IsCornerTile(index);
 
+    // Resolve the tile name from the board data
+    auto tileNameIt = state.tileNames.find(index - 1);
+    std::string tileName = (tileNameIt != state.tileNames.end()) ? tileNameIt->second : "";
+
     if (isCorner) {
         DrawRectangleRec(tileRect, Color{205, 197, 178, 255});
         DrawRectangleLinesEx(tileRect, 1.0F, Color{70, 70, 70, 255});
 
         if (!textureKey.empty()) {
             Rectangle textureDst = Rectangle{tileRect.x + 4.0F,
-                                             tileRect.y + 4.0F,
-                                             tileRect.width - 8.0F,
-                                             tileRect.height - 8.0F};
+                                              tileRect.y + 4.0F,
+                                              tileRect.width - 8.0F,
+                                              tileRect.height - 8.0F};
             DrawTextureFitted(textureKey, textureDst);
         }
+
+        // Draw corner tile name below the texture
+        if (!tileName.empty()) {
+            int nameFontSize = kFontSmall;
+            int nameW = MeasureText(tileName.c_str(), nameFontSize);
+            int availW = static_cast<int>(tileRect.width - 8.0F);
+            if (nameW > availW && nameFontSize > 8) {
+                nameFontSize = std::max(8, nameFontSize * availW / nameW);
+                nameW = MeasureText(tileName.c_str(), nameFontSize);
+            }
+            DrawText(tileName.c_str(),
+                     static_cast<int>(tileRect.x + (tileRect.width - nameW) * 0.5f),
+                     static_cast<int>(tileRect.y + tileRect.height - nameFontSize - 4.0f),
+                     nameFontSize,
+                     Color{40, 40, 40, 255});
+        }
     } else if (isStreet) {
-        Color headerColor = GetColorGroupForTile(index);
+        Color headerColor = GetColorGroupForTile(index, property);
         DrawRotatedTileContent(
             square.side, tileRect, headerColor, code, property, textureKey);
         return;
@@ -390,10 +422,26 @@ void GUIRenderer::DrawTileBase(const int index, const GameState& state) const {
 
         if (!textureKey.empty()) {
             Rectangle textureDst = Rectangle{tileRect.x + 4.0F,
-                                             tileRect.y + 4.0F,
-                                             tileRect.width - 8.0F,
-                                             tileRect.height - 8.0F};
+                                              tileRect.y + 4.0F,
+                                              tileRect.width - 8.0F,
+                                              tileRect.height - 8.0F};
             DrawTextureFitted(textureKey, textureDst);
+        }
+
+        // Draw the tile name label below icon
+        if (!tileName.empty()) {
+            int nameFontSize = kFontSmall;
+            int nameW = MeasureText(tileName.c_str(), nameFontSize);
+            int availW = static_cast<int>(tileRect.width - 8.0F);
+            if (nameW > availW && nameFontSize > 8) {
+                nameFontSize = std::max(8, nameFontSize * availW / nameW);
+                nameW = MeasureText(tileName.c_str(), nameFontSize);
+            }
+            DrawText(tileName.c_str(),
+                     static_cast<int>(tileRect.x + (tileRect.width - nameW) * 0.5f),
+                     static_cast<int>(tileRect.y + tileRect.height - nameFontSize - 4.0f),
+                     nameFontSize,
+                     Color{40, 40, 40, 255});
         }
     }
 
@@ -970,8 +1018,8 @@ void GUIRenderer::DrawSingleHandCard(const CardState& card,
 #endif
 }
 
-Color GUIRenderer::GetColorGroupForTile(const int index) const {
-    return GuiVisualModule::GetColorGroupForTile(index);
+Color GUIRenderer::GetColorGroupForTile(const int index, const PropertyState* property) const {
+    return GuiVisualModule::GetColorGroupForTile(index, property);
 }
 
 Color GUIRenderer::GetTileBodyColor(int index) const {
@@ -994,9 +1042,21 @@ bool GUIRenderer::IsStreetTile(int index, const PropertyState* property) const {
             typeLower.find("lahan") != std::string::npos) {
             return true;
         }
+        // Railroad and utility tiles are NOT streets
+        if (typeLower.find("railroad") != std::string::npos ||
+            typeLower.find("utility") != std::string::npos) {
+            return false;
+        }
     }
 
-    return true;
+    // If there's a property with a color group, it's a street
+    if (property != nullptr && !property->colorGroup.empty()) {
+        return true;
+    }
+
+    // Default: non-corner tiles with no property data are treated as non-streets
+    // so they get a plain rendering with possible texture/icon
+    return false;
 }
 
 const PropertyState*

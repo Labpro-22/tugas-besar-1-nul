@@ -36,6 +36,7 @@
 #include "board/Board.hpp"
 #include "tile/Tile.hpp"
 
+#include <iomanip>
 #include <limits>
 #include <fstream>
 #include <cstring>
@@ -850,10 +851,15 @@ void GameEngine::runGUI() {
     config.window.resizable = true;
     config.assetRoot = "assets";
 
-    for (int i = 1; i <= GUIRenderer::kBoardTileCount; ++i) {
-        char buf[8];
-        std::snprintf(buf, sizeof(buf), "T%02d", i);
-        config.boardVisual.tileCodesInOrder.push_back(buf);
+    for (int i = 0; i < GUIRenderer::kBoardTileCount; ++i) {
+        const Tile* tile = board.getTile(i);
+        if (tile != nullptr) {
+            config.boardVisual.tileCodesInOrder.push_back(tile->getCode());
+        } else {
+            std::ostringstream oss;
+            oss << "T" << std::setw(2) << std::setfill('0') << (i + 1);
+            config.boardVisual.tileCodesInOrder.push_back(oss.str());
+        }
     }
     config.boardVisual.tileTextureByCode = GUIRenderer::BuildDefaultTileVisualMap();
 
@@ -864,9 +870,25 @@ void GameEngine::runGUI() {
         return;
     }
 
+    auto syncTileOrderFromBoard = [&renderer, this]() {
+        std::vector<std::string> codes;
+        for (int i = 0; i < GUIRenderer::kBoardTileCount; ++i) {
+            const Tile* tile = board.getTile(i);
+            if (tile != nullptr) {
+                codes.push_back(tile->getCode());
+            } else {
+                std::ostringstream oss;
+                oss << "T" << std::setw(2) << std::setfill('0') << (i + 1);
+                codes.push_back(oss.str());
+            }
+        }
+        renderer.SetTileOrder(codes);
+    };
+
+    syncTileOrderFromBoard();
+
     bool shouldExit = false;
     while (!shouldExit && !WindowShouldClose()) {
-        // GUI Panel Manager for in-game interactions
         GuiPanels::PanelManager panelManager;
         setPanelManager(&panelManager);
 
@@ -903,6 +925,7 @@ void GameEngine::runGUI() {
                 }
 
                 board.generateDefaultBoard();
+                syncTileOrderFromBoard();
                 turnmgr = TurnManager(maxTurns);
 
                 clearPlayers();
@@ -930,6 +953,7 @@ void GameEngine::runGUI() {
             bool backToMenu = false;
             bool loaded = RenderLoadGameScreen(loadGameState, *this, backToMenu);
             if (loaded) {
+                syncTileOrderFromBoard();
                 currentScreen = GUIScreen::GAME;
             } else if (backToMenu) {
                 currentScreen = GUIScreen::MAIN_MENU;
@@ -1669,11 +1693,13 @@ GameState GameEngine::buildGameState() const {
 
         PropertyState propState;
         propState.code = prop->getCode();
+        propState.name = prop->getName();
 
         // Determine property type
         if (dynamic_cast<StreetProperty*>(prop) != nullptr) {
             propState.type = "street";
             StreetProperty* street = dynamic_cast<StreetProperty*>(prop);
+            propState.colorGroup = street->getColorGroup();
             propState.buildingCount = street->getBuildingCount();
             propState.isHotel = street->hasHotel();
         } else if (dynamic_cast<RailroadProperty*>(prop) != nullptr) {
@@ -1712,6 +1738,14 @@ GameState GameEngine::buildGameState() const {
 
     // Copy log from TransactionLogger to state
     state.log = logger.getAll();
+
+    // Build tile names from board for GUI display
+    for (int i = 0; i < board.getSize(); ++i) {
+        const Tile* tile = board.getTile(i);
+        if (tile != nullptr) {
+            state.tileNames[i] = tile->getName();
+        }
+    }
 
     return state;
 }

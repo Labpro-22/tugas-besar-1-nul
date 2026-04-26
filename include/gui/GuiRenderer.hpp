@@ -193,7 +193,7 @@ class GUIRenderer {
     void DrawActiveHandCards(const PlayerState& activePlayer) const;
     void DrawSingleHandCard(const CardState& card, const Rectangle& dst) const;
 
-    Color GetColorGroupForTile(int index) const;
+    Color GetColorGroupForTile(int index, const PropertyState* property) const;
     Color GetTileBodyColor(int index) const;
     bool IsCornerTile(int index) const;
     bool IsStreetTile(int index, const PropertyState* property) const;
