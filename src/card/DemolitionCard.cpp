@@ -11,12 +11,12 @@
 #include <vector>
 
 DemolitionCard::DemolitionCard()
-    : SkillCard("DemolitionCard: Menghancurkan properti lawan", 0) {}
+    : SkillCard("|Demolition Card|: Destroy any enemy property", 0) {}
 
 void DemolitionCard::apply(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     std::cout
-        << "[MENGGUNAKAN] DemolitionCard: Menghancurkan properti lawan.\n";
+        << "[SKILL] " << this->getDescription() << "\n";
 
     std::vector<Player*> candidates;
     const std::vector<Player*> allPlayers = ctx.getAllPlayers();
@@ -28,7 +28,7 @@ void DemolitionCard::apply(TurnContext& ctx) {
     }
 
     if (candidates.empty()) {
-        std::cout << "[INFO] Tidak ada pemain lawan yang bisa ditarget.\n";
+        std::cout << "No players are targetted.\n";
         return;
     }
 
@@ -41,33 +41,39 @@ void DemolitionCard::apply(TurnContext& ctx) {
             if (sp != nullptr && sp->getBuildingCount() > 0) {
                 try {
                     sp->demolish();
-                    std::cout << "\n[BERHASIL] Properti '" << sp->getName()
-                              << "' telah dihancurkan!\n";
+                    std::cout << "Property '" << sp->getName()
+                              << "' destroyed!\n";
                 } catch (const std::exception& e) {
-                    std::cout << "[GAGAL] " << e.what() << "\n";
+                    std::cout << e.what() << "\n";
                 }
                 return;
             }
         }
-        std::cout << "[INFO] Pemain " << targetPlayer->getUsername()
-                  << " tidak memiliki properti dengan bangunan untuk dihancurkan.\n";
+        std::cout << "[" << targetPlayer->getUsername()
+                  << "] has no property to be destroyed.\n";
         return;
     }
 
-    std::cout << "\n=== Daftar Pemain Lain ===\n";
+    std::cout << "\n=== List of Other Players ===\n";
     for (size_t i = 0; i < candidates.size(); ++i) {
         std::cout << i + 1 << ". " << candidates[i]->getUsername() << "\n";
     }
 
-    std::cout << "\nPilih pemain yang propertinya akan dihancurkan (nomor): ";
+    std::cout << "\n";
+    std::cout << "Choose a player whose property you will destroy (number)\n";
+    std::cout << "> ";
     int playerChoice = 0;
     while (!(std::cin >> playerChoice) || playerChoice < 1 ||
            playerChoice > static_cast<int>(candidates.size())) {
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout
-            << "[INFO] Pilihan tidak valid. Masukkan nomor pemain yang benar: ";
+        std::cout << "Invalid input! Please retry\n\n";
+        std::cout << "Choose a player whose property you will destroy (number)\n";
+        std::cout << "> ";
     }
+    std::cout << "\n";
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     Player* targetPlayer = candidates[playerChoice - 1];
 
@@ -83,16 +89,16 @@ void DemolitionCard::apply(TurnContext& ctx) {
             if (sp != nullptr && sp->getBuildingCount() > 0) {
                 try {
                     sp->demolish();
-                    std::cout << "\n[BERHASIL] Properti '" << sp->getName()
-                              << "' telah dihancurkan!\n";
+                    std::cout << "Property '" << sp->getName()
+                              << "' destroyed!\n";
                 } catch (const std::exception& e) {
-                    std::cout << "[GAGAL] " << e.what() << "\n";
+                    std::cout << e.what() << "\n";
                 }
                 return;
             }
         }
-        std::cout << "[INFO] Pemain " << targetPlayer->getUsername()
-                  << " tidak memiliki properti dengan bangunan untuk dihancurkan.\n";
+        std::cout << "[" << targetPlayer->getUsername()
+                  << "] has no property to be destroyed.\n";
         return;
     }
 
@@ -103,7 +109,7 @@ void DemolitionCard::apply(TurnContext& ctx) {
         if (streetProp != nullptr && streetProp->getBuildingCount() > 0) {
             demolishableIndices.push_back(i);
             std::string buildingType =
-                streetProp->hasHotel() ? "Hotel" : "Rumah";
+                streetProp->hasHotel() ? "Hotel" : "House";
             std::cout << "[" << demolishableIndices.size() << "] "
                       << prop->getName() << " (" << buildingType << ")\n";
         }
@@ -111,21 +117,24 @@ void DemolitionCard::apply(TurnContext& ctx) {
 
     if (demolishableIndices.empty()) {
         std::cout
-            << "[INFO] Pemain " << targetPlayer->getUsername()
-            << " tidak memiliki properti dengan bangunan untuk dihancurkan.\n";
+            << "[" << targetPlayer->getUsername()
+            << "] has no property to be destroyed.\n";
         return;
     }
 
-    std::cout << "\nPilih properti yang akan dihancurkan (nomor): ";
+    std::cout << "\n";
+    std::cout << "Choose the property you want to destroy (number)\n";
+    std::cout << "> ";
     int choice = 0;
     while (!(std::cin >> choice) || choice < 1 ||
            choice > static_cast<int>(demolishableIndices.size())) {
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << "[INFO] Pilihan tidak valid. Masukkan nomor properti yang "
-                     "benar: ";
+        std::cout << "Invalid input! Please retry\n\n";
+        std::cout << "Choose the property you want to destroy (number)\n";
+        std::cout << "> ";
     }
-
+    std::cout << "\n";
     std::cin.clear();
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
@@ -136,13 +145,13 @@ void DemolitionCard::apply(TurnContext& ctx) {
     if (selectedProperty != nullptr) {
         try {
             selectedProperty->demolish();
-            std::cout << "\n[BERHASIL] Properti '"
+            std::cout << "\nProperty '"
                       << selectedProperty->getName()
-                      << "' telah dihancurkan!\n";
-            std::cout << "Tingkat bangunan sekarang: "
+                      << "' destroyed!\n";
+            std::cout << "Current housing level: "
                       << selectedProperty->getBuildingCount() << "\n";
         } catch (const std::exception& e) {
-            std::cout << "[GAGAL] " << e.what() << "\n";
+            std::cout << e.what() << "\n";
         }
     }
 }

@@ -4,7 +4,7 @@
 
 void ShieldCard::apply(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
-    std::cout << "[Skill] ShieldCard: You are immune to rent payment for the next roll\n";
+    std::cout << "[Skill] " << this->getDescription() << "\n";
     
     player.activateShield();
 }

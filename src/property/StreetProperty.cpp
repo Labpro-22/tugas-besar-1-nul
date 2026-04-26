@@ -225,7 +225,6 @@ void StreetProperty::printStatus(TurnContext& ctx){
     if (getStatus() == PropertyStatus::OWNED) {
         std::cout << "| Harga saat ini : M" << getRent(ctx) << "\n";
     }
-    std::cout << "+=============================================+\n";
 }
 
 const std::vector<int>& StreetProperty::getRentTable() const {

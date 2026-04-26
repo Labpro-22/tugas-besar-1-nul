@@ -13,7 +13,7 @@ ChanceCard::ChanceCard(std::string desc, ChanceType t)
     : Card(std::move(desc)), type(t) {}
 
 void ChanceCard::execute(Player* player, TurnContext& ctx) {
-    std::cout << "[Kartu Kesempatan] " << description << "\n";
+    std::cout << "[CHANCE] " << description << "\n";
     
     if (player == nullptr) {
         throw InvalidGameStateException("Cannot execute ChanceCard: player is null");
@@ -66,6 +66,12 @@ void ChanceCard::execute(Player* player, TurnContext& ctx) {
         case ChanceType::GO_TO_JAIL: {
             // std::cout << "Efek: Masuk Penjara.\n";
             
+            if (player->isShieldActive()) {
+                std::cout << "[" << player->getUsername() << "] is protected by a shield and does not have to go to jail.\n\n";
+                player->resetTurnSkills();
+                return;
+            }
+
             Board& board = ctx.board;
             int boardSize = ctx.getBoardSize();
             int jailPos = -1;

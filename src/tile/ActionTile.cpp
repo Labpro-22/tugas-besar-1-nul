@@ -186,6 +186,13 @@ void TaxTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
 
     cout << "[" << player.getUsername() << "] landed on [Tax Tile].\n\n";
+
+    if (player.isShieldActive()) {
+        cout << "[" << player.getUsername() << "] is protected by a shield and does not have to pay tax.\n\n";
+        player.resetTurnSkills();
+        return;
+    }
+
     if (taxType == TaxType::PPH) { // is PPH
         // GUI mode: show tax panel (only for human players)
         if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
@@ -226,12 +233,26 @@ void TaxTile::applyPPH(Player& player, TurnContext& ctx) {
         }
         cout << "Invalid input! Please retry\n\n";
     }
+    
     if (inp == 1) {
+        if (player.getDiscountRate() > 0) {
+            int discountedTax = taxFlat * (100 - player.getDiscountRate()) / 100;
+            std::cout << "Applying discount to tax: M" << taxFlat << " -> M" << discountedTax << "\n";
+            taxFlat = discountedTax;
+            player.resetTurnSkills();
+        }
+
         player.deductCash(taxFlat);
         cout << "[" << player.getUsername() << "] paid tax of M" << taxFlat << "\n";
     } else{
         int percentTaxAmount = static_cast<int>(std::ceil(
             (static_cast<double>(taxPercent) / 100.0) * static_cast<double>(player.getBalance())));
+        if (player.getDiscountRate() > 0) {
+            int discountedTax = percentTaxAmount * (100 - player.getDiscountRate()) / 100;
+            std::cout << "Applying discount to tax: M" << percentTaxAmount << " -> M" << discountedTax << "\n";
+            percentTaxAmount = discountedTax;
+            player.resetTurnSkills();
+        }
         player.deductCash(percentTaxAmount);
         cout << "[" << player.getUsername() << "] paid tax of M" << percentTaxAmount << "\n\n";
     }
@@ -240,6 +261,14 @@ void TaxTile::applyPPH(Player& player, TurnContext& ctx) {
 
 void TaxTile::applyPBM(Player& player, TurnContext& ctx) {
     int taxFlat = ctx.gameEngine.getTaxPbmFlat();
+
+    if (player.getDiscountRate() > 0) {
+        int discountedTax = taxFlat * (100 - player.getDiscountRate()) / 100;
+        std::cout << "Applying discount to tax: M" << taxFlat << " -> M" << discountedTax << "\n";
+        taxFlat = discountedTax;
+        player.resetTurnSkills();
+    }
+
     player.deductCash(taxFlat);
     cout << "[" << player.getUsername() << "] paid tax of M" << taxFlat << "\n\n";
 }

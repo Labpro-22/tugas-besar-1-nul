@@ -23,7 +23,7 @@ void SkillCard::decreaseDuration() {
 
 void SkillCard::execute(Player* player, TurnContext& ctx) {
     if (player == nullptr) {
-        throw InvalidGameStateException("Cannot execute SkillCard: player is null");
+        throw InvalidGameStateException("Cannot execute Skill Card: player is null");
     }
     
     if (player->getHandsAmount() >= 3) {
@@ -32,27 +32,34 @@ void SkillCard::execute(Player* player, TurnContext& ctx) {
             try {
                 player->discardSCard(0);
             } catch (const std::exception& e) {
-                std::cout << "[ERROR] Gagal membuang kartu: " << e.what() << "\n";
+                std::cout << e.what() << "\n";
                 return;
             }
         } else {
-            std::cout << "[INFO] Tangan sudah penuh (3 kartu). Anda harus membuang 1 kartu.\n";
+            std::cout << "Hand is full! You have to discard 1 card.\n";
             
             player->showHands();
             
-            std::cout << "\nPilih kartu yang akan dibuang (1-3): ";
+            std::cout << "\n";
+            std::cout << "Choose a card to discard (1-3)\n";
+            std::cout << "> ";
             int choice = 0;
             while (!(std::cin >> choice) || choice < 1 || choice > 3) {
                 std::cin.clear();
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cout << "[INFO] Pilihan tidak valid. Masukkan nomor 1-3: ";
+                std::cout << "Invalid Input! Please retry.\n\n";
+                std::cout << "Choose a card to discard (1-3)\n";
+                std::cout << "> ";
             }
+            std::cout << "\n";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             
             try {
                 player->discardSCard(choice - 1);
-                std::cout << "[INFO] Kartu berhasil dibuang.\n";
+                std::cout << "Card discarded!\n";
             } catch (const std::exception& e) {
-                std::cout << "[ERROR] Gagal membuang kartu: " << e.what() << "\n";
+                std::cout << e.what() << "\n";
                 return;
             }
             
@@ -64,8 +71,8 @@ void SkillCard::execute(Player* player, TurnContext& ctx) {
     try {
         player->drawSCard(this);
     } catch (const CardSlotFullException& e) {
-        std::cout << "[ERROR] " << e.what() << "\n";
+        std::cout << e.what() << "\n";
     } catch (const std::exception& e) {
-        std::cout << "[ERROR] Gagal menambahkan kartu: " << e.what() << "\n";
+        std::cout << e.what() << "\n";
     }
 }

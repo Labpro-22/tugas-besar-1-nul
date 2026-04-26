@@ -20,7 +20,7 @@ void CommunityChestCard::execute(Player* player, TurnContext& ctx) {
     
     switch (type) {
         case CommunityChestType::BIRTHDAY: {
-            std::cout << "Efek: Dapat M" << amount << " dari setiap pemain.\n";
+            std::cout << "Effect: Collect M" << amount << " from every players.\n";
             
             const std::vector<Player*>& allPlayers = ctx.getAllPlayers();
             int totalCollected = 0;
@@ -32,37 +32,63 @@ void CommunityChestCard::execute(Player* player, TurnContext& ctx) {
                 try {
                     other->deductCash(amount);
                     totalCollected += amount;
-                    std::cout << "[INFO] " << other->getUsername() << " membayar M" << amount << "\n";
+                    std::cout << "[" << other->getUsername() << "] paid M" << amount << "\n";
                 } catch (const std::exception& e) {
-                    std::cout << "[INFO] " << other->getUsername() << " tidak mampu membayar M" << amount << "\n";
+                    std::cout << "[" << other->getUsername() << "] couldn't pay " << amount << "\n";
                 }
             }
             
             if (totalCollected > 0) {
                 player->addCash(totalCollected);
-                std::cout << "[INFO] " << player->getUsername() << " menerima total M" << totalCollected << " dari pemain lain\n";
+                std::cout << "[" << player->getUsername() << "] received a total of M" << totalCollected << " from other players\n";
             } else {
-                std::cout << "[INFO] Tidak ada pemain lain yang membayar.\n";
+                std::cout << "No other players paid.\n";
             }
             break;
         }
         
         case CommunityChestType::DOCTOR_FEE: {
-            std::cout << "Efek: Bayar M" << amount << " untuk biaya dokter.\n";
+            std::cout << "Effect: Pay M" << amount << " after your doctor visit.\n";
+
+            if (player->isShieldActive()) {
+                std::cout << "[" << player->getUsername() << "] is protected by a shield and does not have to pay the doctor fee.\n\n";
+                player->resetTurnSkills();
+                return;
+            }
             
+            if (player->getDiscountRate() > 0) {
+                int discountedAmount = amount * (100 - player->getDiscountRate()) / 100;
+                std::cout << "Applying discount: M" << amount << " -> M" << discountedAmount << "\n";
+                amount = discountedAmount;
+                player->resetTurnSkills();
+            }
+
             try {
                 player->deductCash(amount);
-                std::cout << "[INFO] " << player->getUsername() << " membayar M" << amount << " untuk biaya dokter.\n";
+                std::cout << "[" << player->getUsername() << " paid M" << amount << " for doctor fee.\n";
             } catch (const std::exception& e) {
-                std::cout << "[INFO] " << player->getUsername() << " tidak memiliki cukup uang untuk biaya dokter.\n";
+                std::cout << "[" << player->getUsername() << " doesn't have enough money to pay the doctor fee.\n";
                 player->checkBankruptcy(amount);
             }
             break;
         }
         
         case CommunityChestType::POLITICAL_CAMPAIGN: {
-            std::cout << "Efek: Bayar M" << amount << " kepada setiap pemain.\n";
+            std::cout << "Effect: Pay M" << amount << " to every other players as a political campaign.\n";
             
+            if (player->isShieldActive()) {
+                std::cout << "[" << player->getUsername() << "] is protected by a shield and does not have to pay for the political campaign.\n\n";
+                player->resetTurnSkills();
+                return;
+            }
+
+            if (player->getDiscountRate() > 0) {
+                int discountedAmount = amount * (100 - player->getDiscountRate()) / 100;
+                std::cout << "Applying discount: M" << amount << " -> M" << discountedAmount << "\n";
+                amount = discountedAmount;
+                player->resetTurnSkills();
+            }
+
             const std::vector<Player*>& allPlayers = ctx.getAllPlayers();
             int totalToPay = 0;
             int validRecipients = 0;
@@ -75,7 +101,7 @@ void CommunityChestCard::execute(Player* player, TurnContext& ctx) {
             }
             
             if (player->getBalance() < totalToPay) {
-                std::cout << "[INFO] " << player->getUsername() << " tidak memiliki cukup uang (perlu M" << totalToPay << ").\n";
+                std::cout << "[" << player->getUsername() << "] doesn't have enough money to pay (requires M" << totalToPay << ").\n";
                 player->checkBankruptcy(totalToPay);
                 return;
             }
@@ -86,10 +112,10 @@ void CommunityChestCard::execute(Player* player, TurnContext& ctx) {
                 
                 player->deductCash(amount);
                 other->addCash(amount);
-                std::cout << "[INFO] " << player->getUsername() << " membayar M" << amount << " ke " << other->getUsername() << "\n";
+                std::cout << "[" << player->getUsername() << " paid M" << amount << " to " << other->getUsername() << "\n";
             }
             
-            std::cout << "[INFO] Total dibayar: M" << totalToPay << " kepada " << validRecipients << " pemain.\n";
+            std::cout << "Total paid: M" << totalToPay << " to " << validRecipients << " players.\n";
             break;
         }
     }
