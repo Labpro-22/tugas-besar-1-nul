@@ -95,6 +95,11 @@ void CardTile::onLanded(TurnContext& ctx) {
         std::cout << "[" << player.getUsername() << "] landed on [Chance Tile].\n";
         ChanceCard* card = ctx.drawChanceCard();
         if (card != nullptr) {
+            if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
+                ctx.gameEngine.getPanelManager()->showCardReveal(card, nullptr, player, ctx);
+                return;
+            }
+            
             card->execute(&player, ctx);
             ctx.returnChanceCard(card);
         } else {
@@ -104,6 +109,11 @@ void CardTile::onLanded(TurnContext& ctx) {
         std::cout << "[" << player.getUsername() << "] landed on [Community Chest Tile].\n";
         CommunityChestCard* card = ctx.drawCommunityChestCard();
         if (card != nullptr) {
+            if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
+                ctx.gameEngine.getPanelManager()->showCardReveal(nullptr, card, player, ctx);
+                return;
+            }
+            
             card->execute(&player, ctx);
             ctx.returnCommunityChestCard(card);
         } else {

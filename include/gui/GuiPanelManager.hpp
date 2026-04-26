@@ -18,6 +18,8 @@ class TurnContext;
 class Board;
 class TransactionLogger;
 class GameEngine;
+class ChanceCard;
+class CommunityChestCard;
 
 namespace GuiPanels {
 
@@ -38,7 +40,8 @@ enum class PanelType {
     MESSAGE,
     INPUT_DIALOG,
     FESTIVAL,
-    TAX
+    TAX,
+    CARD_REVEAL
 };
 
 enum class ActionResult {
@@ -162,6 +165,18 @@ struct TaxState {
     ActionResult result = ActionResult::PENDING;
 };
 
+struct CardRevealState {
+    std::string cardTitle;
+    std::string cardDescription;
+    std::string cardType;  // "chance" or "community"
+    ActionResult result = ActionResult::PENDING;
+    bool acknowledged = false;
+    ChanceCard* chanceCard = nullptr;
+    CommunityChestCard* communityCard = nullptr;
+    Player* player = nullptr;
+    TurnContext* ctx = nullptr;
+};
+
 // ============================================================================
 // Panel Manager
 // ============================================================================
@@ -200,6 +215,8 @@ class PanelManager {
     void showMessage(const std::string& title, const std::string& message);
     void showFestival(Player& player, TurnContext& ctx);
     void showTax(Player& player, int taxFlat, float taxPercent);
+    void showCardReveal(ChanceCard* chanceCard, CommunityChestCard* communityCard, 
+                       Player& player, TurnContext& ctx);
 
     // -------------------------------------------------------------------------
     // Accessors for caller to read results / execute follow-up
@@ -219,6 +236,7 @@ class PanelManager {
     LogState& getLogState() { return log_; }
     FestivalState& getFestivalState() { return festival_; }
     TaxState& getTaxState() { return tax_; }
+    CardRevealState& getCardRevealState() { return cardReveal_; }
 
   private:
     PanelType active_ = PanelType::NONE;
@@ -239,6 +257,7 @@ class PanelManager {
     LogState log_;
     FestivalState festival_;
     TaxState tax_;
+    CardRevealState cardReveal_;
 
     // Text input helper
     struct TextInput {
@@ -267,6 +286,7 @@ class PanelManager {
     void renderMessage();
     void renderFestival();
     void renderTax();
+    void renderCardReveal();
 
     // Helpers
     static bool button(const char* text, float x, float y, float w, float h,

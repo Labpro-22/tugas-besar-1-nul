@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -17,4 +18,5 @@ class GameState {
     std::vector<PropertyState> properties;
     std::vector<std::string> deckState;
     std::vector<LogEntry> log;
+    std::map<int, std::string> tileNames;
 };

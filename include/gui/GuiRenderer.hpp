@@ -73,6 +73,17 @@ class GUIRenderer {
         static constexpr int kFrameInterval = 5;
     };
 
+    struct TokenHopAnimation {
+        bool isActive = false;
+        int playerIndex = -1;
+        int fromTileIndex = -1;
+        int currentTileIndex = -1;
+        int toTileIndex = -1;
+        float hopProgress = 0.0f;
+        static constexpr float kHopSpeed = 4.0f;
+        static constexpr float kHopHeight = 18.0f;
+    };
+
     static constexpr int kWindowWidthDefault = 1280;
     static constexpr int kWindowHeightDefault = 720;
     static constexpr int kBoardTileCount = 40;
@@ -105,6 +116,11 @@ class GUIRenderer {
     void SetDiceValues(int die1, int die2);
     void UpdateDiceAnimation();
 
+    void StartTokenHop(int playerIndex, int fromTile, int toTile);
+    void UpdateTokenAnimation();
+    bool IsTokenAnimating() const;
+    void ResetTokenAnimation();
+
     Square GetTileSquare(int index) const;
     int ResolveTileIndexFromCode(const std::string& code) const;
     BoardDisplaySnapshot InspectBoardDisplay() const;
@@ -129,7 +145,7 @@ class GUIRenderer {
                     Color bgColor, Color textColor, Color hoverColor) const;
 
     // Draw game control buttons
-    void DrawGameControls(float x, float y, bool canRoll, bool canEndTurn) const;
+    void DrawGameControls(float x, float y, bool canRoll, bool canEndTurn, bool isJailed = false) const;
 
     // Check if a button was clicked (to be called after drawing)
     bool IsButtonClicked(float x, float y, float width, float height) const;
@@ -137,7 +153,7 @@ class GUIRenderer {
   private:
     static constexpr int kBoardMargin = 24;
     static constexpr int kOuterPadding = 16;
-    static constexpr int kRightPanelWidth = 300;
+    static constexpr int kRightPanelWidth = 340;
     static constexpr int kBottomPanelHeight = 145;
     static constexpr float kTokenScale = 0.55F;
     static constexpr float kOverlayAlphaFactor = 0.72F;
@@ -155,6 +171,7 @@ class GUIRenderer {
 
     int die1_ = 1, die2_ = 1;
     DiceAnimationState diceAnim_;
+    TokenHopAnimation tokenHopAnim_;
     bool assetsLoaded_ = false;
     bool initialized_ = false;
 
@@ -193,7 +210,7 @@ class GUIRenderer {
     void DrawActiveHandCards(const PlayerState& activePlayer) const;
     void DrawSingleHandCard(const CardState& card, const Rectangle& dst) const;
 
-    Color GetColorGroupForTile(int index) const;
+    Color GetColorGroupForTile(int index, const PropertyState* property) const;
     Color GetTileBodyColor(int index) const;
     bool IsCornerTile(int index) const;
     bool IsStreetTile(int index, const PropertyState* property) const;
