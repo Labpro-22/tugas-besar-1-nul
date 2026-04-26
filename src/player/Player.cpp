@@ -110,12 +110,18 @@ int Player::move(int steps, TurnContext& ctx) {
 
 void Player::moveForwardTo(int index, TurnContext& ctx) {
     this->position = index;
-    // ni nanti implement ngapain tilenya, kalo start jg
+    Tile* baseTile = ctx.board.getTile(index);
+    if (baseTile != nullptr) {
+        baseTile->onLanded(ctx);
+    }
 }
 
 void Player::moveBackwardTo(int index, TurnContext& ctx) {
     this->position = index;
-    // ni nanti implement ngapain tilenya
+    Tile* baseTile = ctx.board.getTile(index);
+    if (baseTile != nullptr) {
+        baseTile->onLanded(ctx);
+    }
 }
 
 void Player::setPosition(int pos) {
