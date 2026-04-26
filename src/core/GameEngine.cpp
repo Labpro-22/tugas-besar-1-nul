@@ -210,6 +210,11 @@ static void RenderSplashScreen(GUIRenderer& /*renderer*/, const char* message) {
     EndDrawing();
 }
 
+static std::map<std::string, std::string>& GetPrevPositions() {
+    static std::map<std::string, std::string> prevPositions;
+    return prevPositions;
+}
+
 static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
                             TurnManager& turnmgr, Board& board,
                             Dice& gameDice, int& animatingDiceFrames,
@@ -222,6 +227,21 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
     TurnContext localCtx(*currentPlayer, gameDice, board, engine);
     TurnContext& ctx = persistentCtx ? *persistentCtx : localCtx;
     GameState state = engine.buildGameState();
+
+    // Detect position changes and start hop animation
+    auto& prevPositions = GetPrevPositions();
+    for (std::size_t i = 0; i < state.players.size(); ++i) {
+        const PlayerState& ps = state.players[i];
+        auto it = prevPositions.find(ps.username);
+        if (it != prevPositions.end() && it->second != ps.positionCode) {
+            int fromIdx = renderer.ResolveTileIndexFromCode(it->second);
+            int toIdx = renderer.ResolveTileIndexFromCode(ps.positionCode);
+            if (fromIdx >= 1 && toIdx >= 1 && !renderer.IsTokenAnimating()) {
+                renderer.StartTokenHop(static_cast<int>(i), fromIdx, toIdx);
+            }
+        }
+        prevPositions[ps.username] = ps.positionCode;
+    }
 
     // Update dice animation
     renderer.UpdateDiceAnimation();
@@ -240,21 +260,21 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
     float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 300;
 
     // Draw turn info panel
-    DrawRectangle(10, 10, 340, 100, Color{30, 30, 40, 230});
-    DrawRectangleLinesEx(Rectangle{10.0f, 10.0f, 340.0f, 100.0f}, 2.0f, Color{100, 100, 120, 255});
+    DrawRectangle(10, 10, 380, 110, Color{30, 30, 40, 230});
+    DrawRectangleLinesEx(Rectangle{10.0f, 10.0f, 380.0f, 110.0f}, 2.0f, Color{100, 100, 120, 255});
     DrawText(TextFormat("TURN %d / %d", turnmgr.getCurrentTurn() + 1,
                         turnmgr.getMaxTurn() > 0 ? turnmgr.getMaxTurn() : 999),
-             20, 18, 22, Color{255, 220, 100, 255});
-    DrawText("Current Player:", 20, 48, 14, LIGHTGRAY);
+             20, 18, 24, Color{255, 220, 100, 255});
+    DrawText("Current Player:", 20, 48, 16, LIGHTGRAY);
     DrawText(TextFormat("%s", currentPlayer->getUsername().c_str()),
-             150, 44, 24,
+             180, 44, 26,
              currentPlayer->isBot() ? Color{255, 180, 80, 255} : Color{100, 255, 150, 255});
     DrawText(currentPlayer->isBot() ? "[BOT PLAYER]" : "[HUMAN PLAYER]",
-             20, 78, 14, GRAY);
+             20, 78, 16, GRAY);
 
     // Draw balance info
     DrawText(TextFormat("Balance: M%d", currentPlayer->getBalance()),
-             150, 78, 14, Color{255, 220, 100, 255});
+             180, 78, 16, Color{255, 220, 100, 255});
 
     // Draw control buttons
     bool canRoll = !ctx.hasRolled &&
@@ -266,18 +286,9 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
     if (animatingDiceFrames > 0) {
         int sw = GetScreenWidth();
         int sh = GetScreenHeight();
-        DrawRectangle(sw / 2 - 100, sh / 2 - 30, 200, 40, Color{0, 0, 0, 180});
-        DrawText("Rolling Dice...", sw / 2 - 80, sh / 2 - 20, 20, WHITE);
+        DrawRectangle(sw / 2 - 120, sh / 2 - 25, 240, 50, Color{0, 0, 0, 200});
+        DrawText("Rolling Dice...", sw / 2 - 90, sh / 2 - 18, 24, WHITE);
     }
-
-    // Draw message area
-    float consoleY = static_cast<float>(GetScreenHeight()) - 100.0f;
-    DrawRectangle(10, static_cast<int>(consoleY), 600, 90, Color{20, 20, 25, 230});
-    DrawRectangleLinesEx(Rectangle{10.0f, consoleY, 600.0f, 90.0f}, 1.0f, Color{80, 80, 90, 255});
-    DrawText("Console Output:", 20, GetScreenHeight() - 92, 12, Color{150, 150, 160, 255});
-    DrawText("Press keys or click buttons to play", 20, GetScreenHeight() - 75, 14, LIGHTGRAY);
-    DrawText("[R] Roll  [E] End Turn  [P] Profile  [B] Build  [M] Mortgage  [S] Save  [F12] Screenshot  [ESC] Exit",
-             20, GetScreenHeight() - 55, 12, GRAY);
 
     // Draw in-game help overlay if requested
     if (showHelpOverlay) {
@@ -313,8 +324,8 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
         DrawCenteredText("Press ESC or H to close", sh - 100, 16, GRAY);
     }
 
-    // Render active GUI panel on top of everything
-    if (panelMgr && panelMgr->isActive()) {
+    // Render active GUI panel on top of everything (only after animation finishes)
+    if (panelMgr && panelMgr->isActive() && !renderer.IsTokenAnimating()) {
         panelMgr->updateAndRender();
     }
 
@@ -593,22 +604,37 @@ static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
         DrawCenteredText("Enter maximum turns (-1 for unlimited)", startY - 10, 20, LIGHTGRAY);
         state.maxTurnsInput.Draw(fieldX, startY + 30, fieldWidth, fieldHeight, "", "-1");
 
+        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
+            if (state.maxTurnsInput.text.empty()) {
+                state.maxTurnsInput.text = "-1";
+            }
+            try {
+                int val = std::stoi(state.maxTurnsInput.text);
+                if (val < -1) {
+                    state.errorMessage = "Must be -1 or greater";
+                } else {
+                    state.errorMessage.clear();
+                    state.step = 1;
+                }
+            } catch (...) {
+                state.errorMessage = "Invalid number";
+            }
+        }
         if (RenderGUIButton("Next", fieldX + fieldWidth - 100, startY + 100, 100, 40,
                             Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
             if (state.maxTurnsInput.text.empty()) {
-                state.errorMessage = "Please enter a value";
-            } else {
-                try {
-                    int val = std::stoi(state.maxTurnsInput.text);
-                    if (val < -1) {
-                        state.errorMessage = "Must be -1 or greater";
-                    } else {
-                        state.errorMessage.clear();
-                        state.step = 1;
-                    }
-                } catch (...) {
-                    state.errorMessage = "Invalid number";
+                state.maxTurnsInput.text = "-1";
+            }
+            try {
+                int val = std::stoi(state.maxTurnsInput.text);
+                if (val < -1) {
+                    state.errorMessage = "Must be -1 or greater";
+                } else {
+                    state.errorMessage.clear();
+                    state.step = 1;
                 }
+            } catch (...) {
+                state.errorMessage = "Invalid number";
             }
         }
     } else if (state.step == 1) {
@@ -619,26 +645,34 @@ static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
                             Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255})) {
             state.step = 0;
         }
+        auto advanceFromPlayers = [&]() {
+            if (state.numPlayersInput.text.empty()) {
+                state.numPlayersInput.text = "2";
+            }
+            try {
+                int val = std::stoi(state.numPlayersInput.text);
+                if (val < 2 || val > 6) {
+                    state.errorMessage = "Must be between 2 and 6";
+                } else {
+                    state.errorMessage.clear();
+                    state.step = 2;
+                }
+            } catch (...) {
+                state.errorMessage = "Invalid number";
+            }
+        };
+        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
+            advanceFromPlayers();
+        }
         if (RenderGUIButton("Next", fieldX + fieldWidth - 100, startY + 100, 100, 40,
                             Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
-            if (state.numPlayersInput.text.empty()) {
-                state.errorMessage = "Please enter a value";
-            } else {
-                try {
-                    int val = std::stoi(state.numPlayersInput.text);
-                    if (val < 2 || val > 6) {
-                        state.errorMessage = "Must be between 2 and 6";
-                    } else {
-                        state.errorMessage.clear();
-                        state.step = 2;
-                    }
-                } catch (...) {
-                    state.errorMessage = "Invalid number";
-                }
-            }
+            advanceFromPlayers();
         }
     } else if (state.step == 2) {
-        int numPlayers = std::stoi(state.numPlayersInput.text);
+        int numPlayers = 2;
+        if (!state.numPlayersInput.text.empty()) {
+            try { numPlayers = std::stoi(state.numPlayersInput.text); } catch (...) {}
+        }
         std::string labelText = "Enter number of bots (0-" + std::to_string(numPlayers) + ")";
         DrawCenteredText(labelText.c_str(), startY - 10, 20, LIGHTGRAY);
         state.numBotsInput.Draw(fieldX, startY + 30, fieldWidth, fieldHeight, "", "0");
@@ -647,25 +681,35 @@ static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
                             Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255})) {
             state.step = 1;
         }
+        auto advanceFromBots = [&]() {
+            if (state.numBotsInput.text.empty()) {
+                state.numBotsInput.text = "0";
+            }
+            try {
+                int val = std::stoi(state.numBotsInput.text);
+                if (val < 0 || val > numPlayers) {
+                    state.errorMessage = "Must be between 0 and " + std::to_string(numPlayers);
+                } else {
+                    state.errorMessage.clear();
+                    int numHumans = numPlayers - val;
+                    state.playerNameInputs.resize(numHumans);
+                    for (int i = 0; i < numHumans; ++i) {
+                        if (state.playerNameInputs[i].text.empty()) {
+                            state.playerNameInputs[i].text = "Player" + std::to_string(i + 1);
+                        }
+                    }
+                    state.step = 3;
+                }
+            } catch (...) {
+                state.errorMessage = "Invalid number";
+            }
+        };
+        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
+            advanceFromBots();
+        }
         if (RenderGUIButton("Next", fieldX + fieldWidth - 100, startY + 100, 100, 40,
                             Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
-            if (state.numBotsInput.text.empty()) {
-                state.errorMessage = "Please enter a value";
-            } else {
-                try {
-                    int val = std::stoi(state.numBotsInput.text);
-                    if (val < 0 || val > numPlayers) {
-                        state.errorMessage = "Must be between 0 and " + std::to_string(numPlayers);
-                    } else {
-                        state.errorMessage.clear();
-                        int numHumans = numPlayers - val;
-                        state.playerNameInputs.resize(numHumans);
-                        state.step = 3;
-                    }
-                } catch (...) {
-                    state.errorMessage = "Invalid number";
-                }
-            }
+            advanceFromBots();
         }
     } else if (state.step == 3) {
         int numHumans = static_cast<int>(state.playerNameInputs.size());
@@ -681,7 +725,8 @@ static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
             std::string label = "Player " + std::to_string(i + 1);
             int labelW = MeasureText(label.c_str(), 18);
             DrawText(label.c_str(), static_cast<int>(nameFieldX - labelW - 15), static_cast<int>(nameFieldY + 8), 18, LIGHTGRAY);
-            state.playerNameInputs[i].Draw(nameFieldX, nameFieldY, nameFieldWidth, nameFieldHeight, "");
+            std::string hint = "Player" + std::to_string(i + 1);
+            state.playerNameInputs[i].Draw(nameFieldX, nameFieldY, nameFieldWidth, nameFieldHeight, "", hint.c_str());
             nameFieldY += 55.0f;
             if (nameFieldY > sh - 150) break;
         }
@@ -691,21 +736,21 @@ static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
             state.step = 2;
             state.playerNameInputs.clear();
         }
-        if (RenderGUIButton("Start Game", nameFieldX + nameFieldWidth - 140, nameFieldY + 20, 140, 40,
-                            Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
-            bool allFilled = true;
-            for (const auto& input : state.playerNameInputs) {
-                if (input.text.empty()) {
-                    allFilled = false;
-                    break;
+        auto startGame = [&]() {
+            for (int i = 0; i < numHumans; ++i) {
+                if (state.playerNameInputs[i].text.empty()) {
+                    state.playerNameInputs[i].text = "Player" + std::to_string(i + 1);
                 }
             }
-            if (!allFilled) {
-                state.errorMessage = "Please fill in all player names";
-            } else {
-                state.errorMessage.clear();
-                return true;
-            }
+            state.errorMessage.clear();
+            return true;
+        };
+        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
+            if (startGame()) return true;
+        }
+        if (RenderGUIButton("Start Game", nameFieldX + nameFieldWidth - 140, nameFieldY + 20, 140, 40,
+                            Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
+            if (startGame()) return true;
         }
     }
 
@@ -926,6 +971,8 @@ void GameEngine::runGUI() {
 
                 board.generateDefaultBoard();
                 syncTileOrderFromBoard();
+                GetPrevPositions().clear();
+                renderer.ResetTokenAnimation();
                 turnmgr = TurnManager(maxTurns);
 
                 clearPlayers();
@@ -954,6 +1001,8 @@ void GameEngine::runGUI() {
             bool loaded = RenderLoadGameScreen(loadGameState, *this, backToMenu);
             if (loaded) {
                 syncTileOrderFromBoard();
+                GetPrevPositions().clear();
+                renderer.ResetTokenAnimation();
                 currentScreen = GUIScreen::GAME;
             } else if (backToMenu) {
                 currentScreen = GUIScreen::MAIN_MENU;
@@ -1077,6 +1126,11 @@ void GameEngine::runGUI() {
 
                 // If a blocking panel is active, skip normal input this frame
                 if (panelManager.isBlocking()) {
+                    continue;
+                }
+
+                // If token hop animation is active, skip input until it finishes
+                if (renderer.IsTokenAnimating()) {
                     continue;
                 }
 

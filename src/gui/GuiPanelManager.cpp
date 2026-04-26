@@ -30,9 +30,9 @@
 namespace GuiPanels {
 
 namespace {
-constexpr int kFontBody = 16;
-constexpr int kFontSmall = 14;
-constexpr int kFontTitle = 24;
+constexpr int kFontBody = 18;
+constexpr int kFontSmall = 16;
+constexpr int kFontTitle = 26;
 
 Color panelBgColor() { return Color{35, 35, 48, 255}; }
 Color panelBorderColor() { return Color{100, 100, 130, 255}; }

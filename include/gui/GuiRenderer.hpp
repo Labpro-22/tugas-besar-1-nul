@@ -73,6 +73,17 @@ class GUIRenderer {
         static constexpr int kFrameInterval = 5;
     };
 
+    struct TokenHopAnimation {
+        bool isActive = false;
+        int playerIndex = -1;
+        int fromTileIndex = -1;
+        int currentTileIndex = -1;
+        int toTileIndex = -1;
+        float hopProgress = 0.0f;
+        static constexpr float kHopSpeed = 4.0f;
+        static constexpr float kHopHeight = 18.0f;
+    };
+
     static constexpr int kWindowWidthDefault = 1280;
     static constexpr int kWindowHeightDefault = 720;
     static constexpr int kBoardTileCount = 40;
@@ -104,6 +115,11 @@ class GUIRenderer {
     void StartDiceRoll(int finalDie1, int finalDie2);
     void SetDiceValues(int die1, int die2);
     void UpdateDiceAnimation();
+
+    void StartTokenHop(int playerIndex, int fromTile, int toTile);
+    void UpdateTokenAnimation();
+    bool IsTokenAnimating() const;
+    void ResetTokenAnimation();
 
     Square GetTileSquare(int index) const;
     int ResolveTileIndexFromCode(const std::string& code) const;
@@ -155,6 +171,7 @@ class GUIRenderer {
 
     int die1_ = 1, die2_ = 1;
     DiceAnimationState diceAnim_;
+    TokenHopAnimation tokenHopAnim_;
     bool assetsLoaded_ = false;
     bool initialized_ = false;
 

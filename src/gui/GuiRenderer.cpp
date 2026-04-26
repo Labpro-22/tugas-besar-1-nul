@@ -16,9 +16,9 @@
 #endif
 
 namespace {
-constexpr int kFontBody = 16;
-constexpr int kFontSmall = 12;
-constexpr int kFontTitle = 22;
+constexpr int kFontBody = 18;
+constexpr int kFontSmall = 14;
+constexpr int kFontTitle = 24;
 constexpr int kFontLogo = 48;
 
 int ClampDie(int value) {
@@ -251,6 +251,52 @@ void GUIRenderer::UpdateDiceAnimation() {
     }
 }
 
+void GUIRenderer::StartTokenHop(int playerIndex, int fromTile, int toTile) {
+    tokenHopAnim_.isActive = true;
+    tokenHopAnim_.playerIndex = playerIndex;
+    tokenHopAnim_.fromTileIndex = fromTile;
+    tokenHopAnim_.currentTileIndex = fromTile;
+    tokenHopAnim_.toTileIndex = toTile;
+    tokenHopAnim_.hopProgress = 0.0f;
+}
+
+void GUIRenderer::UpdateTokenAnimation() {
+    if (!tokenHopAnim_.isActive)
+        return;
+
+    float dt = 0.016f;
+#if NIMONSPOLI_HAS_RAYLIB
+    dt = GetFrameTime();
+#endif
+
+    tokenHopAnim_.hopProgress += TokenHopAnimation::kHopSpeed * dt;
+
+    if (tokenHopAnim_.hopProgress >= 1.0f) {
+        // Finished hopping to currentTileIndex (which is the "next" tile)
+        tokenHopAnim_.fromTileIndex = tokenHopAnim_.currentTileIndex;
+
+        if (tokenHopAnim_.fromTileIndex == tokenHopAnim_.toTileIndex) {
+            // Arrived at final destination
+            tokenHopAnim_.isActive = false;
+            return;
+        }
+
+        // Advance to next tile
+        int next = tokenHopAnim_.fromTileIndex + 1;
+        if (next > kBoardTileCount) next = 1;
+        tokenHopAnim_.currentTileIndex = next;
+        tokenHopAnim_.hopProgress = 0.0f;
+    }
+}
+
+bool GUIRenderer::IsTokenAnimating() const {
+    return tokenHopAnim_.isActive;
+}
+
+void GUIRenderer::ResetTokenAnimation() {
+    tokenHopAnim_.isActive = false;
+}
+
 GUIRenderer::Square GUIRenderer::GetTileSquare(const int index) const {
     return GuiLayoutModule::TileSquare(index, tileSize_, boardBounds_);
 }
@@ -296,6 +342,7 @@ void GUIRenderer::DrawBoard(const GameState& state) {
 
     RecalculateLayout();
     UpdateDiceAnimation();
+    UpdateTokenAnimation();
 
 #if NIMONSPOLI_HAS_RAYLIB
     DrawPanelsBackdrop();
@@ -609,9 +656,55 @@ void GUIRenderer::DrawTokens(const GameState& state) const {
 
     for (std::size_t i = 0; i < state.players.size(); ++i) {
         const PlayerState& player = state.players[i];
-        const int tileIndex = ResolveTileIndexFromCode(player.positionCode);
+        int tileIndex = ResolveTileIndexFromCode(player.positionCode);
         if (tileIndex < 1 || tileIndex > kBoardTileCount)
             continue;
+
+        float hopOffsetY = 0.0f;
+        bool isHopping = (tokenHopAnim_.isActive &&
+                          static_cast<int>(i) == tokenHopAnim_.playerIndex);
+
+        if (isHopping) {
+            int fromIdx = tokenHopAnim_.fromTileIndex;
+            int curIdx = tokenHopAnim_.currentTileIndex;
+            float progress = tokenHopAnim_.hopProgress;
+
+            Square fromSquare = GetTileSquare(fromIdx);
+            Square toSquare = GetTileSquare(curIdx);
+            Vector2 fromCenter = Vector2{fromSquare.x + fromSquare.size * 0.5f,
+                                          fromSquare.y + fromSquare.size * 0.5f};
+            Vector2 toCenter = Vector2{toSquare.x + toSquare.size * 0.5f,
+                                       toSquare.y + toSquare.size * 0.5f};
+
+            float drawX = fromCenter.x + (toCenter.x - fromCenter.x) * progress;
+            float drawY = fromCenter.y + (toCenter.y - fromCenter.y) * progress;
+            hopOffsetY = -TokenHopAnimation::kHopHeight *
+                          sinf(progress * 3.14159265f);
+
+            const int stackIdx = std::min(3, occupancy[curIdx]);
+            occupancy[curIdx]++;
+            const Vector2 off = stackOffset[static_cast<std::size_t>(stackIdx)];
+            const float tokenSize = fromSquare.size * kTokenScale;
+
+            const Rectangle dst = Rectangle{drawX - tokenSize * 0.5f + off.x,
+                                            drawY + hopOffsetY - tokenSize * 0.5f + off.y,
+                                            tokenSize,
+                                            tokenSize};
+
+            const std::string key = "player" + std::to_string((i % 4) + 1);
+            if (HasTexture(key)) {
+                const Texture2D tex = GetTextureOrEmpty(key);
+                DrawTexturePro(tex,
+                               Rectangle{0.0f, 0.0f,
+                                         static_cast<float>(tex.width),
+                                         static_cast<float>(tex.height)},
+                               dst, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+            } else {
+                DrawCircleV(Vector2{drawX + off.x, drawY + hopOffsetY + off.y},
+                            tokenSize * 0.25f, Color{35, 96, 190, 255});
+            }
+            continue;
+        }
 
         const int stackIndex = std::min(3, occupancy[tileIndex]);
         occupancy[tileIndex]++;
@@ -1159,15 +1252,15 @@ bool GUIRenderer::DrawButton(const std::string& text, float x, float y, float wi
 
 void GUIRenderer::DrawGameControls(float x, float y, bool canRoll, bool canEndTurn, bool isJailed) const {
 #if NIMONSPOLI_HAS_RAYLIB
-    float buttonWidth = 120.0f;
-    float buttonHeight = 32.0f;
-    float spacing = 8.0f;
+    float buttonWidth = 140.0f;
+    float buttonHeight = 36.0f;
+    float spacing = 6.0f;
     
     Color rollColor = canRoll ? Color{76, 175, 80, 255} : Color{150, 150, 150, 255};
     Color endTurnColor = canEndTurn ? Color{33, 150, 243, 255} : Color{150, 150, 150, 255};
     
     // Draw button labels with keyboard shortcuts
-    DrawText("Controls:", static_cast<int>(x), static_cast<int>(y - 25), 16, DARKGRAY);
+    DrawText("Controls:", static_cast<int>(x), static_cast<int>(y - 28), 18, DARKGRAY);
     
     // Roll Dice button
     DrawButton("Roll Dice [R]", x, y, buttonWidth, buttonHeight,
