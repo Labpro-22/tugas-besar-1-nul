@@ -209,6 +209,7 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
             out << "\n";
 			return false;
 		}
+        ctx.currentPlayer.resetTurnSkills(true);
         out << "\n";
 		return true;
 	}
@@ -259,7 +260,6 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 		return;
 	}
 
-	
     bool movePlayerToJail = false;
     bool movePlayerOutOfJail = false;
 
@@ -285,7 +285,7 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
             // Reset counter karena giliran berakhir secara paksa
             ctx.gameEngine.getTurnManager().resetDoubleGotten();
         }
-        out << "[INFO] Double! Anda mendapatkan kesempatan melempar lagi.\n";
+        out << "Double! You get a chance to throw again\n";
     } else {
         // Perbaikan: Reset counter jika lemparan saat ini bukan double
         ctx.gameEngine.getTurnManager().resetDoubleGotten();
@@ -353,7 +353,7 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
         return;
     }
 
-	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
+	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n\n";
 
 	// Log dice roll
 	std::string logDetail = "Lempar: " + std::to_string(ctx.dice.getDie1()) + "+" +
@@ -378,7 +378,6 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 
 	baseTile->onLanded(ctx);
 
-	if (ctx.currentPlayer.isShieldActive()) ctx.currentPlayer.deactivateShield();
 }
 
 void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
@@ -451,7 +450,6 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 	int diceTotal = ctx.dice.getTotal();
 	this->canEndTurn = !ctx.dice.isDouble();
 
-    out << "\n";
 	out << "Dice set to: " << die1 << " and " << die2 << "\n";
 
 	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
@@ -525,8 +523,6 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
         return;
     }
 	baseTile->onLanded(ctx);
-
-	if (ctx.currentPlayer.isShieldActive()) ctx.currentPlayer.deactivateShield();
 }
 
 void Command::execPrintCert(TurnContext& ctx, std::ostream& out) const {
@@ -929,7 +925,7 @@ void Command::execSave(TurnContext& ctx, std::ostream& out) const {
     try {
         ctx.gameEngine.saveGame(filename);
     } catch (const std::exception& e) {
-        out << "[ERROR] Failed to save game: " << e.what() << "\n";
+        out << e.what() << "\n";
     }
 }
 
@@ -984,46 +980,45 @@ void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {
 void Command::execHelp(std::ostream& out) const {
 	out << "[Command] Help Page\n\n";
     out << "╔══════════════════════════════════════════════════════════════════╗\n";
-    out << "║                        P A N D U A N                             ║\n";
+    out << "║                             G U I D E                            ║\n";
     out << "╠══════════════════════════════════════════════════════════════════╣\n";
-    out << "║ Nimonspoli adalah permainan papan strategi yang terinspirasi     ║\n";
-    out << "║ dari Monopoly. Pemain bergerak mengelilingi papan, membeli       ║\n";
-    out << "║ properti, membangun rumah/hotel, dan memungut sewa.              ║\n";
+    out << "║ Nimonspoli is a strategy-based game inspired purely by Monopoly  ║\n";
+    out << "║ Players move around the monopoly 'globe', monopolizing regions,  ║\n";
+    out << "║ acquiring properties, and mess around with the economy.          ║\n";
     out << "║                                                                  ║\n";
-    out << "║ Tujuan: Menjadi pemain terkaya atau satu-satunya yang tersisa    ║\n";
-    out << "║ setelah pemain lain bangkrut.                                    ║\n";
+    out << "║ Tujuan: Be the richest player within the set turn limit OR be    ║\n";
+    out << "║         the last man standing                                    ║\n";
     out << "║                                                                  ║\n";
     out << "║ MODE BOT (Bonus):                                                ║\n";
-    out << "║   - Anda bisa bermain melawan 1-3 bot/komputer                   ║\n";
-    out << "║   - Bot level Medium akan menjadi lawan Anda                     ║\n";
-    out << "║   - Bot akan mengambil keputusan secara otomatis                 ║\n";
+    out << "║   - You can play against 1-3 bots                                ║\n";
+    out << "║   - Bots take action automatically                               ║\n";
     out << "║                                                                  ║\n";
-    out << "║ PERINTAH GERAK:                                                  ║\n";
-    out << "║   ROLL_DICE        - Lempar dadu untuk bergerak                  ║\n";
-    out << "║   SET_DICE [X] [Y] - Atur hasil dadu manual (2 angka 1-6)        ║\n";
-    out << "║   END_TURN         - Akhiri giliran (wajib lempar dadu dulu!)    ║\n";
+    out << "║ MOVING COMMANDs:                                                 ║\n";
+    out << "║   ROLL_DICE        - Roll dice to move around                    ║\n";
+    out << "║   SET_DICE [X] [Y] - (Testing) Set dice to [X] and [Y]           ║\n";
+    out << "║   END_TURN         - End your turn (have to finish rolling)      ║\n";
     out << "║                                                                  ║\n";
-    out << "║ PERINTAH JAIL:                                                   ║\n";
-    out << "║   PAY_JAIL_FEE    - Bayar denda M50 untuk keluar penjara         ║\n";
+    out << "║ JAIL COMMANDS:                                                   ║\n";
+    out << "║   PAY_JAIL_FEE     - Pay M50 to exit jail                        ║\n";
     out << "║                                                                  ║\n";
-    out << "║ PERINTAH INFO:                                                   ║\n";
-    out << "║   PRINT_BOARD       - Lihat papan permainan                      ║\n";
-    out << "║   PRINT_PROPERTY   - Lihat properti Anda                         ║\n";
-    out << "║   PRINT_PROP_CERT   - Lihat akta properti (opsional: [KODE])     ║\n";
-    out << "║   PROFILE          - Lihat profil pemain                         ║\n";
-    out << "║   PRINT_LOG        - Lihat log transaksi                         ║\n";
+    out << "║ INFO COMMANDS:                                                   ║\n";
+    out << "║   PRINT_BOARD      - Prints the layout of the board              ║\n";
+    out << "║   PRINT_PROPERTY   - Prints a list of your properties            ║\n";
+    out << "║   PRINT_PROP_CERT [X] - Prints the certificate of a property [X] ║\n";
+    out << "║   PROFILE          - Print your profile                          ║\n";
+    out << "║   PRINT_LOG        - Prints transaction logs                     ║\n";
     out << "║                                                                  ║\n";
-    out << "║ PERINTAH PROPERTI:                                               ║\n";
-    out << "║   MORTGAGE [KODE]  - Gadai properti ke bank (50% harga)          ║\n";
-    out << "║   DISMORTGAGE     - Tebus properti yang digadai (110%)           ║\n";
-    out << "║   BUILD           - Bangun rumah/hotel di properti               ║\n";
+    out << "║ PROPERTY COMMANDS:                                               ║\n";
+    out << "║   MORTGAGE [KODE]  - Mortgage your property to the bank (for 50%)║\n";
+    out << "║   DISMORTGAGE      - Dismortgage your mortgaged property         ║\n";
+    out << "║   BUILD            - Build a house/hotel in a region you own     ║\n";
     out << "║                                                                  ║\n";
-    out << "║ PERINTAH KARTU:                                                  ║\n";
-    out << "║   USE_SKILL       - Gunakan kartu kemampuan                      ║\n";
+    out << "║ CARD COMMANDS:                                                   ║\n";
+    out << "║   USE_SKILL        - Use skill card                              ║\n";
     out << "║                                                                  ║\n";
-    out << "║ PERINTAH LAIN:                                                   ║\n";
-    out << "║   SAVE            - Simpan permainan ke file                     ║\n";
-    out << "║   HELP            - Tampilkan panduan ini                        ║\n";
+    out << "║ OTHER COMMANDS:                                                  ║\n";
+    out << "║   SAVE             - Save current state                          ║\n";
+    out << "║   HELP             - Show this page                              ║\n";
     out << "╚══════════════════════════════════════════════════════════════════╝\n\n";
 }
 

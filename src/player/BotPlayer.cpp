@@ -129,5 +129,5 @@ int BotPlayer::decideJailAction(int jailFine,
 }
 
 void BotPlayer::displayBotAction(const std::string& action) {
-    std::cout << "[BOT " << botName << "] " << action << std::endl;
+    std::cout << "[BOT] " << botName << action << std::endl;
 }

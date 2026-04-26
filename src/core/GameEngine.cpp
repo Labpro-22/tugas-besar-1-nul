@@ -1450,11 +1450,10 @@ void GameEngine::newGame() {
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
-    std::cout << "\n";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     if (numBots < 0) { std::cout << "Number lower than 0!\n"; numBots = 0; }
     else if (numBots > numPlayers-1) { std::cout << "Number larger than " << numPlayers-1 << "\n"; numBots = numPlayers-1; }
-    else { std::cout << "[INIT] Bot amount set to " << std::to_string(numBots) << "\n"; }
+    else { std::cout << "\n[INIT] Bot amount set to " << std::to_string(numBots) << "\n"; }
     std::cout << "\n";
 
     int numHumans = numPlayers - numBots;
@@ -1557,10 +1556,10 @@ void GameEngine::startMenu() {
     std::cout << "         N I M O N S P O L I\n";
     std::cout << "========================================\n";
     std::cout << "Pick an option:\n";
-    std::cout << "  1. NEW GAME       - Start a new game\n";
+    std::cout << "  1. NEW GAME        - Start a new game\n";
     std::cout << "  2. LOAD SAVED GAME - Continue from save file\n";
-    std::cout << "  3. HELP           - Show the help display\n";
-    std::cout << "  4. EXIT           - Exit the game\n";
+    std::cout << "  3. HELP            - Show the help display\n";
+    std::cout << "  4. EXIT            - Exit the game\n";
 
     while (true) {
         std::cout << "Enter a choice (1-4)\n";

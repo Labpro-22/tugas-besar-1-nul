@@ -96,6 +96,7 @@ void StreetTile::triggerRentPayment(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     if (player.isShieldActive()) {
         cout << "You have an active shield! No rent paid\n";
+        ctx.currentPlayer.resetTurnSkills();
         return;
     }
 

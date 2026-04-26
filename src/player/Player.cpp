@@ -139,23 +139,21 @@ void Player::buy(Property* p, TurnContext& ctx) {
         throw InvalidGameStateException("Cannot buy null property");
     }
 
-    // Jika uang tidak cukup, properti langsung masuk mekanisme lelang.
-    if (this->getBalance() < p->getBuyPrice()) {
-        cout << "You don't have enough balance! Running auction...\n";
-        AuctionManager am;
-        TurnManager& tm = ctx.getTurnMgr();
-        AuctionWinner aw = am.runAuction(*p, tm.getTurnOrder(), tm.getActivePlayerIndex());
-        aw.winner.buy(&aw.prop_won, aw.buyAmount, ctx);
-        cout << "\n";
-        cout << "[" << aw.winner.getUsername() << "] just won the auction for " << aw.prop_won.getName() << "\n";
-        cout << "[" << aw.winner.getUsername() << "]'s remaining money: " << aw.winner.getBalance() << "\n\n";
-        return;
-    } else{
-        cout << "[" << ctx.currentPlayer.getUsername() << "] just bought " << p->getName() << "\n";
-        cout << "[" << ctx.currentPlayer.getUsername() << "]'s remaining money: " << ctx.currentPlayer.getBalance() << "\n\n";
+    int finalPrice = p->getBuyPrice();
+    if (this->discountRate > 0) {
+        int finalPrice = p->getBuyPrice() * (100 - this->discountRate) / 100;
+        std::cout << "Applying discount: M" << p->getBuyPrice() << " -> M" << finalPrice << "\n";
+        this->deductCash(finalPrice);
+        this->resetTurnSkills();
     }
 
-    this->deductCash(p->getBuyPrice());
+    if (this->getBalance() < finalPrice) {
+        throw InsufficientFundsException("Not enough money to buy " +
+                                         p->getName());
+    }
+    
+    this->deductCash(finalPrice);
+
     this->addProperty(p, ctx);
 }
 
@@ -392,6 +390,10 @@ void Player::setDiscountRate(int discount) {
     this->discountRate = discount;
 }
 
+void Player::resetDiscountRate() {
+    this->discountRate = 0;
+}
+
 void Player::activateShield() {
     if (this->hasShield) {
         throw InvalidGameStateException("Shield is already active for player " + this->username);
@@ -404,6 +406,14 @@ void Player::deactivateShield() {
         throw InvalidGameStateException("Shield is already inactive for player " + this->username);
     }
     this->hasShield = false;
+}
+
+void Player::resetTurnSkills(bool end) {
+    std::cout << "Resetting turn-based skills for player " << this->username << ".\n";
+
+    if (this->isShieldActive()) this->deactivateShield();
+    if (this->getDiscountRate() > 0) this->resetDiscountRate();
+    if (end) this->usedSkillThisTurn = false;
 }
 
 void Player::enterJail() {
@@ -534,28 +544,31 @@ bool Player::checkBankruptcy(int requiredAmount) {
     return false;
 }
 
-// Jangan ubah deductCash, biarkan seperti aslinya. Tambahkan fungsi baru ini:
-
 bool Player::payDebt(int amount, TurnContext& ctx) {
     if (amount <= 0) return true;
+
+    if (this->getDiscountRate() > 0) {
+        int discountedAmount = amount * (100 - this->getDiscountRate()) / 100;
+        std::cout << "Applying discount to debt: M" << amount << " -> M" << discountedAmount << "\n";
+        amount = discountedAmount;
+        this->resetTurnSkills();
+    }
 
     if (this->status == PlayerStatus::BANKRUPT) {
         return false;
     }
 
-    // 1. Jika uang cukup, langsung potong saja tanpa repot
     if (this->balance >= amount) {
         this->deductCash(amount);
         return true; 
     }
 
-    // 2. Uang tidak cukup, panggil kurator (BankruptcyManager)
-    std::cout << "[PENGUMUMAN] Uang " << this->username << " tidak cukup! Memasuki proses likuidasi...\n";
+    std::cout << this->username << "'s balance insufficient! Entering liquidation process...\n";
 
     if (this->isBot()) {
         try {
             BankruptcyManager::performForcedLiquidation(ctx, amount);
-            std::cout << "[BOT] Likuidasi otomatis selesai.\n";
+            std::cout << "[BOT] Automatic liquidation complete.\n";
         } catch (const BankruptcyException& e) {
             std::cout << "[BOT] " << e.what() << "\n";
             return false; // Gagal bayar (Bangkrut)
@@ -563,7 +576,7 @@ bool Player::payDebt(int amount, TurnContext& ctx) {
     } else {
         bool survived = BankruptcyManager::resolveDebtByLiquidation(ctx, amount);
         if (!survived) {
-            std::cout << "[INFO] " << this->username << " resmi Dinyatakan BANGKRUT!\n";
+            std::cout << "[INFO] " << this->username << " declared BANKRUPTCY!\n";
             return false; // Gagal bayar (Bangkrut)
         }
     }
@@ -572,7 +585,6 @@ bool Player::payDebt(int amount, TurnContext& ctx) {
         return false;
     }
 
-    // 3. Setelah likuidasi, seharusnya uang sudah cukup. Baru kita potong.
     this->deductCash(amount);
     return true; // Berhasil bayar dan selamat dari kebangkrutan
 }
@@ -601,12 +613,10 @@ void Player::payRent(Property* p, TurnContext& ctx){
         return;
     }
 
-    // Gunakan payDebt. Jika return true (berhasil bayar), berikan uangnya ke pemilik
     if (this->payDebt(tagihan, ctx)) {
         pemilik->addCash(tagihan);
-        std::cout << "Berhasil membayar sewa sebesar M" << tagihan << " kepada " << pemilik->getUsername() << "\n";
+        std::cout << "[" << this->getUsername() << "] paid rent of M" << tagihan << " to [" << pemilik->getUsername() << "]\n";
     } else {
-        // Jika return false, artinya pemain bangkrut. 
-        // Proses penyerahan aset sisa ke pemilik (jika ada aturannya) bisa diletakkan di sini.
+        
     }
 }

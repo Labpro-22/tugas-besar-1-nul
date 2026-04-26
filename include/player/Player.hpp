@@ -84,8 +84,10 @@ protected:
     void discardSCard(int idx);
     void useSCard(int idx, TurnContext& ctx);
     void setDiscountRate(int discount);
+    void resetDiscountRate();
     void activateShield();
     void deactivateShield();
+    void resetTurnSkills(bool end = false);
 
     // jail
     void enterJail();
