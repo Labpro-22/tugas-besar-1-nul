@@ -115,15 +115,12 @@ void StreetTile::triggerRentPayment(TurnContext& ctx) {
             ctx.gameEngine.getPanelManager()->getBankruptcyState().rentOwner = owner;
             return;
         }
-        const bool canContinue = BankruptcyManager::resolveDebtByLiquidation(ctx, rent);
-        if (!canContinue) {
-            return;
-        }
+        // Bagian pemanggilan BankruptcyManager secara manual dihapus karena sudah di-handle oleh payRent
     }
 
-    player.deductCash(rent);
-    owner->addCash(rent);
-    cout << "Rent paid: M" << rent << "\n";
+    // Menggunakan fungsi payRent dari Player
+    player.payRent(property, ctx);
+    
     cout << "Money left: <M" << player.getBalance() << ">.\n\n";
 }
 
@@ -140,10 +137,12 @@ void RailroadTile::onLanded(TurnContext& ctx) {
                  << prop->getName() << "] milik ["
                  << prop->getOwner()->getUsername() << "].\n\n";
             prop->printStatus(ctx); 
-            player.deductCash(prop->getRent(ctx)); // nanti aktivasi mode bankruptcy
-            (property->getOwner())->addCash(prop->getRent(ctx));
+            
+            // Panggil payRent (otomatis handle deduct, add ke owner, dan cek bangkrut)
+            player.payRent(prop, ctx);
+            
             cout << "Uang anda tersisa: <M"
-                 << player.getBalance() - prop->getRent(ctx)
+                 << player.getBalance()
                  << ">.\n\n";
         }
     } else {
@@ -170,6 +169,11 @@ void UtilityTile::onLanded(TurnContext& ctx) {
                  << prop->getOwner()->getUsername() << "].\n\n";
             cout << "Biaya sewa:\nFaktor Pengali:\n";
             prop->printStatus(ctx); 
+            
+            // Pada kode asli, mekanisme bayar utilitas belum diimplementasi.
+            // Sekarang kita langsung delegasikan ke payRent
+            player.payRent(prop, ctx);
+            
             cout << "Uang anda tersisa: <M" << player.getBalance()
                  << ">.\n\n"; 
         }

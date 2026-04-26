@@ -100,7 +100,7 @@ int Player::move(int steps, TurnContext& ctx) {
     this->position = (oldPosition + trueSteps) % boardSize;
 
     for (int i = 0; i < nPassStart; ++i) {
-        std::cout << "start\n";
+        std::cout << "You crossed START. You accepted M" << ctx.gameEngine.getGoSalary() << "\n";
         this->addCash(ctx.gameEngine.getGoSalary());
         ctx.gameEngine.giveRandomSkillCardTo(*this);
     }
@@ -511,6 +511,49 @@ bool Player::checkBankruptcy(int requiredAmount) {
     return false;
 }
 
+// Jangan ubah deductCash, biarkan seperti aslinya. Tambahkan fungsi baru ini:
+
+bool Player::payDebt(int amount, TurnContext& ctx) {
+    if (amount <= 0) return true;
+
+    if (this->status == PlayerStatus::BANKRUPT) {
+        return false;
+    }
+
+    // 1. Jika uang cukup, langsung potong saja tanpa repot
+    if (this->balance >= amount) {
+        this->deductCash(amount);
+        return true; 
+    }
+
+    // 2. Uang tidak cukup, panggil kurator (BankruptcyManager)
+    std::cout << "[PENGUMUMAN] Uang " << this->username << " tidak cukup! Memasuki proses likuidasi...\n";
+
+    if (this->isBot()) {
+        try {
+            BankruptcyManager::performForcedLiquidation(ctx, amount);
+            std::cout << "[BOT] Likuidasi otomatis selesai.\n";
+        } catch (const BankruptcyException& e) {
+            std::cout << "[BOT] " << e.what() << "\n";
+            return false; // Gagal bayar (Bangkrut)
+        }
+    } else {
+        bool survived = BankruptcyManager::resolveDebtByLiquidation(ctx, amount);
+        if (!survived) {
+            std::cout << "[INFO] " << this->username << " resmi Dinyatakan BANGKRUT!\n";
+            return false; // Gagal bayar (Bangkrut)
+        }
+    }
+
+    if (this->balance < amount) {
+        return false;
+    }
+
+    // 3. Setelah likuidasi, seharusnya uang sudah cukup. Baru kita potong.
+    this->deductCash(amount);
+    return true; // Berhasil bayar dan selamat dari kebangkrutan
+}
+
 void Player::decrementjailTurns(){
     if (this->jailTurns <= 0){
         throw InvalidGameStateException("Player has invalid jail turns");
@@ -518,9 +561,29 @@ void Player::decrementjailTurns(){
     this->jailTurns--;
 }
 
+
 void Player::payRent(Property* p, TurnContext& ctx){
-    StreetProperty* sp = dynamic_cast<StreetProperty*> (p);
-    if (sp != nullptr){
-        deductCash(p->getRent(ctx));
+    if (p == nullptr) {
+        throw InvalidGameStateException("Cannot pay rent for null property");
+    }
+
+    Player* pemilik = p->getOwner();
+    if (pemilik == nullptr) {
+        throw InvalidGameStateException("Cannot pay rent to null property owner");
+    }
+
+    int tagihan = p->getRent(ctx);
+
+    if (tagihan <= 0) {
+        return;
+    }
+
+    // Gunakan payDebt. Jika return true (berhasil bayar), berikan uangnya ke pemilik
+    if (this->payDebt(tagihan, ctx)) {
+        pemilik->addCash(tagihan);
+        std::cout << "Berhasil membayar sewa sebesar M" << tagihan << " kepada " << pemilik->getUsername() << "\n";
+    } else {
+        // Jika return false, artinya pemain bangkrut. 
+        // Proses penyerahan aset sisa ke pemilik (jika ada aturannya) bisa diletakkan di sini.
     }
 }

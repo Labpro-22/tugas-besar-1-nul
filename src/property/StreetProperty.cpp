@@ -219,10 +219,10 @@ void StreetProperty::printStatus(TurnContext& ctx){
     std::cout << (getBuildingCount() > 4 ? "| Building: Hotel\n" : "| Number of houses: " + std::to_string(getBuildingCount()) + "\n");
     std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
     printRentTable();
-    std::cout << "+=============================================+\n";
     if (getStatus() == PropertyStatus::OWNED) {
-        std::cout << "Harga saat ini : M" << getRent(ctx) << "\n";
+        std::cout << "| Harga saat ini : M" << getRent(ctx) << "\n";
     }
+    std::cout << "+=============================================+\n";
 }
 
 const std::vector<int>& StreetProperty::getRentTable() const {

@@ -168,11 +168,13 @@ void FestivalTile::onLanded(TurnContext& ctx) {
                                                                // jadi exception
         }
     }
-    applyFestival(player, *(proptile->getProperty()));
+    applyFestival(player, *(proptile->getProperty()), ctx);
 }
 
-void FestivalTile::applyFestival(Player& player, Property& prop) {
+void FestivalTile::applyFestival(Player& player, Property& prop, TurnContext& ctx) {
+    cout << "Applying Festival Mode to property: " << prop.getName() << "\n";
     prop.applyFestival();
+    cout << "Now the rent for " << prop.getName() << " is M" << prop.getRent(ctx) << "\n";
 }
 
 TaxTile::TaxTile(int idx, string cd, string nm, TaxType type)
