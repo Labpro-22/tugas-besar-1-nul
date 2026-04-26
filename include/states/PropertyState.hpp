@@ -9,6 +9,7 @@ class PropertyState {
     std::string type;
     std::string colorGroup;
     std::string owner;
+    int ownerPlayerIdx = -1;
     std::string status;
     int festivalMult = 0;
     int festivalDur = 0;

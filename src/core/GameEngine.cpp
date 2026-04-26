@@ -356,10 +356,10 @@ static bool HandleGameInput(GUIRenderer& renderer, GameEngine& engine,
                             GuiPanels::PanelManager* panelMgr = nullptr) {
     auto snapshot = renderer.InspectBoardDisplay();
     float controlsX = snapshot.rightPanel.x + 15;
-    float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 300;
-    const float buttonWidth = 120.0f;
-    const float buttonHeight = 32.0f;
-    const float spacing = 8.0f;
+    float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 280;
+    const float buttonWidth = 140.0f;
+    const float buttonHeight = 36.0f;
+    const float spacing = 6.0f;
 
     bool rollClicked = renderer.IsButtonClicked(controlsX, controlsY, buttonWidth, buttonHeight);
     bool endTurnClicked = renderer.IsButtonClicked(controlsX + buttonWidth + spacing, controlsY, buttonWidth, buttonHeight);
@@ -1832,8 +1832,15 @@ GameState GameEngine::buildGameState() const {
         Player* owner = prop->getOwner();
         if (owner != nullptr) {
             propState.owner = owner->getUsername();
-        } else{
+            for (size_t pi = 0; pi < players.size(); ++pi) {
+                if (players[pi] == owner) {
+                    propState.ownerPlayerIdx = static_cast<int>(pi);
+                    break;
+                }
+            }
+        } else {
             propState.owner = "BANK";
+            propState.ownerPlayerIdx = -1;
         }
 
         // Get status

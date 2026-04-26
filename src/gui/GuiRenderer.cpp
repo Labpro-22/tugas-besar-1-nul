@@ -607,6 +607,21 @@ void GUIRenderer::DrawTileOverlayForProperty(
             DrawRectangleRec(dst, Color{255, 120, 60, 80});
         }
     }
+
+    // Ownership indicator
+    if (property.ownerPlayerIdx >= 0) {
+        static const Color kPlayerColors[4] = {
+            Color{231, 76, 60, 255},   // Player 1 - Red
+            Color{52, 152, 219, 255},  // Player 2 - Blue
+            Color{46, 204, 113, 255},  // Player 3 - Green
+            Color{241, 196, 15, 255},  // Player 4 - Yellow
+        };
+        Color ownerColor = kPlayerColors[property.ownerPlayerIdx % 4];
+        float dotRadius = dst.width * 0.12f;
+        Vector2 dotCenter = {dst.x + dst.width - dotRadius - 3.0f,
+                             dst.y + dotRadius + 3.0f};
+        DrawCircleV(dotCenter, dotRadius, ownerColor);
+    }
 #endif
 }
 
