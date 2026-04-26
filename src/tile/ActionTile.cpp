@@ -92,7 +92,7 @@ void CardTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     
     if (cardType == CardTileType::CHANCE) {
-        std::cout << player.getUsername() << " landed on Chance Tile.\n";
+        std::cout << "[" << player.getUsername() << "] landed on [Chance Tile].\n";
         ChanceCard* card = ctx.drawChanceCard();
         if (card != nullptr) {
             card->execute(&player, ctx);
@@ -101,13 +101,13 @@ void CardTile::onLanded(TurnContext& ctx) {
             std::cout << "[INFO] No Chance cards available in the deck.\n";
         }
     } else {
-        std::cout << player.getUsername() << " landed on Community Chest Tile.\n";
+        std::cout << "[" << player.getUsername() << "] landed on [Community Chest Tile].\n";
         CommunityChestCard* card = ctx.drawCommunityChestCard();
         if (card != nullptr) {
             card->execute(&player, ctx);
             ctx.returnCommunityChestCard(card);
         } else {
-            std::cout << "[INFO] No Community Chest cards available in the deck.\n";
+            std::cout << "No Community Chest cards available in the deck.\n";
         }
     }
 }
@@ -170,11 +170,13 @@ void FestivalTile::onLanded(TurnContext& ctx) {
                                                                // jadi exception
         }
     }
-    applyFestival(player, *(proptile->getProperty()));
+    applyFestival(player, *(proptile->getProperty()), ctx);
 }
 
-void FestivalTile::applyFestival(Player& player, Property& prop) {
+void FestivalTile::applyFestival(Player& player, Property& prop, TurnContext& ctx) {
+    cout << "Applying Festival Mode to property: " << prop.getName() << "\n";
     prop.applyFestival();
+    cout << "Now the rent for " << prop.getName() << " is M" << prop.getRent(ctx) << "\n";
 }
 
 TaxTile::TaxTile(int idx, string cd, string nm, TaxType type)

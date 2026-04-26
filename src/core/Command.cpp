@@ -229,6 +229,7 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	else if (commandName == "PRINT_PROP_CERT") execPrintCert(ctx, out);
 	else if (commandName == "PRINT_PROPERTY") execPrintProperty(ctx, out);
 	else if (commandName == "MORTGAGE") execMortgage(ctx, out);
+	else if (commandName == "DISMORTGAGE") execDismortgage(ctx, out);
 	else if (commandName == "PROFILE") execProfile(ctx, out);
 	else if (commandName == "USE_SKILL") execUseSkill(ctx, out);
 	else if (commandName == "BUILD") execUpgrade(ctx, out);
@@ -254,7 +255,7 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 
 	bool validRoll = ctx.dice.roll();
 	if (!validRoll) {
-		out << "[WARN] You cannot roll the dice anymore this turn.\n";
+		out << "[WARN] You cannot roll the dice anymore this turn.\n\n";
 		return;
 	}
 
@@ -383,12 +384,12 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
     if (ctx.currentPlayer.isInJail()
         && ctx.gameEngine.getTurnManager().getHasActedThisTurn()){
-        out << "[WARN] You have played in this turn, and you are still in jail.\n";
+        out << "[WARN] You have played in this turn, and you are still in jail.\n\n";
         return;
     }
 
     if (!ctx.dice.canRoll){
-		out << "[WARN] You cannot roll the dice anymore this turn.\n";
+		out << "[WARN] You cannot roll the dice anymore this turn.\n\n";
 		return;
 	}
     if (argc() < 3) {
@@ -404,7 +405,7 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
             "Die values must be between 1 and 6 inclusively");
     }
 
-	out << "[COMMAND] Setting dice...\n";
+	out << "[COMMAND] Setting Dice\n\n";
 
     bool movePlayerToJail = false;
     bool movePlayerOutOfJail = false;
@@ -432,7 +433,7 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
             // Reset counter karena giliran berakhir secara paksa
             ctx.gameEngine.getTurnManager().resetDoubleGotten();
         } else{
-            out << "[INFO] Double! You get a chance to throw again\n";
+            out << "Double! You get a chance to throw again\n";
         }
         
     } else {
@@ -450,6 +451,7 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 	int diceTotal = ctx.dice.getTotal();
 	this->canEndTurn = !ctx.dice.isDouble();
 
+    out << "\n";
 	out << "Dice set to: " << die1 << " and " << die2 << "\n";
 
 	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
@@ -989,25 +991,31 @@ void Command::execHelp(std::ostream& out) const {
     out << "║   - Bot akan mengambil keputusan secara otomatis                 ║\n";
     out << "║                                                                  ║\n";
     out << "║ PERINTAH GERAK:                                                  ║\n";
-    out << "║   - ROLL_DICE      : Lempar dadu untuk bergerak                  ║\n";
-    out << "║   - SET_DICE X Y   : Atur dadu manual (contoh: SET_DICE 3 5)     ║\n";
-    out << "║   - END_TURN       : Akhiri giliran (wajib lempar dadu dulu!)    ║\n";
+    out << "║   ROLL_DICE        - Lempar dadu untuk bergerak                  ║\n";
+    out << "║   SET_DICE [X] [Y] - Atur hasil dadu manual (2 angka 1-6)        ║\n";
+    out << "║   END_TURN         - Akhiri giliran (wajib lempar dadu dulu!)    ║\n";
+    out << "║                                                                  ║\n";
+    out << "║ PERINTAH JAIL:                                                   ║\n";
+    out << "║   PAY_JAIL_FEE    - Bayar denda M50 untuk keluar penjara         ║\n";
     out << "║                                                                  ║\n";
     out << "║ PERINTAH INFO:                                                   ║\n";
-    out << "║   - PRINT_BOARD    : Lihat papan permainan                       ║\n";
-    out << "║   - PRINT_PROPERTY : Lihat properti Anda                         ║\n";
-    out << "║   - PRINT_PROP_CERT [KODE] : Lihat akta properti                 ║\n";
-    out << "║   - PROFILE        : Lihat profil pemain                         ║\n";
-    out << "║   - PRINT_LOG      : Lihat log transaksi                         ║\n";
+    out << "║   PRINT_BOARD       - Lihat papan permainan                      ║\n";
+    out << "║   PRINT_PROPERTY   - Lihat properti Anda                         ║\n";
+    out << "║   PRINT_PROP_CERT   - Lihat akta properti (opsional: [KODE])     ║\n";
+    out << "║   PROFILE          - Lihat profil pemain                         ║\n";
+    out << "║   PRINT_LOG        - Lihat log transaksi                         ║\n";
     out << "║                                                                  ║\n";
-    out << "║ PERINTAH AKSI:                                                   ║\n";
-    out << "║   - MORTGAGE       : Gadai properti ke bank                      ║\n";
-    out << "║   - BUILD          : Bangun rumah/hotel di properti              ║\n";
-    out << "║   - USE_SKILL      : Gunakan kartu kemampuan                     ║\n";
+    out << "║ PERINTAH PROPERTI:                                               ║\n";
+    out << "║   MORTGAGE [KODE]  - Gadai properti ke bank (50% harga)          ║\n";
+    out << "║   DISMORTGAGE     - Tebus properti yang digadai (110%)           ║\n";
+    out << "║   BUILD           - Bangun rumah/hotel di properti               ║\n";
+    out << "║                                                                  ║\n";
+    out << "║ PERINTAH KARTU:                                                  ║\n";
+    out << "║   USE_SKILL       - Gunakan kartu kemampuan                      ║\n";
     out << "║                                                                  ║\n";
     out << "║ PERINTAH LAIN:                                                   ║\n";
-    out << "║   - SAVE           : Simpan permainan                            ║\n";
-    out << "║   - HELP           : Tampilkan panduan ini                       ║\n";
+    out << "║   SAVE            - Simpan permainan ke file                     ║\n";
+    out << "║   HELP            - Tampilkan panduan ini                        ║\n";
     out << "╚══════════════════════════════════════════════════════════════════╝\n\n";
 }
 

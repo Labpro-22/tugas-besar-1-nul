@@ -30,7 +30,6 @@ class StreetTile : public PropertyTile {
         void onLanded(TurnContext& ctx) override;
         void triggerBuyOrAuction(TurnContext& ctx);
         void triggerRentPayment(TurnContext& ctx);
-        bool triggerBankruptcy(TurnContext& ctx, int debtAmount);
 };
 
 class RailroadTile : public PropertyTile{

@@ -77,6 +77,7 @@ protected:
     void deductCash(int amount);
     void setBankruptStatus();
     bool checkBankruptcy(int requiredAmount);
+    bool payDebt(int amount, TurnContext& ctx);
 
     // hands or cards
     void drawSCard(SkillCard* deck);

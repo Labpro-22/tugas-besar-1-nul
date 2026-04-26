@@ -67,7 +67,7 @@ class FestivalTile : public ActionTile {
   public:
     FestivalTile(int idx, string cd, string nm);
     void onLanded(TurnContext& ctx) override;
-    void applyFestival(Player& player, Property& prop);
+    void applyFestival(Player& player, Property& prop, TurnContext& ctx);
 };
 
 class TaxTile : public ActionTile {

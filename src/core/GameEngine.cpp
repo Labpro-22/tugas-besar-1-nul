@@ -634,10 +634,14 @@ static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
                     if (val < 0 || val > numPlayers) {
                         state.errorMessage = "Must be between 0 and " + std::to_string(numPlayers);
                     } else {
-                        state.errorMessage.clear();
                         int numHumans = numPlayers - val;
-                        state.playerNameInputs.resize(numHumans);
-                        state.step = 3;
+                        if (numHumans < 1) {
+                            state.errorMessage = "At least 1 human player required";
+                        } else {
+                            state.errorMessage.clear();
+                            state.playerNameInputs.resize(numHumans);
+                            state.step = 3;
+                        }
                     }
                 } catch (...) {
                     state.errorMessage = "Invalid number";
@@ -680,8 +684,26 @@ static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
             if (!allFilled) {
                 state.errorMessage = "Please fill in all player names";
             } else {
-                state.errorMessage.clear();
-                return true;
+                std::vector<std::string> names;
+                for (const auto& input : state.playerNameInputs) {
+                    names.push_back(input.text);
+                }
+                for (size_t i = 0; i < names.size(); ++i) {
+                    std::string lowerName = names[i];
+                    for (char& c : lowerName) c = std::tolower(c);
+                    for (size_t j = i + 1; j < names.size(); ++j) {
+                        std::string lowerCompare = names[j];
+                        for (char& c : lowerCompare) c = std::tolower(c);
+                        if (lowerName == lowerCompare) {
+                            state.errorMessage = "Each player must have a unique name";
+                            break;
+                        }
+                    }
+                    if (!state.errorMessage.empty()) break;
+                }
+                if (state.errorMessage.empty()) {
+                    return true;
+                }
             }
         }
     }

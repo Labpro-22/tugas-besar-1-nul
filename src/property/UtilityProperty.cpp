@@ -1,6 +1,8 @@
 #include "property/UtilityProperty.hpp"
 #include "property/Property.hpp"
 #include "player/Player.hpp"
+#include "core/Dice.hpp"
+#include "core/TurnContext.hpp"
 
 #include <iostream>
 #include <utility>
@@ -43,13 +45,11 @@ int UtilityProperty::getRent(const TurnContext& ctx) const {
         throw InvalidGameStateException(
             "Utility owned-count provider is not set");
     }
-    if (!diceTotalExtractor_) {
-        throw InvalidGameStateException(
-            "Utility dice-total provider is not set");
-    }
 
     const int ownedUtilities = ownedUtilityCounter_(owner_);
-    const int diceTotal = diceTotalExtractor_(ctx);
+
+    const int diceTotal = diceTotalExtractor_ ? diceTotalExtractor_(ctx)
+                                              : ctx.dice.getTotal();
     return getRentFromOwnedCountAndDice(ownedUtilities, diceTotal);
 }
 
@@ -99,6 +99,19 @@ void UtilityProperty::printStatus(TurnContext& ctx) {
     }
     std::cout << "| Status: " << stat << "\n";
     std::cout << "| Harga Beli    : M" << getBuyPrice() << "\n";
-    std::cout << "| Sewa saat ini    : M" << getRent(ctx) << "\n";
+    std::string faktorPengaliText = "-";
+    if (getStatus() == PropertyStatus::OWNED && getOwner() != nullptr && ownedUtilityCounter_) {
+        const int ownedUtilities = ownedUtilityCounter_(getOwner());
+        auto it = multiplierTable_.find(ownedUtilities);
+        if (it == multiplierTable_.end()) {
+            it = multiplierTable_.find(static_cast<int>(multiplierTable_.size()));
+        }
+        if (it != multiplierTable_.end()) {
+            faktorPengaliText = std::to_string(it->second);
+        }
+    }
+
+    std::cout << "| Sewa saat ini    : <banyak dadu ketika mendarat> x M"
+              << faktorPengaliText << "\n";
     std::cout << "+================================+\n";
 }

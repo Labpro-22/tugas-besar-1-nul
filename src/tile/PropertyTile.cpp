@@ -2,16 +2,13 @@
 #include "core/TurnContext.hpp"
 #include "core/GameEngine.hpp"
 #include "core/BankruptcyManager.hpp"
-#include "exception/BankruptcyException.hpp"
 #include "player/Player.hpp"
 #include "property/Property.hpp"
 #include "gui/GuiPanelManager.hpp"
 #include <iostream>
 #include <limits>
-#include <vector>
 #include "core/TurnManager.hpp"
 #include "core/AuctionManager.hpp"
-#include <limits>
 
 using namespace std;
 
@@ -122,153 +119,13 @@ void StreetTile::triggerRentPayment(TurnContext& ctx) {
             ctx.gameEngine.getPanelManager()->getBankruptcyState().rentOwner = owner;
             return;
         }
-        const bool canContinue = triggerBankruptcy(ctx, rent);
-        if (!canContinue) {
-            return;
-        }
+        // Bagian pemanggilan BankruptcyManager secara manual dihapus karena sudah di-handle oleh payRent
     }
 
-    player.deductCash(rent);
-    owner->addCash(rent);
-    cout << "Rent paid: M" << rent << "\n";
+    // Menggunakan fungsi payRent dari Player
+    player.payRent(property, ctx);
+    
     cout << "Money left: <M" << player.getBalance() << ">.\n\n";
-}
-
-bool StreetTile::triggerBankruptcy(TurnContext& ctx, int debtAmount) {
-    Player& player = ctx.currentPlayer;
-
-    // GUI mode: show bankruptcy panel (only for human players)
-    if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
-        ctx.gameEngine.getPanelManager()->showBankruptcy(ctx, debtAmount);
-        return false; // Defer to panel; caller should not continue immediately
-    }
-
-    while (player.getBalance() < debtAmount) {
-        auto options = BankruptcyManager::getAvailableLiquidationOptions(ctx);
-        if (options.empty()) {
-            BankruptcyManager::declareBankrupt(ctx);
-            cout << player.getUsername() << " cannot cover rent and is bankrupt\n";
-            return false;
-        }
-
-        cout << "=== Panel Likuidasi ===\n";
-        cout << "Uang kamu saat ini: M" << player.getBalance()
-             << "  |  Kewajiban: M" << debtAmount << "\n\n";
-
-        vector<LiquidationOption> sellOptions;
-        vector<LiquidationOption> mortgageOptions;
-        for (const auto& option : options) {
-            if (option.property == nullptr || option.property->getStatus() != PropertyStatus::OWNED) {
-                continue;
-            }
-
-            if (option.type == LiquidationOption::SELL) {
-                sellOptions.push_back(option);
-            } else {
-                mortgageOptions.push_back(option);
-            }
-        }
-
-        vector<LiquidationOption> numberedOptions;
-        int menuIndex = 1;
-
-        cout << "[Jual ke Bank]\n";
-        if (sellOptions.empty()) {
-            cout << "- Tidak ada properti yang bisa dijual\n";
-        } else {
-            for (const auto& option : sellOptions) {
-                Property* prop = option.property;
-                string typeLabel = "LAIN";
-                string extraLabel;
-
-                if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
-                    typeLabel = street->getColorGroup();
-                    if (street->hasHotel()) {
-                        const int housePart = 4 * street->getHousePrice();
-                        const int hotelPart = street->getHotelPrice();
-                        extraLabel = " (termasuk hotel: M" + to_string(housePart + hotelPart) + ")";
-                    } else if (street->getBuildingCount() > 0) {
-                        const int buildingPart = street->getBuildingCount() * street->getHousePrice();
-                        extraLabel = " (termasuk " + to_string(street->getBuildingCount()) +
-                                     " rumah: M" + to_string(buildingPart / 2) + ")";
-                    }
-                } else if (dynamic_cast<RailroadProperty*>(prop) != nullptr) {
-                    typeLabel = "STATION";
-                } else if (dynamic_cast<UtilityProperty*>(prop) != nullptr) {
-                    typeLabel = "UTILITY";
-                }
-
-                cout << menuIndex << ". " << prop->getName() << " (" << prop->getCode() << ")"
-                     << "  [" << typeLabel << "]"
-                     << "  Harga Jual: M" << option.cashValue
-                     << extraLabel << "\n";
-                numberedOptions.push_back(option);
-                ++menuIndex;
-            }
-        }
-
-        cout << "\n[Gadaikan]\n";
-        if (mortgageOptions.empty()) {
-            cout << "- Tidak ada properti yang bisa digadaikan\n";
-        } else {
-            for (const auto& option : mortgageOptions) {
-                Property* prop = option.property;
-                string typeLabel = "LAIN";
-                if (StreetProperty* street = dynamic_cast<StreetProperty*>(prop)) {
-                    typeLabel = street->getColorGroup();
-                } else if (dynamic_cast<RailroadProperty*>(prop) != nullptr) {
-                    typeLabel = "STATION";
-                } else if (dynamic_cast<UtilityProperty*>(prop) != nullptr) {
-                    typeLabel = "UTILITY";
-                }
-
-                cout << menuIndex << ". " << prop->getName() << " (" << prop->getCode() << ")"
-                     << "  [" << typeLabel << "]"
-                     << "  Nilai Gadai: M" << option.cashValue << "\n";
-                numberedOptions.push_back(option);
-                ++menuIndex;
-            }
-        }
-
-        if (numberedOptions.empty()) {
-            BankruptcyManager::declareBankrupt(ctx);
-            cout << player.getUsername() << " cannot cover rent and is bankrupt\n";
-            return false;
-        }
-
-        int selected = 0;
-        cout << "\nPilih aksi likuidasi (nomor): ";
-        while (!(cin >> selected) || selected < 1 || selected > static_cast<int>(numberedOptions.size())) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Input tidak valid, masukkan nomor yang benar: ";
-        }
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        const LiquidationOption choice = numberedOptions[static_cast<size_t>(selected - 1)];
-        if (choice.property == nullptr || choice.property->getStatus() != PropertyStatus::OWNED) {
-            cout << "Properti tidak valid untuk diproses.\n\n";
-            continue;
-        }
-
-        try {
-            if (choice.type == LiquidationOption::MORTGAGE) {
-                player.mortgage(choice.property);
-                cout << "[LIKUIDASI] Berhasil menggadaikan " << choice.property->getName()
-                     << " untuk M" << choice.cashValue << "\n\n";
-            } else {
-                const int saleValue = choice.property->sellToBank();
-                player.addCash(saleValue);
-                player.sell(*choice.property);
-                cout << "[LIKUIDASI] Berhasil menjual " << choice.property->getName()
-                     << " ke bank untuk M" << saleValue << "\n\n";
-            }
-        } catch (const std::exception& ex) {
-            cout << "[LIKUIDASI] Gagal: " << ex.what() << "\n\n";
-        }
-    }
-
-    return true;
 }
 
 void RailroadTile::onLanded(TurnContext& ctx) {
@@ -284,10 +141,12 @@ void RailroadTile::onLanded(TurnContext& ctx) {
                  << prop->getName() << "] milik ["
                  << prop->getOwner()->getUsername() << "].\n\n";
             prop->printStatus(ctx); 
-            player.deductCash(prop->getRent(ctx)); // nanti aktivasi mode bankruptcy
-            (property->getOwner())->addCash(prop->getRent(ctx));
+            
+            // Panggil payRent (otomatis handle deduct, add ke owner, dan cek bangkrut)
+            player.payRent(prop, ctx);
+            
             cout << "Uang anda tersisa: <M"
-                 << player.getBalance() - prop->getRent(ctx)
+                 << player.getBalance()
                  << ">.\n\n";
         }
     } else {
@@ -314,6 +173,11 @@ void UtilityTile::onLanded(TurnContext& ctx) {
                  << prop->getOwner()->getUsername() << "].\n\n";
             cout << "Biaya sewa:\nFaktor Pengali:\n";
             prop->printStatus(ctx); 
+            
+            // Pada kode asli, mekanisme bayar utilitas belum diimplementasi.
+            // Sekarang kita langsung delegasikan ke payRent
+            player.payRent(prop, ctx);
+            
             cout << "Uang anda tersisa: <M" << player.getBalance()
                  << ">.\n\n"; 
         }
