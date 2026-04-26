@@ -135,6 +135,7 @@ GUIRenderer::BuildDefaultTileVisualMap() {
         {"rr", "tile-stasiun"},
         {"pln", "tile-pln"},
         {"pam", "tile-pam"},
+        {"fes", "tile-festival"},
         {"festival", "tile-festival"},
         {"kesempatan", "tile-kesempatan"},
         {"chance", "tile-kesempatan"},
