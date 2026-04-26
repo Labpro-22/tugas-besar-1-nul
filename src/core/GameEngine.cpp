@@ -1163,8 +1163,6 @@ bool GameEngine::executeBotTurn(TurnContext& ctx) {
             }
         }
     }
-    turnmgr.setTurnOrder(this->getPlayers());
-
     // Trigger tile onLanded
     baseTile->onLanded(ctx);
 
@@ -1236,11 +1234,11 @@ void GameEngine::newGame() {
 
     int numBots;
     std::cout << "[INIT] Querying bot players\n";
-    std::cout << "Enter bot amount (0-" << numPlayers << ")\n";
+    std::cout << "Enter bot amount (0-" << numPlayers-1 << ")\n";
     std::cout << "> ";
     while (!(std::cin >> numBots)) {
-        std::cout << "Amount must be a valid number (0-" << std::to_string(numPlayers) << ")! Retrying input...\n\n";
-        std::cout << "Enter bot amount (0-" << numPlayers << ")\n";
+        std::cout << "Amount must be a valid number (0-" << std::to_string(numPlayers-1) << ")! Retrying input...\n\n";
+        std::cout << "Enter bot amount (0-" << numPlayers-1 << ")\n";
         std::cout << "> ";
 
         std::cin.clear();
@@ -1249,7 +1247,7 @@ void GameEngine::newGame() {
     std::cout << "\n";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     if (numBots < 0) { std::cout << "Number lower than 0!\n"; numBots = 0; }
-    else if (numBots > numPlayers) { std::cout << "Number larger than " << numPlayers << "\n"; numBots = numPlayers; }
+    else if (numBots > numPlayers-1) { std::cout << "Number larger than " << numPlayers-1 << "\n"; numBots = numPlayers-1; }
     else { std::cout << "[INIT] Bot amount set to " << std::to_string(numBots) << "\n"; }
     std::cout << "\n";
 
