@@ -162,7 +162,7 @@ void RailroadTile::triggerRentPayment(TurnContext& ctx) {
             ctx.gameEngine.getPanelManager()->getBankruptcyState().rentOwner = owner;
             return;
         }
-        const bool canContinue = StreetTile::triggerBankruptcy(ctx, rent);
+        const bool canContinue = BankruptcyManager::resolveDebtByLiquidation(ctx, rent);
         if (!canContinue) {
             return;
         }
@@ -215,7 +215,7 @@ void UtilityTile::triggerRentPayment(TurnContext& ctx) {
             ctx.gameEngine.getPanelManager()->getBankruptcyState().rentOwner = owner;
             return;
         }
-        const bool canContinue = StreetTile::triggerBankruptcy(ctx, rent);
+        const bool canContinue = BankruptcyManager::resolveDebtByLiquidation(ctx, rent);
         if (!canContinue) {
             return;
         }
