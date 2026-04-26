@@ -193,7 +193,7 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	}
 
 	if (argc() == 0) {
-		out << "[WARN] No Command Written. Type in HELP for command list\n";
+		out << "[WARN] No Command Written. Type in HELP for command list\n\n";
 		return false;
 	}
 
@@ -202,12 +202,14 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	if (commandName == "END_TURN") {
 		if (!ctx.canEndTurn()) {
 			if (ctx.currentPlayer.isInJail()) {
-				out << "[ERROR] Kamu sedang di penjara! Pilih: bayar denda atau ROLL_DICE untuk mencoba double.\n";
+				out << "[WARN] You are currently in jail! To escape, either: Pay the Fine or use ROLL_DICE to roll a double.\n";
 			} else {
-				out << "[ERROR] Kamu belum melempar dadu! Gunakan ROLL_DICE terlebih dahulu.\n";
+				out << "[WARN] You haven't rolled the dice! Use ROLL_DICE before ending your turn.\n";
 			}
+            out << "\n";
 			return false;
 		}
+        out << "\n";
 		return true;
 	}
     else if (commandName == "ROLL_DICE") {
@@ -229,12 +231,13 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 	else if (commandName == "MORTGAGE") execMortgage(ctx, out);
 	else if (commandName == "PROFILE") execProfile(ctx, out);
 	else if (commandName == "USE_SKILL") execUseSkill(ctx, out);
-	else if (commandName == "HELP") execHelp(out);
 	else if (commandName == "BUILD") execUpgrade(ctx, out);
 	else if (commandName == "PRINT_LOG") execPrintLog(ctx, out);
 	else if (commandName == "SAVE") execSave(ctx, out);
 	else if (commandName == "HELP") execHelp(out);
-	else out << "[WARN] Unrecognized command: " << commandName << "\n";
+	else {
+        out << "[WARN] Unrecognized command: " << commandName << "\n";
+        out << "Type HELP to see the list of available commands.\n\n";}
 	return false;
 }
 
@@ -247,7 +250,7 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
         return;
     }
 
-    out << "[COMMAND] Rolling dice...\n";
+    out << "[COMMAND] Rolling Dice\n\n";
 
 	bool validRoll = ctx.dice.roll();
 	if (!validRoll) {
@@ -429,7 +432,7 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
             // Reset counter karena giliran berakhir secara paksa
             ctx.gameEngine.getTurnManager().resetDoubleGotten();
         } else{
-            out << "[INFO] Double! Anda mendapatkan kesempatan melempar lagi.\n";
+            out << "[INFO] Double! You get a chance to throw again\n";
         }
         
     } else {
@@ -499,7 +502,7 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
         out << "You failed to roll doubles. Turns in jail remaining: " << ctx.currentPlayer.getJailTurns() << "\n";
         return;
     }
-	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
+	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n\n";
 	
 	int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
 	Tile* baseTile = ctx.board.getTile(nextPos);
@@ -728,18 +731,22 @@ void Command::execProfile(TurnContext& ctx, std::ostream& out) const {
 		}
 	}
 
+    out << "\n";
 	out << "=== PLAYER PROFILE ===\n";
 	out << "Name                   : " << currentPlayer.getUsername() << "\n";
 	out << "Balance                : M" << formatMoneyId(currentPlayer.getBalance()) << "\n";
 	out << "Total properties owned : " << currentPlayer.getPropertiesAmount() << "\n";
 	out << "Total houses owned     : " << totalHousesOwned << "\n";
-	out << "Total hotels owned     : " << totalHotelsOwned << "\n";
+	out << "Total hotels owned     : " << totalHotelsOwned << "\n\n";
 }
 
 void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
+    out << "\n";
+    out << "[COMMAND] Mortgage\n\n";
+
 	Player& currentPlayer = ctx.currentPlayer;
 	if (currentPlayer.getPropertiesAmount() == 0) {
-		out << "[WARN] You do not own any properties to mortgage.\n";
+		out << "[WARN] You do not own any properties to mortgage.\n\n";
 		return;
 	}
 
@@ -753,24 +760,25 @@ void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
 	if (argc() >= 2 && argv(1) != nullptr) {
 		propertyCode = argv(1);
 	} else {
-		out << "[COMMAND] Input property code to mortgage: ";
+		out << "Input property code to mortgage\n";
+        out << "> ";
 		std::getline(std::cin, propertyCode);
 	}
 
 	if (propertyCode.empty()) {
-		out << "[WARN] Property code cannot be empty.\n";
+		out << "[WARN] Property code cannot be empty.\n\n";
 		return;
 	}
 
 	Tile* tile = ctx.board.getTileByCode(propertyCode);
 	if (tile == nullptr) {
-		out << "[WARN] Property with code '" << propertyCode << "' not found.\n";
+		out << "[WARN] Property with code '" << propertyCode << "' not found.\n\n";
 		return;
 	}
 
 	PropertyTile* propertyTile = dynamic_cast<PropertyTile*>(tile);
 	if (propertyTile == nullptr) {
-		out << "[WARN] Tile with code '" << propertyCode << "' is not a property tile.\n";
+		out << "[WARN] Tile with code '" << propertyCode << "' is not a property tile.\n\n";
 		return;
 	}
 
@@ -782,7 +790,7 @@ void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
 	const auto& ownedProperties = currentPlayer.getProperties();
 	auto ownedIt = std::find(ownedProperties.begin(), ownedProperties.end(), tileProperty);
 	if (ownedIt == ownedProperties.end()) {
-		out << "[WARN] You do not own property '" << tileProperty->getName() << "'.\n";
+		out << "[WARN] You do not own property '" << tileProperty->getName() << "'.\n\n";
 		return;
 	}
 
@@ -793,7 +801,7 @@ void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
 	}
 
 	if (tileProperty->getStatus() == PropertyStatus::MORTGAGED) {
-		out << "[WARN] Property '" << tileProperty->getName() << "' is already mortgaged.\n";
+		out << "[WARN] Property '" << tileProperty->getName() << "' is already mortgaged.\n\n";
 		return;
 	}
 
@@ -805,10 +813,12 @@ void Command::execMortgage(TurnContext& ctx, std::ostream& out) const {
 	}
 
 	out << "[INFO] Property '" << tileProperty->getName() << "' has been mortgaged.\n";
-	out << "[INFO] You received M" << formatMoneyId(tileProperty->getMortgageValue()) << ".\n";
+	out << "[INFO] You received M" << formatMoneyId(tileProperty->getMortgageValue()) << ".\n\n";
 }
 
 void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
+    out << "[COMMAND] Dismortgage\n\n";
+
     Player& currentPlayer = ctx.currentPlayer;
 
     // GUI mode: show dismortgage panel
@@ -826,19 +836,19 @@ void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
     }
 
     if (propertyCode.empty()) {
-        out << "[WARN] Property code cannot be empty.\n";
+        out << "[WARN] Property code cannot be empty.\n\n";
         return;
     }
 
     Tile* tile = ctx.board.getTileByCode(propertyCode);
     if (tile == nullptr) {
-        out << "[WARN] Property with code '" << propertyCode << "' not found.\n";
+        out << "[WARN] Property with code '" << propertyCode << "' not found.\n\n";
         return;
     }
 
     PropertyTile* propertyTile = dynamic_cast<PropertyTile*>(tile);
     if (propertyTile == nullptr) {
-        out << "[WARN] Tile with code '" << propertyCode << "' is not a property tile.\n";
+        out << "[WARN] Tile with code '" << propertyCode << "' is not a property tile.\n\n";
         return;
     }
 
@@ -850,7 +860,7 @@ void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
     const auto& ownedProperties = currentPlayer.getProperties();
     auto ownedIt = std::find(ownedProperties.begin(), ownedProperties.end(), tileProperty);
     if (ownedIt == ownedProperties.end()) {
-        out << "[WARN] You do not own property '" << tileProperty->getName() << "'.\n";
+        out << "[WARN] You do not own property '" << tileProperty->getName() << "'.\n\n";
         return;
     }
 
@@ -861,7 +871,7 @@ void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
     }
 
     if (tileProperty->getStatus() != PropertyStatus::MORTGAGED) {
-        out << "[WARN] Property '" << tileProperty->getName() << "' is not mortgaged.\n";
+        out << "[WARN] Property '" << tileProperty->getName() << "' is not mortgaged.\n\n";
         return;
     }
 
@@ -870,7 +880,7 @@ void Command::execDismortgage(TurnContext& ctx, std::ostream& out) const {
     tileProperty->redeem();
 
     out << "[INFO] Property '" << tileProperty->getName() << "' has been dismortgaged.\n";
-    out << "[INFO] You paid M" << formatMoneyId(cost) << ".\n";
+    out << "[INFO] You paid M" << formatMoneyId(cost) << ".\n\n";
 }
 
 void Command::execUpgrade(TurnContext& ctx, std::ostream& out) const {
@@ -878,9 +888,10 @@ void Command::execUpgrade(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execSave(TurnContext& ctx, std::ostream& out) const {
-    // Check if player has already taken any action this turn (spec requirement)
+    out << "[COMMAND] Save Game\n\n";
+
     if (ctx.gameEngine.getTurnManager().getHasActedThisTurn()) {
-        out << "[ERROR] Simpan hanya dapat dilakukan di awal giliran, sebelum melakukan aksi apapun.\n";
+        out << "[WARN] Save can only be done at the start of a turn, before writing any commands.\n\n";
         return;
     }
 
@@ -895,12 +906,13 @@ void Command::execSave(TurnContext& ctx, std::ostream& out) const {
     if (argc() >= 2 && argv(1) != nullptr) {
         filename = argv(1);
     } else {
-        out << "[COMMAND] Input filename: ";
+        out << "Input filename:\n";
+        out << "> ";
         std::getline(std::cin, filename);
     }
 
     if (filename.empty()) {
-        out << "[WARN] Filename cannot be empty.\n";
+        out << "[WARN] Filename cannot be empty.\n\n";
         return;
     }
 
@@ -925,7 +937,7 @@ void Command::execPrintLog(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {
-	out << "[COMMAND] Checking skill cards in hand...\n";
+	out << "[COMMAND] Skill Card Menu\n\n";
 	if (ctx.currentPlayer.getHandsAmount() == 0) {
 		out << "No cards found in hand\n";
 		return;
@@ -960,7 +972,7 @@ void Command::execUseSkill(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execHelp(std::ostream& out) const {
-	out << "\n";
+	out << "[Command] Help Page\n\n";
     out << "╔══════════════════════════════════════════════════════════════════╗\n";
     out << "║                        P A N D U A N                             ║\n";
     out << "╠══════════════════════════════════════════════════════════════════╣\n";
@@ -996,10 +1008,12 @@ void Command::execHelp(std::ostream& out) const {
     out << "║ PERINTAH LAIN:                                                   ║\n";
     out << "║   - SAVE           : Simpan permainan                            ║\n";
     out << "║   - HELP           : Tampilkan panduan ini                       ║\n";
-    out << "╚══════════════════════════════════════════════════════════════════╝\n";
+    out << "╚══════════════════════════════════════════════════════════════════╝\n\n";
 }
 
 void Command::execPrintBoard(TurnContext& ctx, std::ostream& out) const {
+    out << "[COMMAND] Print Board\n\n";
+
     struct CellContent {
         std::string line1Plain;
         std::string line1Rendered;
@@ -1214,4 +1228,5 @@ void Command::execPrintBoard(TurnContext& ctx, std::ostream& out) const {
     printCellLine(bottomCells, 1);
     printCellLine(bottomCells, 2);
     printRowBorder(bottomCells.size());
+    out << "\n";
 }

@@ -129,7 +129,9 @@ void FestivalTile::onLanded(TurnContext& ctx) {
         return;
     }
 
-    cout << "\nChoose property to increase rent: \n";
+    cout << "[" << player.getUsername() << "] landed on [Festival Tile].\n\n";
+
+    cout << "Choose property to increase rent: \n";
     bool hasProp = false;
     std::vector<Tile*>& allTiles = ctx.board.getAllTiles();
     PropertyTile* proptile = nullptr;
@@ -143,7 +145,7 @@ void FestivalTile::onLanded(TurnContext& ctx) {
         }
     }
     if (!hasProp){
-        cout << "[" << ctx.currentPlayer.getUsername() << "] doesn't have any property. Moving on...\n";
+        cout << "[" << ctx.currentPlayer.getUsername() << "] doesn't have any property to increase the rent of.\n";
         return;
     }
     std::string inp;
@@ -180,6 +182,8 @@ TaxTile::TaxTile(int idx, string cd, string nm, TaxType type)
 
 void TaxTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
+
+    cout << "[" << player.getUsername() << "] landed on [Tax Tile].\n\n";
     if (taxType == TaxType::PPH) { // is PPH
         // GUI mode: show tax panel (only for human players)
         if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
@@ -206,13 +210,19 @@ void TaxTile::applyPPH(Player& player, TurnContext& ctx) {
         return;
     }
 
+    cout << "You have 2 options to pay your tax:\n";
+    cout << "1. Pay flat tax of M" << taxFlat << "\n";
+    cout << "2. Pay percentage tax of " << taxPercent << "\% of your current balance\n";
+
+
     int inp;
     while (true){
-        cout << "2 options: pay flat for: " << taxFlat << " or " << taxPercent << "% of your wealth? (1-2)\n";
+        cout << "> ";
         cin >> inp;
         if (inp == 1 || inp == 2) {
             break;
         }
+        cout << "Invalid input! Please retry\n\n";
     }
     if (inp == 1) {
         player.deductCash(taxFlat);
@@ -221,7 +231,7 @@ void TaxTile::applyPPH(Player& player, TurnContext& ctx) {
         int percentTaxAmount = static_cast<int>(std::ceil(
             (static_cast<double>(taxPercent) / 100.0) * static_cast<double>(player.getBalance())));
         player.deductCash(percentTaxAmount);
-        cout << "[" << player.getUsername() << "] paid tax of M" << percentTaxAmount << "\n";
+        cout << "[" << player.getUsername() << "] paid tax of M" << percentTaxAmount << "\n\n";
     }
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
@@ -229,5 +239,5 @@ void TaxTile::applyPPH(Player& player, TurnContext& ctx) {
 void TaxTile::applyPBM(Player& player, TurnContext& ctx) {
     int taxFlat = ctx.gameEngine.getTaxPbmFlat();
     player.deductCash(taxFlat);
-    cout << "[" << player.getUsername() << "] paid tax of M" << taxFlat << "\n";
+    cout << "[" << player.getUsername() << "] paid tax of M" << taxFlat << "\n\n";
 }

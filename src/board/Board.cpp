@@ -399,15 +399,15 @@ void Board::generateDefaultBoard() {
     addStreet(3, "TSK", "Tasikmalaya", 60, 30, "Coklat", 50, 50, {4, 20, 60, 180, 320, 450});
     setTileAt(4, new TaxTile(4, "PPH", "Pajak Penghasilan", TaxType::PPH));
     addRailroad(5, "GBR", "Stasiun Gambir", 200, 100, {{1, 25}, {2, 50}, {3, 100}, {4, 200}});
-    addStreet(6, "BGR", "Bogor", 100, 50, "Biru_Muda", 50, 50, {6, 30, 90, 270, 400, 550});
+    addStreet(6, "BGR", "Bogor", 100, 50, "Biru Muda", 50, 50, {6, 30, 90, 270, 400, 550});
     setTileAt(7, new FestivalTile(7, "FES", "Festival"));
-    addStreet(8, "DPK", "Depok", 100, 50, "Biru_Muda", 50, 50, {6, 30, 90, 270, 400, 550});
-    addStreet(9, "BKS", "Bekasi", 120, 60, "Biru_Muda", 50, 50, {8, 40, 100, 300, 450, 600});
+    addStreet(8, "DPK", "Depok", 100, 50, "Biru Muda", 50, 50, {6, 30, 90, 270, 400, 550});
+    addStreet(9, "BKS", "Bekasi", 120, 60, "Biru Muda", 50, 50, {8, 40, 100, 300, 450, 600});
     setTileAt(10, new JailTile(10, "PEN", "Penjara"));
-    addStreet(11, "MGL", "Magelang", 140, 70, "Merah_Muda", 100, 100, {10, 50, 150, 450, 625, 750});
+    addStreet(11, "MGL", "Magelang", 140, 70, "Merah Muda", 100, 100, {10, 50, 150, 450, 625, 750});
     addUtility(12, "PLN", "PLN", 150, 75, {{1, 4}, {2, 10}});
-    addStreet(13, "SOL", "Solo", 140, 70, "Merah_Muda", 100, 100, {10, 50, 150, 450, 625, 750});
-    addStreet(14, "YOG", "Yogyakarta", 160, 80, "Merah_Muda", 100, 100, {12, 60, 180, 500, 700, 900});
+    addStreet(13, "SOL", "Solo", 140, 70, "Merah Muda", 100, 100, {10, 50, 150, 450, 625, 750});
+    addStreet(14, "YOG", "Yogyakarta", 160, 80, "Merah Muda", 100, 100, {12, 60, 180, 500, 700, 900});
     addRailroad(15, "STB", "Stasiun Bandung", 200, 100, {{1, 25}, {2, 50}, {3, 100}, {4, 200}});
     addStreet(16, "MAL", "Malang", 180, 90, "Orange", 100, 100, {14, 70, 200, 550, 750, 950});
     setTileAt(17, new CardTile(17, "DNU", "Dana Umum"));
@@ -434,7 +434,7 @@ void Board::generateDefaultBoard() {
     setTileAt(36, new CardTile(36, "KSP", "Kesempatan"));
     addStreet(37, "JKT", "Jakarta", 350, 175, "Biru Tua", 200, 200, {35, 175, 500, 1100, 1300, 1500});
     setTileAt(38, new TaxTile(38, "PBM", "Pajak Barang Mewah", TaxType::PBM));
-    addStreet(39, "IKN", "Ibu Kota Nusantara", 400, 200, "Biru_Tua", 200, 200, {50, 200, 600, 1400, 1700, 2000});
+    addStreet(39, "IKN", "Ibu Kota Nusantara", 400, 200, "Biru Tua", 200, 200, {50, 200, 600, 1400, 1700, 2000});
 }
 
 

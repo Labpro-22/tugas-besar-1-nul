@@ -99,7 +99,7 @@ void GameEngine::run() {
         }
 
         TurnContext ctx(*currentPlayer, gameDice, board, *this);
-        std::cout << "\n=== Giliran " << (turnmgr.getCurrentTurn() + 1) << ": " << currentPlayer->getUsername() << " ===\n";
+        std::cout << "══════ Turn " << (turnmgr.getCurrentTurn() + 1) << ": [" << currentPlayer->getUsername() << "] ══════\n";
 
         // Check if current player is a bot
         if (currentPlayer->isBot()) {
@@ -1155,33 +1155,34 @@ bool GameEngine::executeBotTurn(TurnContext& ctx) {
 void GameEngine::loadGameFromSave() {
     clearPlayers();
 
-    std::cout << "[INFO] Loading Game from Save File...\n";
-    std::cout << "Masukkan nama file save game: ";
+    std::cout << "[INFO] Querying Save File...\n";
+    std::cout << "Input game saved file\n";
+    std::cout << "> ";
     std::string filename;
     std::getline(std::cin, filename);
 
     if (filename.empty()) {
-        std::cout << "[ERROR] Nama file tidak boleh kosong. Kembali ke menu...\n";
+        std::cout << "Filename can't be empty!\n\n";
         return;
     }
 
     try {
-        this->board.generateDefaultBoard();
         loadGame(filename);
-    } catch (const std::exception& e) {
-        std::cout << "[ERROR] Gagal load game: " << e.what() << "\n";
-        std::cout << "Menggunakan konfigurasi default...\n";
+    } catch (CommandException e) {
+        std::cout << e.what() << "\n";
+        std::cout << "Generating default configuration...\n\n";
         // Fallback ke new game jika load gagal
         this->newGame();
     }
 }
+
 void GameEngine::newGame() {
-    std::cout << "\n[INFO] Starting New Game...\n";
-    std::cout << "[INFO] Generating default board\n";
+    std::cout << "[INIT] Starting New Game\n";
+    std::cout << "[INIT] Generating default board\n";
     this->board.generateDefaultBoard();
 
     int maxTurns = getConfiguredMaxTurn(); //tergantung, kalau new game masih bisa ngeload ya brarti bener gini
-    std::cout << "[INFO] Querying max turns\n";
+    std::cout << "[INIT] Querying max turns\n";
     std::cout << "Enter max turn (-1 for unlimited turns, default from config: " << maxTurns << ")\n";
     std::cout << "> ";
     while (!(std::cin >> maxTurns)){
@@ -1193,70 +1194,80 @@ void GameEngine::newGame() {
         maxTurns = -1; //additional validation
     }
     this->turnmgr = TurnManager(maxTurns);
+    std::cout << "\n";
 
     int numPlayers;
-    std::cout << "\n";
-    std::cout << "[INFO] Querying players\n";
-    std::cout << "Enter player amount (2-4)\n";
+    std::cout << "[INIT] Querying total game players\n";
+    std::cout << "Enter total player amount (2-4)\n";
     std::cout << "> ";
-    while (!(std::cin >> numPlayers)) {
-        std::cout << "Error! Itu bukan angka. Coba lagi: ";
+    while (!(std::cin >> numPlayers) || numPlayers < 2 || numPlayers > 4) {
+        std::cout << "Amount must be a valid number (2-4)! Retrying input...\n\n";
+        std::cout << "Enter total player amount (2-4)\n";
+        std::cout << "> ";
 
-        // 1. Bersihkan status error pada cin
         std::cin.clear();
-
-        // 2. Buang karakter sampah di buffer agar tidak terjadi infinite loop
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
+    std::cout << "\n";
+    std::cout << "[INIT] Total player amount set to " << numPlayers << "\n";
+    std::cout << "\n";
 
     int numBots;
-    std::cout << "Enter number of bots (0-" << numPlayers << "): ";
+    std::cout << "[INIT] Querying bot players\n";
+    std::cout << "Enter bot amount (0-" << numPlayers << ")\n";
+    std::cout << "> ";
     while (!(std::cin >> numBots)) {
-        std::cout << "Error! Itu bukan angka. Coba lagi: ";
+        std::cout << "Amount must be a valid number (0-" << std::to_string(numPlayers) << ")! Retrying input...\n\n";
+        std::cout << "Enter bot amount (0-" << numPlayers << ")\n";
+        std::cout << "> ";
 
-        // 1. Bersihkan status error pada cin
         std::cin.clear();
-
-        // 2. Buang karakter sampah di buffer agar tidak terjadi infinite loop
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
+    std::cout << "\n";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    if (numBots < 0) numBots = 0;
-    if (numBots > numPlayers) numBots = numPlayers;
+    if (numBots < 0) { std::cout << "Number lower than 0!\n"; numBots = 0; }
+    else if (numBots > numPlayers) { std::cout << "Number larger than " << numPlayers << "\n"; numBots = numPlayers; }
+    else { std::cout << "[INIT] Bot amount set to " << std::to_string(numBots) << "\n"; }
+    std::cout << "\n";
 
     int numHumans = numPlayers - numBots;
+    std::cout << "[INIT] Human amount set to " << std::to_string(numHumans) << "\n";
+    std::cout << "\n";
 
-    // Create human players
+    std::cout << "[INIT] Querying human player names\n";
     for (int i = 0; i < numHumans; ++i) {
         std::string username;
-        std::cout << "Enter player " << (i + 1) << "'s name: ";
+        std::cout << "Enter player " << (i + 1) << "'s name\n";
+        std::cout << "> ";
         while (true){
             std::getline(std::cin, username);
             if (username != ""){
                 break;
-            } else{ std::cout << "Enter valid username!\n";}
+            } else{ std::cout << "Username can't be empty! Retrying input...\n"; }
         }
         players.push_back(new Player(username, getStartingBalance()));
-        std::cout << "[INFO] Added human player: " << username << "\n";
+        std::cout << "[INIT] Added human player: " << username << "\n\n";
     }
 
-    // Create bot players
     for (int i = 0; i < numBots; ++i) {
         std::string botName = "Bot" + std::to_string(i + 1);
         players.push_back(new BotPlayer(botName, getStartingBalance()));
-        std::cout << "[INFO] Added bot player: " << botName << "\n";
+        std::cout << "[INIT] Added bot player: " << botName << "\n";
+        if (i == numBots - 1) std::cout << "\n";
     }
 
-    // Give each player 1 skill card at the start of the game
-    std::cout << "\n[INFO] Distributing initial skill cards to all players...\n";
+    std::cout << "[INIT] Distributing initial skill cards\n";
     for (Player* player : players) {
         if (player != nullptr) {
             giveRandomSkillCardTo(*player);
         }
     }
+    std::cout << "\n";
 
     turnmgr.setTurnOrder(this->getPlayers());
 }
+
 
 
 std::vector<Player*> GameEngine::getPlayers() const {
@@ -1326,7 +1337,8 @@ void GameEngine::startMenu() {
     std::cout << "  4. EXIT           - Exit the game\n";
 
     while (true) {
-        std::cout << "Enter a choice (1-4): ";
+        std::cout << "Enter a choice (1-4)\n";
+        std::cout << "> ";
         std::string choiceLine;
         std::getline(std::cin, choiceLine);
 
@@ -1339,19 +1351,22 @@ void GameEngine::startMenu() {
         }
 
         if (choice == 1) {
+            std::cout << "\n";
             this->newGame();
             break;
         } else if (choice == 2) {
+            std::cout << "\n";
             this->loadGameFromSave();
             break;
         } else if (choice == 3) {
             break;
         } else if (choice == 4) {
+            std::cout << "\n";
             std::cout << "Thank you for playing!\n";
             exit(0);
             break;
         } else {
-            std::cout << "Invalid choice. Please retry\n\n";
+            std::cout << "Input has to be 1-4. Please retry\n\n";
         }
     }
 }
@@ -1657,7 +1672,11 @@ static PlayerStatus stringToPlayerStatus(const std::string& status) {
 }
 
 void GameEngine::loadGame(const std::string& file) {
-    std::cout << "[INFO] Loading game from file: " << file << "\n";
+    std::cout << "[INIT] Starting New Game\n";
+    std::cout << "[INIT] Generating default board\n";
+    this->board.generateDefaultBoard();
+
+    std::cout << "[INIT] Loading game from file: " << file << "\n";
 
     SaveLoadManager saveLoadManager;
     GameState state = saveLoadManager.load(file);

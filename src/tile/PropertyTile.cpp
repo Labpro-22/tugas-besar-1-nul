@@ -56,6 +56,7 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
     cout << "[" << player.getUsername() << "] landed on [" << getName()
          << "].\n\n";
     getProperty()->printStatus(ctx);
+    cout << "\n";
 
     // GUI mode: show buy panel (only for human players)
     if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
@@ -70,25 +71,28 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
 
     string ans;
     while (true) {
-        cout << "[Y/N] Apakah Anda mau beli " << getName()
-             << "? (Harga: " << getProperty()->getBuyPrice() << ")\n\n";
+        cout << "Do you want to buy " << getName()
+             << "? (Price: " << getProperty()->getBuyPrice() << ") [Y/n]\n";
+        cout << "> ";
         cin >> ans;
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear newline from buffer
         if (ans == "Y" || ans == "y"){
             player.buy(getProperty(), ctx);
-            cout << "[" << player.getUsername() << "] baru saja membeli " << getName() << "\n";
-            cout << "Uang [" << player.getUsername() << "] tersisa: " << player.getBalance() << "\n\n";
+            cout << "\n";
+            cout << "[" << player.getUsername() << "] just bought " << getName() << "\n";
+            cout << "[" << player.getUsername() << "]'s remaining money: " << player.getBalance() << "\n\n";
             break;
         } else if (ans == "N" || ans == "n"){
             AuctionManager am;
             TurnManager tm = ctx.getTurnMgr();
             AuctionWinner aw = am.runAuction(*(getProperty()), tm.getTurnOrder(), tm.getActivePlayerIndex());
             aw.winner.buy(&aw.prop_won, aw.buyAmount, ctx);
-            cout << "[" << aw.winner.getUsername() << "] baru saja membeli " << aw.prop_won.getName() << "\n";
-            cout << "Uang [" << aw.winner.getUsername() << "] tersisa: " << aw.winner.getBalance() << "\n\n";
+            cout << "\n";
+            cout << "[" << aw.winner.getUsername() << "] just won the auction for " << aw.prop_won.getName() << "\n";
+            cout << "[" << aw.winner.getUsername() << "]'s remaining money: " << aw.winner.getBalance() << "\n\n";
             break;
         } else {
-            cout << "input tidak valid. Ulangi input.\n";
+            cout << "Invalid input! Please retry\n\n";
         }
     }
 }
