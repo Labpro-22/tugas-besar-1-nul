@@ -5,7 +5,7 @@
 #include "player/Player.hpp"
 
 TurnManager::TurnManager(int maxTurn)
-    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), hasActedThisTurn(false), turnOrder() {}
+    : currentTurn(0), maxTurn(maxTurn > 0 ? maxTurn : -1), activePlayerIndex(-1), hasActedThisTurn(false), turnOrder(), doubleGotten(0) {}
 
 void TurnManager::setTurnOrder(const std::vector<Player*>& players) {
     this->turnOrder.clear();

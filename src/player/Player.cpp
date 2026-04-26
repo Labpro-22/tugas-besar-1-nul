@@ -12,6 +12,7 @@
 #include "property/Property.hpp"
 #include "property/RailroadProperty.hpp"
 #include "property/StreetProperty.hpp"
+#include "property/UtilityProperty.hpp"
 #include "core/TurnContext.hpp"
 #include "board/Board.hpp"
 #include "core/GameEngine.hpp"
@@ -47,6 +48,7 @@ bool Player::isShieldActive() const { return this->hasShield; }
 
 int Player::getDiscountRate() const { return this->discountRate; }
 
+int Player::getJailTurns() const {return this->jailTurns; }
 
 int Player::getPropertiesAmount() const { return this->properties.size(); }
 
@@ -271,6 +273,22 @@ void Player::addProperty(Property* p, TurnContext& ctx) {
             return count;
         });
     }
+    if (dynamic_cast<UtilityProperty*> (p) != nullptr){
+        (dynamic_cast<UtilityProperty*> (p))->setOwnedUtilityCounter(
+            [](const Player* owner) -> int {
+            if (owner == nullptr) return 0;
+            
+            int count = 0;
+            // Asumsi Player memiliki method getProperties() yang me-return vector<Property*>
+            for (Property* p : owner->getProperties()) {
+                // Cek apakah properti 'p' ini adalah sebuah stasiun
+                if (dynamic_cast<UtilityProperty*>(p) != nullptr) {
+                    count++;
+                }
+            }
+            return count;
+        });
+    }
     p->setOwner(this, ctx);
     this->properties.push_back(p);
 }
@@ -296,7 +314,7 @@ void Player::drawSCard(SkillCard* card) {
     }
 
     this->hand.push_back(card);
-    std::cout << "[CARD] " << card->getDescription() << " ditambahkan ke tangan.\n";
+    std::cout << "[CARD] " << card->getDescription() << " ditambahkan ke tangan " << getUsername() << ".\n";
 }
 
 void Player::discardSCard(int idx) {
@@ -367,11 +385,12 @@ void Player::deactivateShield() {
 
 void Player::enterJail() {
     this->status = PlayerStatus::JAILED;
-    this->jailTurns = 3;
+    this->jailTurns = 3; // artinya masih ada 3 turn lagi di jail
 }
 
 void Player::exitJail() {
     this->status = PlayerStatus::ACTIVE;
+    this->jailTurns = 0;
 }
 
 void Player::decideAction(TurnContext& ctx) {}
@@ -491,3 +510,12 @@ bool Player::checkBankruptcy(int requiredAmount) {
 
     return false;
 }
+
+void Player::decrementjailTurns(){
+    if (this->jailTurns <= 0){
+        throw InvalidGameStateException("Player has invalid jail turns");
+    }
+    this->jailTurns--;
+}
+
+void Player::payRent(Property* p, TurnContext& ctx){}

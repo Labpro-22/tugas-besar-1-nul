@@ -12,6 +12,7 @@
 #include "property/StreetProperty.hpp"
 #include "property/UtilityProperty.hpp"
 #include "tile/PropertyTile.hpp"
+#include "tile/ActionTile.hpp"
 #include "tile/Tile.hpp"
 
 #include <algorithm>
@@ -90,6 +91,37 @@ std::pair<std::string, std::string> tileColorCodeAndAnsi(Tile* tile) {
 	}
 
     return {"DF", "\033[37m"};
+}
+
+bool shouldAdvanceTurnAfterJail(const TurnContext& ctx) {
+    return ctx.currentPlayer.isInJail() && !ctx.startedTurnInJail;
+}
+
+bool handleGoToJailLanding(Tile* landedTile, TurnContext& ctx, std::ostream& out) {
+    if (dynamic_cast<GoToJailTile*>(landedTile) == nullptr) {
+        return false;
+    }
+
+    out << "[INFO] Mendarat di Go To Jail. Pemain dipindahkan ke penjara.\n";
+    ctx.currentPlayer.moveForwardTo(10, ctx);
+
+    Tile* jailBaseTile = ctx.board.getTile(10);
+    JailTile* jailTile = dynamic_cast<JailTile*>(jailBaseTile);
+    if (jailTile == nullptr) {
+        throw InvalidGameStateException("Error when moving player to Jail from GoToJail tile!");
+    }
+
+    jailBaseTile->onLanded(ctx);
+    if (!ctx.currentPlayer.isInJail()) {
+        ctx.currentPlayer.enterJail();
+    }
+    if (!jailTile->isInmate(ctx.currentPlayer)) {
+        jailTile->addInmate(ctx.currentPlayer);
+    }
+
+    ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "PENJARA", "Mendarat di Go To Jail");
+    ctx.gameEngine.getTurnManager().resetDoubleGotten();
+    return true;
 }
 } // namespace
 
@@ -178,8 +210,19 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 		}
 		return true;
 	}
-	else if (commandName == "ROLL_DICE") execRollDice(ctx, out);
-	else if (commandName == "SET_DICE") execSetDice(ctx, out);
+    else if (commandName == "ROLL_DICE") {
+        execRollDice(ctx, out);
+        if (shouldAdvanceTurnAfterJail(ctx)) {
+            return true;
+        }
+    }
+    else if (commandName == "SET_DICE") {
+        execSetDice(ctx, out);
+        if (shouldAdvanceTurnAfterJail(ctx)) {
+            return true;
+        }
+    }
+    else if (commandName == "PAY_JAIL_FEE") execPayJailFee(ctx, out);
 	else if (commandName == "PRINT_BOARD") execPrintBoard(ctx, out);
 	else if (commandName == "PRINT_PROP_CERT") execPrintCert(ctx, out);
 	else if (commandName == "PRINT_PROPERTY") execPrintProperty(ctx, out);
@@ -198,6 +241,12 @@ bool Command::dispatch(TurnContext& ctx, std::ostream& out) const {
 /* === COMMANDS === */
 
 void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
+    if (ctx.currentPlayer.isInJail()
+        && ctx.gameEngine.getTurnManager().getHasActedThisTurn()){
+        out << "should not ever show up: [WARN] You have played in this turn, and you are still in jail.\n";
+        return;
+    }
+
     out << "[COMMAND] Rolling dice...\n";
 
 	bool validRoll = ctx.dice.roll();
@@ -206,26 +255,31 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 		return;
 	}
 
-	// Mark that player has taken action (rolling dice)
+	
+    bool movePlayerToJail = false;
+    bool movePlayerOutOfJail = false;
+
+	// Mark that player has taken action (setting dice)
 	ctx.gameEngine.getTurnManager().markActionTaken();
 
 	if (ctx.dice.isDouble()) {
         ctx.gameEngine.getTurnManager().incrementDoubleGotten();
         int currentDoubles = ctx.gameEngine.getTurnManager().getDoubleGotten();
 
+        
+        if (ctx.currentPlayer.getStatus() == PlayerStatus::JAILED){
+            out << "You got double dice, you got out of jail!\n";
+            movePlayerOutOfJail = true;
+        }
+
         if (currentDoubles >= 3) {
-            out << "Go to jail because going over speed limit\n"; // hubungkan ke gotojail nanti
+            out << "Go to jail because going over speed limit\n"; 
             
             // Log tindakan ke TransactionLogger
             ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "PENJARA", "3x Double (Speeding)");
-            
-            // Proses masuk penjara dan pindah posisi ke Tile 10 (Jail)
-            ctx.currentPlayer.enterJail();
-            ctx.currentPlayer.moveForwardTo(10, ctx); 
-            
+            movePlayerToJail = true; // flag yang memindahkan player ke jail
             // Reset counter karena giliran berakhir secara paksa
             ctx.gameEngine.getTurnManager().resetDoubleGotten();
-            return; 
         }
         out << "[INFO] Double! Anda mendapatkan kesempatan melempar lagi.\n";
     } else {
@@ -235,16 +289,66 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 
 	// Set flag untuk validasi END_TURN
 	if (ctx.currentPlayer.isInJail()) {
-		ctx.hasTakenJailAction = true;  // Pemain di penjara sudah mencoba lempar dadu
+		ctx.hasTakenJailAction = true;
 	} else {
-		ctx.hasRolled = true;  // Pemain normal sudah lempar dadu
+		ctx.hasRolled = true;
 	}
 
 	int diceTotal = ctx.dice.getTotal();
 	this->canEndTurn = !ctx.dice.isDouble();
 
+
 	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
 		<< std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
+
+    if (movePlayerOutOfJail){
+	    Tile* baseTile = ctx.board.getTile(10);
+        JailTile* jt = dynamic_cast<JailTile*> (baseTile);
+        if (jt == nullptr){
+            throw InvalidGameStateException("Error when moving player out of Jail!");
+            return;
+        } else{
+            ctx.currentPlayer.exitJail();
+            jt->removeInmate(ctx.currentPlayer);
+        }
+    }
+
+    if (movePlayerToJail){
+	    ctx.currentPlayer.moveForwardTo(10, ctx); // 10 index jail
+	    Tile* baseTile = ctx.board.getTile(10);
+        baseTile->onLanded(ctx);
+        JailTile* jt = dynamic_cast<JailTile*> (baseTile);
+        if (jt == nullptr){
+            throw InvalidGameStateException("Error when moving player to Jail!");
+            return;
+        } else{
+            ctx.currentPlayer.enterJail();
+            jt->addInmate(ctx.currentPlayer);
+            return;
+        }
+    }
+
+    if (ctx.currentPlayer.getStatus() == PlayerStatus::JAILED){
+        if (ctx.currentPlayer.getJailTurns() == 0){
+            int jail_fee = ctx.gameEngine.getJailFine();
+            ctx.currentPlayer.deductCash(jail_fee);
+            out << "Player " << ctx.currentPlayer.getUsername() << " paid M" << jail_fee << " to get out of jail!\n";
+            Tile* baseTile = ctx.board.getTile(10);
+            JailTile* jt = dynamic_cast<JailTile*> (baseTile);
+            if (jt == nullptr){
+                throw InvalidGameStateException("Error when moving player out of Jail!");
+                return;
+            } else{
+                ctx.currentPlayer.exitJail();
+                jt->removeInmate(ctx.currentPlayer);
+                return;
+            }
+        }
+        ctx.currentPlayer.decrementjailTurns();
+        out << "You failed to roll doubles. Turns in jail remaining: " << ctx.currentPlayer.getJailTurns() << "\n";
+        return;
+    }
+
 	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
 
 	// Log dice roll
@@ -258,11 +362,15 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 		throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(nextPos));
 	}
 
-	out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
+	// out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
 
 	// Log movement
 	logDetail = "Mendarat di " + baseTile->getName() + " (" + baseTile->getCode() + ")";
 	ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "GERAK", logDetail);
+
+    if (handleGoToJailLanding(baseTile, ctx, out)) {
+        return;
+    }
 
 	baseTile->onLanded(ctx);
 
@@ -270,6 +378,12 @@ void Command::execRollDice(TurnContext& ctx, std::ostream& out) const {
 }
 
 void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
+    if (ctx.currentPlayer.isInJail()
+        && ctx.gameEngine.getTurnManager().getHasActedThisTurn()){
+        out << "[WARN] You have played in this turn, and you are still in jail.\n";
+        return;
+    }
+
     if (!ctx.dice.canRoll){
 		out << "[WARN] You cannot roll the dice anymore this turn.\n";
 		return;
@@ -289,27 +403,35 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 
 	out << "[COMMAND] Setting dice...\n";
 
+    bool movePlayerToJail = false;
+    bool movePlayerOutOfJail = false;
+
 	// Mark that player has taken action (setting dice)
 	ctx.gameEngine.getTurnManager().markActionTaken();
+    ctx.dice.setManual(die1, die2);
+
 	if (ctx.dice.isDouble()) {
         ctx.gameEngine.getTurnManager().incrementDoubleGotten();
         int currentDoubles = ctx.gameEngine.getTurnManager().getDoubleGotten();
 
+        
+        if (ctx.currentPlayer.getStatus() == PlayerStatus::JAILED){
+            out << "You got double dice!\n";
+            movePlayerOutOfJail = true;
+        }
+
         if (currentDoubles >= 3) {
-            out << "Go to jail because going over speed limit\n"; // hubungkan ke gotojail nanti
+            out << "Go to jail because going over speed limit\n"; 
             
             // Log tindakan ke TransactionLogger
             ctx.gameEngine.logAction(ctx.currentPlayer.getUsername(), "PENJARA", "3x Double (Speeding)");
-            
-            // Proses masuk penjara dan pindah posisi ke Tile 10 (Jail)
-            ctx.currentPlayer.enterJail();
-            ctx.currentPlayer.moveForwardTo(10, ctx); 
-            
+            movePlayerToJail = true; // flag yang memindahkan player ke jail
             // Reset counter karena giliran berakhir secara paksa
             ctx.gameEngine.getTurnManager().resetDoubleGotten();
-            return; 
+        } else{
+            out << "[INFO] Double! Anda mendapatkan kesempatan melempar lagi.\n";
         }
-        out << "[INFO] Double! Anda mendapatkan kesempatan melempar lagi.\n";
+        
     } else {
         // Perbaikan: Reset counter jika lemparan saat ini bukan double
         ctx.gameEngine.getTurnManager().resetDoubleGotten();
@@ -322,7 +444,6 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 		ctx.hasRolled = true;
 	}
 
-	ctx.dice.setManual(die1, die2);
 	int diceTotal = ctx.dice.getTotal();
 	this->canEndTurn = !ctx.dice.isDouble();
 
@@ -330,6 +451,54 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 
 	out << "Result = " << std::to_string(ctx.dice.getDie1()) << "+"
 		<< std::to_string(ctx.dice.getDie2()) << " = " << diceTotal << "\n";
+
+    if (movePlayerOutOfJail){
+	    Tile* baseTile = ctx.board.getTile(10);
+        JailTile* jt = dynamic_cast<JailTile*> (baseTile);
+        if (jt == nullptr){
+            throw InvalidGameStateException("Error when moving player out of Jail!");
+            return;
+        } else{
+            ctx.currentPlayer.exitJail();
+            jt->removeInmate(ctx.currentPlayer);
+        }
+    }
+
+    if (movePlayerToJail){
+	    ctx.currentPlayer.moveForwardTo(10, ctx); // 10 index jail
+	    Tile* baseTile = ctx.board.getTile(10);
+        baseTile->onLanded(ctx);
+        JailTile* jt = dynamic_cast<JailTile*> (baseTile);
+        if (jt == nullptr){
+            throw InvalidGameStateException("Error when moving player to Jail!");
+            return;
+        } else{
+            ctx.currentPlayer.enterJail();
+            jt->addInmate(ctx.currentPlayer);
+            return;
+        }
+    }
+
+    if (ctx.currentPlayer.getStatus() == PlayerStatus::JAILED){
+        if (ctx.currentPlayer.getJailTurns() == 0){
+            int jail_fee = ctx.gameEngine.getJailFine();
+            ctx.currentPlayer.deductCash(jail_fee);
+            out << "Player " << ctx.currentPlayer.getUsername() << " paid M" << jail_fee << " to get out of jail!\n";
+            Tile* baseTile = ctx.board.getTile(10);
+            JailTile* jt = dynamic_cast<JailTile*> (baseTile);
+            if (jt == nullptr){
+                throw InvalidGameStateException("Error when moving player out of Jail!");
+                return;
+            } else{
+                ctx.currentPlayer.exitJail();
+                jt->removeInmate(ctx.currentPlayer);
+                return;
+            }
+        }
+        ctx.currentPlayer.decrementjailTurns();
+        out << "You failed to roll doubles. Turns in jail remaining: " << ctx.currentPlayer.getJailTurns() << "\n";
+        return;
+    }
 	out << "Moving " << ctx.currentPlayer.getUsername() << "'s pawn by " << diceTotal << " steps\n";
 	
 	int nextPos = ctx.currentPlayer.move(diceTotal, ctx);
@@ -338,7 +507,10 @@ void Command::execSetDice(TurnContext& ctx, std::ostream& out) const {
 		throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(nextPos));
 	}
 
-	out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
+	// out << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
+    if (handleGoToJailLanding(baseTile, ctx, out)) {
+        return;
+    }
 	baseTile->onLanded(ctx);
 
 	if (ctx.currentPlayer.isShieldActive()) ctx.currentPlayer.deactivateShield();
@@ -454,6 +626,26 @@ void Command::execPrintProperty(TurnContext& ctx, std::ostream& out) const {
 			cout << "\n";
 		}
 	}
+}
+
+void Command::execPayJailFee(TurnContext& ctx, std::ostream& out) const{
+    if (ctx.currentPlayer.getStatus() != PlayerStatus::JAILED){
+        out << "You are not in jail! Cannot pay jail fee!\n";
+        return;
+    }
+    int jail_fee = ctx.gameEngine.getJailFine(); 
+    ctx.currentPlayer.deductCash(jail_fee);
+    out << "Player " << ctx.currentPlayer.getUsername() << " paid M" << jail_fee << " to get out of jail!\n";
+    Tile* baseTile = ctx.board.getTile(10);
+    JailTile* jt = dynamic_cast<JailTile*> (baseTile);
+    if (jt == nullptr){
+        throw InvalidGameStateException("Error when moving player out of Jail!");
+        return;
+    } else{
+        ctx.currentPlayer.exitJail();
+        jt->removeInmate(ctx.currentPlayer);
+        return;
+    }
 }
 
 	// struct PropertyLine {

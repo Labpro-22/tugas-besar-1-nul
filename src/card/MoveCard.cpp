@@ -20,6 +20,6 @@ void MoveCard::apply(TurnContext& ctx) {
 	if (baseTile == nullptr) {
 		throw InvalidGameStateException("Player moved to an invalid tile index: " + std::to_string(nextPos));
 	}
-    std::cout << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
+    // std::cout << ctx.currentPlayer.getUsername() << " landed in " << baseTile->getName() << "\n";
 	baseTile->onLanded(ctx);
 }

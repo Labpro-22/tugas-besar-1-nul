@@ -21,7 +21,7 @@ void ChanceCard::execute(Player* player, TurnContext& ctx) {
     
     switch (type) {
         case ChanceType::GO_TO_NEAREST_STATION: {
-            std::cout << "Efek: Pergi ke stasiun terdekat.\n";
+            // std::cout << "Efek: Pergi ke stasiun terdekat.\n";
             
             int currentPos = player->getPosition();
             int boardSize = ctx.getBoardSize();
@@ -52,7 +52,7 @@ void ChanceCard::execute(Player* player, TurnContext& ctx) {
         }
         
         case ChanceType::MOVE_BACK_3: {
-            std::cout << "Efek: Mundur 3 petak.\n";
+            // std::cout << "Efek: Mundur 3 petak.\n";
             
             int currentPos = player->getPosition();
             int boardSize = ctx.getBoardSize();
@@ -64,7 +64,7 @@ void ChanceCard::execute(Player* player, TurnContext& ctx) {
         }
         
         case ChanceType::GO_TO_JAIL: {
-            std::cout << "Efek: Masuk Penjara.\n";
+            // std::cout << "Efek: Masuk Penjara.\n";
             
             Board& board = ctx.board;
             int boardSize = ctx.getBoardSize();
@@ -79,11 +79,11 @@ void ChanceCard::execute(Player* player, TurnContext& ctx) {
             }
             
             if (jailPos != -1) {
-                std::cout << "[INFO] Pemain dipindahkan ke Penjara (posisi " << jailPos << ")\n";
+                std::cout << "[INFO] Pemain dipindahkan ke Penjara.\n";
                 player->moveForwardTo(jailPos, ctx);
                 player->enterJail();
             } else {
-                std::cout << "[INFO] Pemain dipindahkan ke Penjara (posisi 10)\n";
+                std::cout << "[INFO] Pemain dipindahkan ke Penjara.\n";
                 player->moveForwardTo(10, ctx);
                 player->enterJail();
             }

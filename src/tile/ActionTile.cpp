@@ -92,7 +92,7 @@ void CardTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     
     if (cardType == CardTileType::CHANCE) {
-        std::cout << "[" << player.getUsername() << "] landed on Chance Tile. Drawing a card...\n";
+        std::cout << player.getUsername() << " landed on Chance Tile.\n";
         ChanceCard* card = ctx.drawChanceCard();
         if (card != nullptr) {
             card->execute(&player, ctx);
@@ -101,7 +101,7 @@ void CardTile::onLanded(TurnContext& ctx) {
             std::cout << "[INFO] No Chance cards available in the deck.\n";
         }
     } else {
-        std::cout << "[" << player.getUsername() << "] landed on Community Chest Tile. Drawing a card...\n";
+        std::cout << player.getUsername() << " landed on Community Chest Tile.\n";
         CommunityChestCard* card = ctx.drawCommunityChestCard();
         if (card != nullptr) {
             card->execute(&player, ctx);
@@ -183,18 +183,21 @@ void TaxTile::onLanded(TurnContext& ctx) {
     if (taxType == TaxType::PPH) { // is PPH
         // GUI mode: show tax panel (only for human players)
         if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
-            ctx.gameEngine.getPanelManager()->showTax(player, 67, 10.0f);
+            ctx.gameEngine.getPanelManager()->showTax(
+                player,
+                ctx.gameEngine.getTaxPphFlat(),
+                static_cast<float>(ctx.gameEngine.getTaxPphPercent()));
             return;
         }
-        applyPPH(player);
+        applyPPH(player, ctx);
     } else if (taxType == TaxType::PBM) { // is PBM
-        applyPBM(player);
+        applyPBM(player, ctx);
     }
 }
 
-void TaxTile::applyPPH(Player& player) {
-    int taxFlat = 67;      // nanti sesuaikan
-    float taxPercent = 10; // nanti sesuaikan
+void TaxTile::applyPPH(Player& player, TurnContext& ctx) {
+    int taxFlat = ctx.gameEngine.getTaxPphFlat();
+    int taxPercent = ctx.gameEngine.getTaxPphPercent();
 
     // Bot players auto-pay flat tax
     if (player.isBot()) {
@@ -205,7 +208,7 @@ void TaxTile::applyPPH(Player& player) {
 
     int inp;
     while (true){
-        cout << "2 options: pay flat for: " << taxFlat << " or " << taxPercent << "%% of your wealth? (1-2)\n";
+        cout << "2 options: pay flat for: " << taxFlat << " or " << taxPercent << "% of your wealth? (1-2)\n";
         cin >> inp;
         if (inp == 1 || inp == 2) {
             break;
@@ -215,13 +218,16 @@ void TaxTile::applyPPH(Player& player) {
         player.deductCash(taxFlat);
         cout << "[" << player.getUsername() << "] paid tax of M" << taxFlat << "\n";
     } else{
-        player.deductCash(ceil(taxPercent*player.getBalance()));
-        cout << "[" << player.getUsername() << "] paid tax of M" << ceil(taxPercent*player.getBalance()) << "\n";
+        int percentTaxAmount = static_cast<int>(std::ceil(
+            (static_cast<double>(taxPercent) / 100.0) * static_cast<double>(player.getBalance())));
+        player.deductCash(percentTaxAmount);
+        cout << "[" << player.getUsername() << "] paid tax of M" << percentTaxAmount << "\n";
     }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
-void TaxTile::applyPBM(Player& player) {
-    int taxFlat = 67; // nanti sesuaikan sama config
+void TaxTile::applyPBM(Player& player, TurnContext& ctx) {
+    int taxFlat = ctx.gameEngine.getTaxPbmFlat();
     player.deductCash(taxFlat);
     cout << "[" << player.getUsername() << "] paid tax of M" << taxFlat << "\n";
 }

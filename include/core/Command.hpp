@@ -30,6 +30,7 @@ private:
     void execUseSkill(TurnContext& ctx, std::ostream& out) const;
     void execHelp(std::ostream& out) const;
     void execPrintBoard(TurnContext& ctx, std::ostream& out) const;
+    void execPayJailFee(TurnContext& ctx, std::ostream& out) const;
 
   public:
     Command() = default;

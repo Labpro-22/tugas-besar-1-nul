@@ -53,7 +53,7 @@ void StreetTile::onLanded(TurnContext& ctx) {
 
 void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
-    cout << "[" << player.getUsername() << "] mendarat di [" << getName()
+    cout << "[" << player.getUsername() << "] landed on [" << getName()
          << "].\n\n";
     getProperty()->printStatus(ctx);
 
@@ -88,7 +88,7 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
             cout << "Uang [" << aw.winner.getUsername() << "] tersisa: " << aw.winner.getBalance() << "\n\n";
             break;
         } else {
-            cout << "input tidak valid. Throw input invalid exception.\n";
+            cout << "input tidak valid. Ulangi input.\n";
         }
     }
 }
@@ -107,7 +107,7 @@ void StreetTile::triggerRentPayment(TurnContext& ctx) {
     }
 
     const int rent = property->getRent(ctx);
-    cout << "You landed in [" << property->getName() << "] owned by [" << owner->getUsername() << "].\n\n";
+    cout << "You landed on [" << property->getName() << "] owned by " << owner->getUsername() << ".\n\n";
     property->printStatus(ctx);
 
     if (player.getBalance() < rent) {
@@ -274,15 +274,17 @@ void RailroadTile::onLanded(TurnContext& ctx) {
     } else if (property->getStatus() == PropertyStatus::OWNED) {
 
         if (property->getOwner() != &player) {
+            // belum buat sudut pandang player untuk pembayaran dan penerimaan cash
             Property* prop = getProperty();
-            cout << "[" << player.getUsername() << "] mendarat di ["
+            cout << "[" << player.getUsername() << "] landed on ["
                  << prop->getName() << "] milik ["
                  << prop->getOwner()->getUsername() << "].\n\n";
-            prop->printStatus(ctx); // ini harusnya jadi 0 harga belinya
+            prop->printStatus(ctx); 
+            player.deductCash(prop->getRent(ctx)); // nanti aktivasi mode bankruptcy
+            (property->getOwner())->addCash(prop->getRent(ctx));
             cout << "Uang anda tersisa: <M"
                  << player.getBalance() - prop->getRent(ctx)
-                 << ">.\n\n"; // nanti implement dari player, biar bisa kurangi
-                              // balance player
+                 << ">.\n\n";
         }
     } else {
         // kalau Mortgaged lewat aja sih
@@ -292,7 +294,7 @@ void RailroadTile::onLanded(TurnContext& ctx) {
 void RailroadTile::autoAcquire(Player& player, TurnContext& ctx){
     Property* prop = getProperty();
     player.addProperty(prop, ctx);
-    cout << "[" << prop->getName() << "] menjadi milik [" << prop->getOwner()->getUsername() << "].\n\n";
+    cout << "[" << prop->getName() << "] is now owned by " << prop->getOwner()->getUsername() << "!\n\n";
 }
 
 void UtilityTile::onLanded(TurnContext& ctx) {
@@ -301,15 +303,15 @@ void UtilityTile::onLanded(TurnContext& ctx) {
         autoAcquire(player, ctx);
         
     } else if (property->getStatus() == PropertyStatus::OWNED){
-        
         if (property->getOwner() != &player){
             Property* prop = getProperty();
-            cout << "[" << player.getUsername() << "] mendarat di ["
+            cout << "[" << player.getUsername() << "] landed on ["
                  << prop->getName() << "] milik ["
                  << prop->getOwner()->getUsername() << "].\n\n";
-            prop->printStatus(ctx); // ini harusnya jadi 0 harga belinya
+            cout << "Biaya sewa:\nFaktor Pengali:\n";
+            prop->printStatus(ctx); 
             cout << "Uang anda tersisa: <M" << player.getBalance()
-                 << ">.\n\n"; // nanti implement dari player
+                 << ">.\n\n"; 
         }
     } else {
         // kalau Mortgaged lewat aja sih
@@ -319,5 +321,5 @@ void UtilityTile::onLanded(TurnContext& ctx) {
 void UtilityTile::autoAcquire(Player& player, TurnContext& ctx){
     Property* prop = getProperty();
     player.addProperty(prop, ctx);
-    cout << "[" << prop->getName() << "] menjadi milik [" << prop->getOwner()->getUsername() << "].\n\n";
+    cout << "[" << prop->getName() << "] is now owned by " << prop->getOwner()->getUsername() << "!\n\n";
 }

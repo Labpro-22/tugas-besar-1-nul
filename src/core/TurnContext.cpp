@@ -38,5 +38,6 @@ void TurnContext::returnCommunityChestCard(CommunityChestCard* card) {
 }
 
 bool TurnContext::canEndTurn() const {
-    return this->getTurnMgr().getHasActedThisTurn() && !dice.isDouble(); 
+    const bool jailedThisTurn = currentPlayer.isInJail() && !startedTurnInJail;
+    return this->getTurnMgr().getHasActedThisTurn() && (!dice.isDouble() || jailedThisTurn);
 }

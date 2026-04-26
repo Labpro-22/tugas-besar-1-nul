@@ -4,6 +4,7 @@
 #include "core/Dice.hpp"
 #include "core/ConfigLoader.hpp"
 #include "core/SaveLoadManager.hpp"
+#include "config/ConfigValidator.hpp"
 #include "tile/ActionTile.hpp"
 #include "tile/PropertyTile.hpp"
 #include "property/Property.hpp"
@@ -52,6 +53,14 @@ GameEngine::GameEngine(int size)
         , status(GameStatus::NOT_STARTED)
         , activeConfig(Config{})
         , players{std::vector<Player*>{}} {
+    try {
+        ConfigLoader loader;
+        activeConfig = loader.loadAll("config");
+        ConfigValidator::validate(activeConfig);
+    } catch (const std::exception& exc) {
+        std::cout << "[WARN] Failed to load config files, using built-in defaults: "
+                  << exc.what() << "\n";
+    }
     initializeCardDecks();
 }
 
@@ -247,7 +256,8 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
              150, 78, 14, Color{255, 220, 100, 255});
 
     // Draw control buttons
-    bool canRoll = !ctx.hasRolled && !currentPlayer->isInJail();
+    bool canRoll = !ctx.hasRolled &&
+                   (!currentPlayer->isInJail() || (ctx.startedTurnInJail && !ctx.hasTakenJailAction));
     bool canEndTurn = ctx.canEndTurn();
     renderer.DrawGameControls(controlsX, controlsY, canRoll, canEndTurn);
 
@@ -579,7 +589,7 @@ static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
             }
         }
     } else if (state.step == 1) {
-        DrawCenteredText("Enter number of players (2-6)", startY - 10, 20, LIGHTGRAY);
+        DrawCenteredText("Enter number of players (2-4)", startY - 10, 20, LIGHTGRAY);
         state.numPlayersInput.Draw(fieldX, startY + 30, fieldWidth, fieldHeight, "", "2");
 
         if (RenderGUIButton("Back", fieldX, startY + 100, 100, 40,
@@ -864,16 +874,20 @@ void GameEngine::runGUI() {
                 int numBots = std::stoi(newGameState.numBotsInput.text);
                 int numHumans = numPlayers - numBots;
 
+                if (maxTurns < -1) {
+                    maxTurns = getConfiguredMaxTurn();
+                }
+
                 board.generateDefaultBoard();
                 turnmgr = TurnManager(maxTurns);
 
                 clearPlayers();
                 for (int i = 0; i < numHumans; ++i) {
-                    players.push_back(new Player(newGameState.playerNameInputs[i].text, 1500));
+                    players.push_back(new Player(newGameState.playerNameInputs[i].text, getStartingBalance()));
                 }
                 for (int i = 0; i < numBots; ++i) {
                     std::string botName = "Bot" + std::to_string(i + 1);
-                    players.push_back(new BotPlayer(botName, 1500));
+                    players.push_back(new BotPlayer(botName, getStartingBalance()));
                 }
                 for (Player* player : players) {
                     if (player != nullptr) {
@@ -1166,25 +1180,46 @@ void GameEngine::newGame() {
     std::cout << "[INFO] Generating default board\n";
     this->board.generateDefaultBoard();
 
-    int maxTurns;
+    int maxTurns = getConfiguredMaxTurn(); //tergantung, kalau new game masih bisa ngeload ya brarti bener gini
     std::cout << "[INFO] Querying max turns\n";
-    std::cout << "Enter max turn (-1 for unlimited turns)\n";
+    std::cout << "Enter max turn (-1 for unlimited turns, default from config: " << maxTurns << ")\n";
     std::cout << "> ";
-    std::cin >> maxTurns;
+    while (!(std::cin >> maxTurns)){
+        std::cout << "Input invalid! Try again! Enter max turn (-1 for unlimited turns)\n";std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    };
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    if (maxTurns < -1){
+        maxTurns = -1; //additional validation
+    }
     this->turnmgr = TurnManager(maxTurns);
 
     int numPlayers;
     std::cout << "\n";
     std::cout << "[INFO] Querying players\n";
-    std::cout << "Enter player amount (2-6)\n";
+    std::cout << "Enter player amount (2-4)\n";
     std::cout << "> ";
-    std::cin >> numPlayers;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    while (!(std::cin >> numPlayers)) {
+        std::cout << "Error! Itu bukan angka. Coba lagi: ";
+
+        // 1. Bersihkan status error pada cin
+        std::cin.clear();
+
+        // 2. Buang karakter sampah di buffer agar tidak terjadi infinite loop
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
 
     int numBots;
     std::cout << "Enter number of bots (0-" << numPlayers << "): ";
-    std::cin >> numBots;
+    while (!(std::cin >> numBots)) {
+        std::cout << "Error! Itu bukan angka. Coba lagi: ";
+
+        // 1. Bersihkan status error pada cin
+        std::cin.clear();
+
+        // 2. Buang karakter sampah di buffer agar tidak terjadi infinite loop
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     if (numBots < 0) numBots = 0;
     if (numBots > numPlayers) numBots = numPlayers;
@@ -1195,15 +1230,20 @@ void GameEngine::newGame() {
     for (int i = 0; i < numHumans; ++i) {
         std::string username;
         std::cout << "Enter player " << (i + 1) << "'s name: ";
-        std::getline(std::cin, username);
-        players.push_back(new Player(username, 1500)); // saldo awal 1500
+        while (true){
+            std::getline(std::cin, username);
+            if (username != ""){
+                break;
+            } else{ std::cout << "Enter valid username!\n";}
+        }
+        players.push_back(new Player(username, getStartingBalance()));
         std::cout << "[INFO] Added human player: " << username << "\n";
     }
 
     // Create bot players
     for (int i = 0; i < numBots; ++i) {
         std::string botName = "Bot" + std::to_string(i + 1);
-        players.push_back(new BotPlayer(botName, 1500));
+        players.push_back(new BotPlayer(botName, getStartingBalance()));
         std::cout << "[INFO] Added bot player: " << botName << "\n";
     }
 
@@ -1320,8 +1360,34 @@ TurnManager& GameEngine::getTurnManager() {
     return turnmgr;
 }
 
+int GameEngine::getConfiguredMaxTurn() const {
+    return (activeConfig.misc.maxTurn > 0) ? activeConfig.misc.maxTurn : -1;
+}
+
 int GameEngine::getGoSalary() const {
     return (activeConfig.special.goSalary > 0) ? activeConfig.special.goSalary : 200;
+}
+
+int GameEngine::getJailFine() const {
+    return (activeConfig.special.jailFine > 0) ? activeConfig.special.jailFine : 50;
+}
+
+int GameEngine::getTaxPphFlat() const {
+    return (activeConfig.tax.pphFlat >= 0) ? activeConfig.tax.pphFlat : 0;
+}
+
+int GameEngine::getTaxPphPercent() const {
+    if (activeConfig.tax.pphPercent < 0) {
+        return 0;
+    }
+    if (activeConfig.tax.pphPercent > 100) {
+        return 100;
+    }
+    return activeConfig.tax.pphPercent;
+}
+
+int GameEngine::getTaxPbmFlat() const {
+    return (activeConfig.tax.pbmFlat >= 0) ? activeConfig.tax.pbmFlat : 150;
 }
 
 int GameEngine::getStartingBalance() const {

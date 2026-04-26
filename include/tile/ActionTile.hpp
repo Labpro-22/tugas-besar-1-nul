@@ -77,6 +77,6 @@ class TaxTile : public ActionTile {
   public:
     TaxTile(int idx, string cd, string nm, TaxType type);
     void onLanded(TurnContext& ctx) override;
-    void applyPPH(Player& player);
-    void applyPBM(Player& player);
+    void applyPPH(Player& player, TurnContext& ctx);
+    void applyPBM(Player& player, TurnContext& ctx);
 };

@@ -24,7 +24,6 @@ enum class GameStatus { NOT_STARTED, RUNNING, FINISHED };
 
 class GameEngine {
   private:
-    // Board board;
     Board board;
     TurnManager turnmgr;
     CardDeck<ChanceCard> chanceDeck;
@@ -61,7 +60,12 @@ class GameEngine {
     void displayPlayers() const;
     std::vector<Player*> getPlayers() const;
 
+    int getConfiguredMaxTurn() const;
     int getGoSalary() const;
+    int getJailFine() const;
+    int getTaxPphFlat() const;
+    int getTaxPphPercent() const;
+    int getTaxPbmFlat() const;
     int getStartingBalance() const;
     void giveRandomSkillCardTo(Player& player);
     // Card deck methods

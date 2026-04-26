@@ -49,6 +49,7 @@ protected:
     int getPropertiesAmount() const;
     int getHandsAmount() const;
     int getWealth() const;
+    int getJailTurns() const;
     const std::vector<Property*>& getProperties() const;
     const std::vector<SkillCard*>& getHand() const;
 
@@ -71,6 +72,7 @@ protected:
     void mortgage(Property* p);
 
     // cash management and bankruptcy
+    void payRent(Property* p, TurnContext& ctx);
     void addCash(int amount);
     void deductCash(int amount);
     void setBankruptStatus();
@@ -87,6 +89,7 @@ protected:
     // jail
     void enterJail();
     void exitJail();
+    void decrementjailTurns();
 
     // action
     virtual void decideAction(TurnContext& ctx);
