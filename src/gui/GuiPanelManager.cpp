@@ -20,6 +20,8 @@
 #include "tile/PropertyTile.hpp"
 #include "core/AuctionManager.hpp"
 #include "core/BankruptcyManager.hpp"
+#include "card/ChanceCard.hpp"
+#include "card/CommunityChestCard.hpp"
 
 #if NIMONSPOLI_HAS_RAYLIB
 #include <raylib.h>
@@ -257,6 +259,26 @@ void PanelManager::showTax(Player& player, int taxFlat, float taxPercent) {
     tax_ = TaxState{&player, taxFlat, taxPercent, ActionResult::PENDING};
 }
 
+void PanelManager::showCardReveal(ChanceCard* chanceCard, CommunityChestCard* communityCard, 
+                                   Player& player, TurnContext& ctx) {
+    active_ = PanelType::CARD_REVEAL;
+    blocking_ = true;
+    
+    std::string title, description, cardType;
+    if (chanceCard) {
+        title = "Kartu Kesempatan";
+        description = chanceCard->getDescription();
+        cardType = "chance";
+    } else {
+        title = "Kartu Dana Umum";
+        description = communityCard->getDescription();
+        cardType = "community";
+    }
+    
+    cardReveal_ = CardRevealState{title, description, cardType, ActionResult::PENDING, false,
+                                  chanceCard, communityCard, &player, &ctx};
+}
+
 // ============================================================================
 // updateAndRender dispatcher
 // ============================================================================
@@ -279,6 +301,7 @@ void PanelManager::updateAndRender() {
     case PanelType::MESSAGE: renderMessage(); break;
     case PanelType::FESTIVAL: renderFestival(); break;
     case PanelType::TAX: renderTax(); break;
+    case PanelType::CARD_REVEAL: renderCardReveal(); break;
     default: break;
     }
 #endif
@@ -1146,6 +1169,41 @@ void PanelManager::renderTax() {
             showMessage("Pajak Gagal", e.what());
         }
         tax_.result = ActionResult::DONE;
+        dismiss();
+    }
+#endif
+}
+
+// ============================================================================
+// CARD REVEAL
+// ============================================================================
+
+void PanelManager::renderCardReveal() {
+#if NIMONSPOLI_HAS_RAYLIB
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+    int pw = 500, ph = 350;
+    float px = (sw - pw) / 2.0f;
+    float py = (sh - ph) / 2.0f;
+    
+    std::string title = cardReveal_.cardType == "chance" ? "Kartu Kesempatan" : "Kartu Dana Umum";
+    panelBg(pw, ph, title.c_str());
+    
+    wrappedText(cardReveal_.cardDescription, static_cast<int>(px + 30), static_cast<int>(py + 70), pw - 60, kFontBody, LIGHTGRAY, 26);
+    
+    if (button("Lanjutkan", px + pw / 2 - 80, py + ph - 70, 160, 45,
+               Color{76, 175, 80, 255}, WHITE, Color{100, 200, 100, 255})) {
+        if (cardReveal_.player && cardReveal_.ctx) {
+            if (cardReveal_.chanceCard) {
+                cardReveal_.chanceCard->execute(cardReveal_.player, *cardReveal_.ctx);
+                cardReveal_.ctx->returnChanceCard(cardReveal_.chanceCard);
+            } else if (cardReveal_.communityCard) {
+                cardReveal_.communityCard->execute(cardReveal_.player, *cardReveal_.ctx);
+                cardReveal_.ctx->returnCommunityChestCard(cardReveal_.communityCard);
+            }
+        }
+        cardReveal_.acknowledged = true;
+        cardReveal_.result = ActionResult::DONE;
         dismiss();
     }
 #endif

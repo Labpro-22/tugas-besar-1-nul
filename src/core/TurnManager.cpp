@@ -76,9 +76,18 @@ void TurnManager::setActivePlayerIndex(int idx) { this->activePlayerIndex = idx;
 
 void TurnManager::setMaxTurn(int max) { this->maxTurn = max; }
 
-bool TurnManager::isGameOver() const { 
-    if (maxTurn < 0) return false; // nanti bikin kalo smua ud bangkrut
-    return this->currentTurn >= this->maxTurn; 
+bool TurnManager::isGameOver() const {
+    int activePlayers = 0;
+    for (Player* player : this->turnOrder) {
+        if (player != nullptr && player->getStatus() != PlayerStatus::BANKRUPT) {
+            ++activePlayers;
+        }
+    }
+    if (activePlayers <= 1) {
+        return true;
+    }
+    if (maxTurn < 0) return false;
+    return this->currentTurn >= this->maxTurn;
 }
 
 std::vector<Player*> TurnManager::determineWinner() {

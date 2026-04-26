@@ -1097,11 +1097,11 @@ bool GUIRenderer::DrawButton(const std::string& text, float x, float y, float wi
 #endif
 }
 
-void GUIRenderer::DrawGameControls(float x, float y, bool canRoll, bool canEndTurn) const {
+void GUIRenderer::DrawGameControls(float x, float y, bool canRoll, bool canEndTurn, bool isJailed) const {
 #if NIMONSPOLI_HAS_RAYLIB
     float buttonWidth = 120.0f;
-    float buttonHeight = 40.0f;
-    float spacing = 10.0f;
+    float buttonHeight = 32.0f;
+    float spacing = 8.0f;
     
     Color rollColor = canRoll ? Color{76, 175, 80, 255} : Color{150, 150, 150, 255};
     Color endTurnColor = canEndTurn ? Color{33, 150, 243, 255} : Color{150, 150, 150, 255};
@@ -1129,17 +1129,31 @@ void GUIRenderer::DrawGameControls(float x, float y, bool canRoll, bool canEndTu
     DrawButton("Mortgage [M]", x, y + 2 * (buttonHeight + spacing), buttonWidth, buttonHeight,
                Color{244, 67, 54, 255}, WHITE, Color{255, 120, 100, 255});
     
+    // Dismortgage button
+    DrawButton("Dismortg [D]", x + buttonWidth + spacing, y + 2 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+               Color{121, 85, 72, 255}, WHITE, Color{160, 120, 100, 255});
+    
+    // Use Skill button
+    DrawButton("Use Skill [U]", x, y + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+               Color{0, 150, 136, 255}, WHITE, Color{80, 200, 180, 255});
+    
     // Save button
-    DrawButton("Save [S]", x + buttonWidth + spacing, y + 2 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+    DrawButton("Save [S]", x + buttonWidth + spacing, y + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight,
                Color{96, 125, 139, 255}, WHITE, Color{140, 160, 170, 255});
     
     // Help button
-    DrawButton("Help [H]", x, y + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight,
-               Color{0, 150, 136, 255}, WHITE, Color{80, 200, 180, 255});
+    DrawButton("Help [H]", x, y + 4 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+               Color{63, 81, 181, 255}, WHITE, Color{100, 130, 220, 255});
     
     // Exit button
-    DrawButton("Exit [ESC]", x + buttonWidth + spacing, y + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+    DrawButton("Exit [ESC]", x + buttonWidth + spacing, y + 4 * (buttonHeight + spacing), buttonWidth, buttonHeight,
                Color{120, 120, 120, 255}, WHITE, Color{160, 160, 160, 255});
+    
+    // Pay Jail Fee button (only visible when jailed)
+    if (isJailed) {
+        DrawButton("Pay Jail [J]", x, y + 5 * (buttonHeight + spacing), buttonWidth, buttonHeight,
+                   Color{255, 87, 34, 255}, WHITE, Color{255, 130, 100, 255});
+    }
 #endif
 }
 

@@ -129,7 +129,7 @@ class GUIRenderer {
                     Color bgColor, Color textColor, Color hoverColor) const;
 
     // Draw game control buttons
-    void DrawGameControls(float x, float y, bool canRoll, bool canEndTurn) const;
+    void DrawGameControls(float x, float y, bool canRoll, bool canEndTurn, bool isJailed = false) const;
 
     // Check if a button was clicked (to be called after drawing)
     bool IsButtonClicked(float x, float y, float width, float height) const;

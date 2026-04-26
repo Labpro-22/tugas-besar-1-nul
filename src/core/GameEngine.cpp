@@ -236,7 +236,7 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
 
     // Button dimensions
     float controlsX = snapshot.rightPanel.x + 15;
-    float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 240;
+    float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 300;
 
     // Draw turn info panel
     DrawRectangle(10, 10, 340, 100, Color{30, 30, 40, 230});
@@ -259,7 +259,7 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
     bool canRoll = !ctx.hasRolled &&
                    (!currentPlayer->isInJail() || (ctx.startedTurnInJail && !ctx.hasTakenJailAction));
     bool canEndTurn = ctx.canEndTurn();
-    renderer.DrawGameControls(controlsX, controlsY, canRoll, canEndTurn);
+    renderer.DrawGameControls(controlsX, controlsY, canRoll, canEndTurn, currentPlayer->isInJail());
 
     // Draw dice animation status
     if (animatingDiceFrames > 0) {
@@ -328,19 +328,22 @@ static bool HandleGameInput(GUIRenderer& renderer, GameEngine& engine,
                             GuiPanels::PanelManager* panelMgr = nullptr) {
     auto snapshot = renderer.InspectBoardDisplay();
     float controlsX = snapshot.rightPanel.x + 15;
-    float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 240;
+    float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 300;
     const float buttonWidth = 120.0f;
-    const float buttonHeight = 40.0f;
-    const float spacing = 10.0f;
+    const float buttonHeight = 32.0f;
+    const float spacing = 8.0f;
 
     bool rollClicked = renderer.IsButtonClicked(controlsX, controlsY, buttonWidth, buttonHeight);
     bool endTurnClicked = renderer.IsButtonClicked(controlsX + buttonWidth + spacing, controlsY, buttonWidth, buttonHeight);
     bool profileClicked = renderer.IsButtonClicked(controlsX, controlsY + buttonHeight + spacing, buttonWidth, buttonHeight);
     bool buildClicked = renderer.IsButtonClicked(controlsX + buttonWidth + spacing, controlsY + buttonHeight + spacing, buttonWidth, buttonHeight);
     bool mortgageClicked = renderer.IsButtonClicked(controlsX, controlsY + 2 * (buttonHeight + spacing), buttonWidth, buttonHeight);
-    bool saveClicked = renderer.IsButtonClicked(controlsX + buttonWidth + spacing, controlsY + 2 * (buttonHeight + spacing), buttonWidth, buttonHeight);
-    bool helpClicked = renderer.IsButtonClicked(controlsX, controlsY + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight);
-    bool exitClicked = renderer.IsButtonClicked(controlsX + buttonWidth + spacing, controlsY + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+    bool dismortgageClicked = renderer.IsButtonClicked(controlsX + buttonWidth + spacing, controlsY + 2 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+    bool useSkillClicked = renderer.IsButtonClicked(controlsX, controlsY + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+    bool saveClicked = renderer.IsButtonClicked(controlsX + buttonWidth + spacing, controlsY + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+    bool helpClicked = renderer.IsButtonClicked(controlsX, controlsY + 4 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+    bool exitClicked = renderer.IsButtonClicked(controlsX + buttonWidth + spacing, controlsY + 4 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+    bool payJailClicked = renderer.IsButtonClicked(controlsX, controlsY + 5 * (buttonHeight + spacing), buttonWidth, buttonHeight);
 
     Player* currentPlayer = turnmgr.getCurrentPlayer();
     if (currentPlayer == nullptr) return true;
@@ -382,12 +385,31 @@ static bool HandleGameInput(GUIRenderer& renderer, GameEngine& engine,
         try { cmd.parse("MORTGAGE"); cmd.dispatch(ctx); }
         catch (const std::exception& exc) { std::cout << exc.what() << "\n"; }
     }
+    else if (IsKeyPressed(KEY_D) || dismortgageClicked) {
+        try { cmd.parse("DISMORTGAGE"); cmd.dispatch(ctx); }
+        catch (const std::exception& exc) { std::cout << exc.what() << "\n"; }
+    }
+    else if (IsKeyPressed(KEY_U) || useSkillClicked) {
+        try { cmd.parse("USE_SKILL"); cmd.dispatch(ctx); }
+        catch (const std::exception& exc) { std::cout << exc.what() << "\n"; }
+    }
     else if (IsKeyPressed(KEY_S) || saveClicked) {
         try { cmd.parse("SAVE"); cmd.dispatch(ctx); }
         catch (const std::exception& exc) { std::cout << exc.what() << "\n"; }
     }
+    else if (IsKeyPressed(KEY_J) || payJailClicked) {
+        if (currentPlayer->isInJail()) {
+            try { cmd.parse("PAY_JAIL_FEE"); cmd.dispatch(ctx); }
+            catch (const std::exception& exc) { std::cout << exc.what() << "\n"; }
+        }
+    }
     else if (IsKeyPressed(KEY_H) || helpClicked) {
         showHelp = true;
+    }
+    else if (IsKeyPressed(KEY_L)) {
+        if (panelMgr) {
+            panelMgr->showLog(engine.getLogger());
+        }
     }
     else if (IsKeyPressed(KEY_F12)) {
         TakeScreenshot("nimonspoli_screenshot.png");
@@ -842,9 +864,11 @@ void GameEngine::runGUI() {
         return;
     }
 
-    // GUI Panel Manager for in-game interactions
-    GuiPanels::PanelManager panelManager;
-    setPanelManager(&panelManager);
+    bool shouldExit = false;
+    while (!shouldExit && !WindowShouldClose()) {
+        // GUI Panel Manager for in-game interactions
+        GuiPanels::PanelManager panelManager;
+        setPanelManager(&panelManager);
 
     // Show splash screen briefly
     double splashStart = GetTime();
@@ -925,8 +949,7 @@ void GameEngine::runGUI() {
     }
 
     if (WindowShouldClose()) {
-        renderer.Shutdown();
-        return;
+        break;
     }
 
     // Show splash again briefly before game
@@ -942,8 +965,9 @@ void GameEngine::runGUI() {
     bool showInGameHelp = false;
 
     // Main game loop
-    while (!turnmgr.isGameOver()) {
+    while (!turnmgr.isGameOver() && !shouldExit) {
         if (WindowShouldClose()) {
+            shouldExit = true;
             break;
         }
 
@@ -1033,11 +1057,12 @@ void GameEngine::runGUI() {
                 }
 
                 // Handle input
-                bool shouldExit = HandleGameInput(renderer, *this, turnmgr, board,
+                bool inputExit = HandleGameInput(renderer, *this, turnmgr, board,
                                                   gameDice, animatingDiceFrames, cmd, goNext, showInGameHelp, ctx, &panelManager);
-                if (shouldExit) {
-                    renderer.Shutdown();
-                    return;
+                if (inputExit) {
+                    shouldExit = true;
+                    humanTurnDone = true;
+                    break;
                 }
 
                 if (goNext) {
@@ -1074,6 +1099,80 @@ void GameEngine::runGUI() {
     }
 
     std::cout << "\n=== Permainan Selesai! ===\n";
+    
+    bool returnToMenu = false;
+    
+    #if NIMONSPOLI_HAS_RAYLIB
+    {
+        std::vector<Player*> winners = turnmgr.determineWinner();
+        
+        bool showGameOverScreen = true;
+        while (showGameOverScreen && !WindowShouldClose()) {
+            int sw = GetScreenWidth();
+            int sh = GetScreenHeight();
+            
+            BeginDrawing();
+            ClearBackground(Color{25, 25, 35, 255});
+            
+            DrawCenteredText("P E R M A I N A N   S E L E S A I", sh / 2 - 120, 48, Color{255, 200, 50, 255});
+            
+            if (!winners.empty()) {
+                std::string winnerText = "Pemenang: " + winners[0]->getUsername();
+                int wealth = winners[0]->getWealth();
+                winnerText += " (Kekayaan: M" + std::to_string(wealth) + ")";
+                DrawCenteredText(winnerText.c_str(), sh / 2 - 40, 28, Color{100, 255, 150, 255});
+                
+                if (winners.size() > 1) {
+                    std::string tieText = "Seri dengan: ";
+                    for (size_t i = 1; i < winners.size(); ++i) {
+                        if (i > 1) tieText += ", ";
+                        tieText += winners[i]->getUsername();
+                    }
+                    DrawCenteredText(tieText.c_str(), sh / 2, 20, Color{255, 220, 100, 255});
+                }
+            } else {
+                DrawCenteredText("Tidak ada pemenang", sh / 2 - 40, 28, LIGHTGRAY);
+            }
+            
+            std::string statsText = "Giliran Total: " + std::to_string(turnmgr.getCurrentTurn() + 1);
+            DrawCenteredText(statsText.c_str(), sh / 2 + 50, 18, GRAY);
+            
+            float btnWidth = 200.0f;
+            float btnHeight = 45.0f;
+            float btnX = (sw - btnWidth) / 2.0f;
+            float btnY = sh / 2 + 100;
+            
+            if (RenderGUIButton("Main Menu", btnX, btnY, btnWidth, btnHeight,
+                               Color{33, 150, 243, 255}, WHITE, Color{100, 180, 255, 255})) {
+                showGameOverScreen = false;
+                returnToMenu = true;
+            }
+            
+            btnY += btnHeight + 12;
+            if (RenderGUIButton("Keluar", btnX, btnY, btnWidth, btnHeight,
+                               Color{244, 67, 54, 255}, WHITE, Color{255, 120, 100, 255})) {
+                showGameOverScreen = false;
+                shouldExit = true;
+            }
+            
+            if (IsKeyPressed(KEY_ESCAPE)) {
+                showGameOverScreen = false;
+                shouldExit = true;
+            }
+            
+            EndDrawing();
+        }
+    }
+    #endif
+    
+    if (returnToMenu) {
+        clearPlayers();
+        continue;
+    }
+    
+    break;
+    }
+    
     renderer.Shutdown();
 #else
     std::cout << "GUI mode not available - Raylib not found.\n";
