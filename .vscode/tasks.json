@@ -1,0 +1,245 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build project",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Rebuild project",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build config driver",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Rebuild after ParseUtils fix",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build logger implementation",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build states implementation",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build DTO-aligned states",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build SaveLoad refactor",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Rebuild SaveLoad refactor",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build strict save format",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"cmake-build"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Check Raylib availability",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"pkg-config --modversion raylib 2>/dev/null || echo MISSING_RAYLIB; echo '---ASSETS---'; ls assets | head -n 30"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Run GUI headless simulation",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"cd /home/nicholaswisee/Code/projects/tugas-besar-1-nul && c++ -std=c++17 -Iinclude test/gui/gui_simulation_driver.cpp src/gui/GuiRenderer.cpp src/states/LogEntry.cpp -o /tmp/gui_sim && /tmp/gui_sim"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Run GUI headless simulation v2",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"cd /home/nicholaswisee/Code/projects/tugas-besar-1-nul && c++ -std=c++17 -Iinclude test/gui/gui_simulation_driver.cpp src/gui/GuiRenderer.cpp src/states/LogEntry.cpp -o /tmp/gui_sim && /tmp/gui_sim"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Run GUI headless simulation v3",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"cd /home/nicholaswisee/Code/projects/tugas-besar-1-nul && c++ -std=c++17 -Iinclude test/gui/gui_simulation_driver.cpp src/gui/GuiRenderer.cpp src/states/LogEntry.cpp -o /tmp/gui_sim && /tmp/gui_sim"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Detect OS and package manager",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"cat /etc/os-release; echo '---'; command -v apt || true; command -v dnf || true; command -v pacman || true; command -v zypper || true; echo '---'; pkg-config --modversion raylib 2>/dev/null || echo NOT_INSTALLED"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Install raylib (pacman)",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"sudo pacman -S --noconfirm raylib && pkg-config --modversion raylib"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Build and run GUI visual test",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"cd /home/nicholaswisee/Code/projects/tugas-besar-1-nul && c++ -std=c++17 $(pkg-config --cflags raylib) -Iinclude test/gui/gui_simulation_driver.cpp src/gui/GuiRenderer.cpp src/states/LogEntry.cpp -o /tmp/gui_sim_visual $(pkg-config --libs raylib) && /tmp/gui_sim_visual"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Re-run GUI visual test",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"cd /home/nicholaswisee/Code/projects/tugas-besar-1-nul && c++ -std=c++17 $(pkg-config --cflags raylib) -Iinclude test/gui/gui_simulation_driver.cpp src/gui/GuiRenderer.cpp src/states/LogEntry.cpp -o /tmp/gui_sim_visual $(pkg-config --libs raylib) && /tmp/gui_sim_visual"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Compile GUI simulation after modularization",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"cd /home/nicholaswisee/Code/projects/tugas-besar-1-nul && c++ -std=c++17 $(pkg-config --cflags raylib) -Iinclude test/gui/gui_simulation_driver.cpp src/gui/GuiRenderer.cpp src/states/LogEntry.cpp -o /tmp/gui_sim_visual_mod $(pkg-config --libs raylib)"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Run GUI simulation after modularization",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-lc",
+				"/tmp/gui_sim_visual_mod"
+			],
+			"isBackground": false
+		}
+	]
+}
