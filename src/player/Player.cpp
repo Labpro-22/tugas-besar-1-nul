@@ -3,6 +3,7 @@
 
 #include "board/Board.hpp"
 #include "card/SkillCard.hpp"
+#include "core/AuctionManager.hpp"
 #include "core/BankruptcyManager.hpp"
 #include "core/TurnContext.hpp"
 #include "exception/BankruptcyException.hpp"
@@ -150,11 +151,22 @@ void Player::buy(Property* p, int buyAmount, TurnContext& ctx) {
     if (p == nullptr) {
         throw InvalidGameStateException("Cannot buy null property");
     }
-    if (this->getBalance() < p->getBuyPrice()) {
-        throw InsufficientFundsException("Not enough money to buy " + 
-                                         p->getName());
+    // if (this->getBalance() < p->getBuyPrice()) {
+    //     throw InsufficientFundsException("AUCTION: Not enough money to buy " + 
+    //                                      p->getName()); //should never appear due to auction characteristics
+    // }
+    try{
+        this->deductCash(buyAmount);
+    } catch (NimonspoliException* e){
+        cout << e->what() << "\n";
+        AuctionManager am;
+        TurnManager tm = ctx.getTurnMgr();
+        AuctionWinner aw = am.runAuction(*p, tm.getTurnOrder(), tm.getActivePlayerIndex());
+        aw.winner.buy(&aw.prop_won, aw.buyAmount, ctx);
+        cout << "\n";
+        cout << "[" << aw.winner.getUsername() << "] just won the auction for " << aw.prop_won.getName() << "\n";
+        cout << "[" << aw.winner.getUsername() << "]'s remaining money: " << aw.winner.getBalance() << "\n\n";
     }
-    this->deductCash(buyAmount);
     this->addProperty(p, ctx);
 }
 

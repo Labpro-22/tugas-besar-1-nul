@@ -125,6 +125,21 @@ void GameEngine::run() {
     }
 
     std::cout << "\n=== Permainan Selesai! ===\n";
+    const std::vector<Player*> winners = turnmgr.determineWinner();
+    if (winners.empty()) {
+        std::cout << "Tidak ada pemenang yang valid.\n";
+    } else {
+        std::cout << "Pemenang:\n";
+        for (Player* winner : winners) {
+            if (winner == nullptr) {
+                continue;
+            }
+            std::cout << "- " << winner->getUsername()
+                      << " | Balance: M" << winner->getBalance()
+                      << " | Properti: " << winner->getPropertiesAmount()
+                      << " | Kartu: " << winner->getHandsAmount() << "\n";
+        }
+    }
 }
 
 #if NIMONSPOLI_HAS_RAYLIB
@@ -1097,6 +1112,21 @@ void GameEngine::runGUI() {
     }
 
     std::cout << "\n=== Permainan Selesai! ===\n";
+    const std::vector<Player*> winners = turnmgr.determineWinner();
+    if (winners.empty()) {
+        std::cout << "Tidak ada pemenang yang valid.\n";
+    } else {
+        std::cout << "Pemenang:\n";
+        for (Player* winner : winners) {
+            if (winner == nullptr) {
+                continue;
+            }
+            std::cout << "- " << winner->getUsername()
+                      << " | Balance: M" << winner->getBalance()
+                      << " | Properti: " << winner->getPropertiesAmount()
+                      << " | Kartu: " << winner->getHandsAmount() << "\n";
+        }
+    }
     renderer.Shutdown();
 #else
     std::cout << "GUI mode not available - Raylib not found.\n";
@@ -1205,9 +1235,11 @@ void GameEngine::newGame() {
     int maxTurns = getConfiguredMaxTurn(); //tergantung, kalau new game masih bisa ngeload ya brarti bener gini
     std::cout << "[INIT] Querying max turns\n";
     std::cout << "Enter max turn (-1 for unlimited turns, default from config: " << maxTurns << ")\n";
+    std::cout << "Note that turns mean each player's turn.\n";
     std::cout << "> ";
     while (!(std::cin >> maxTurns)){
         std::cout << "Input invalid! Try again! Enter max turn (-1 for unlimited turns)\n";std::cin.clear();
+        std::cout << "Note that turns mean each player's turn.\n";
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     };
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
