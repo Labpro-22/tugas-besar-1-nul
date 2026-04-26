@@ -634,10 +634,14 @@ static bool RenderNewGameSetup(NewGameState& state, GameEngine& /*engine*/) {
                     if (val < 0 || val > numPlayers) {
                         state.errorMessage = "Must be between 0 and " + std::to_string(numPlayers);
                     } else {
-                        state.errorMessage.clear();
                         int numHumans = numPlayers - val;
-                        state.playerNameInputs.resize(numHumans);
-                        state.step = 3;
+                        if (numHumans < 1) {
+                            state.errorMessage = "At least 1 human player required";
+                        } else {
+                            state.errorMessage.clear();
+                            state.playerNameInputs.resize(numHumans);
+                            state.step = 3;
+                        }
                     }
                 } catch (...) {
                     state.errorMessage = "Invalid number";
