@@ -76,8 +76,6 @@ void StreetTile::triggerBuyOrAuction(TurnContext& ctx) {
         if (ans == "Y" || ans == "y"){
             player.buy(getProperty(), ctx);
             cout << "\n";
-            cout << "[" << player.getUsername() << "] just bought " << getName() << "\n";
-            cout << "[" << player.getUsername() << "]'s remaining money: " << player.getBalance() << "\n\n";
             break;
         } else if (ans == "N" || ans == "n"){
             AuctionManager am;

@@ -3,6 +3,7 @@
 
 #include "board/Board.hpp"
 #include "card/SkillCard.hpp"
+#include "core/AuctionManager.hpp"
 #include "core/BankruptcyManager.hpp"
 #include "core/TurnContext.hpp"
 #include "exception/BankruptcyException.hpp"
@@ -161,9 +162,12 @@ void Player::buy(Property* p, int buyAmount, TurnContext& ctx) {
     if (p == nullptr) {
         throw InvalidGameStateException("Cannot buy null property");
     }
-    if (this->getBalance() < p->getBuyPrice()) {
-        throw InsufficientFundsException("Not enough money to buy " + 
-                                         p->getName());
+    if (buyAmount < 0) {
+        throw InvalidGameStateException("AUCTION: Buy amount must be non-negative");
+    }
+    if (this->getBalance() < buyAmount) {
+        throw InsufficientFundsException("AUCTION: Not enough money to buy " + 
+                                         p->getName()); //should never appear due to auction characteristics
     }
     this->deductCash(buyAmount);
     this->addProperty(p, ctx);

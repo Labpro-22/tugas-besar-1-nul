@@ -43,6 +43,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <random>
+#include <sstream>
 
 GameEngine::GameEngine(int size)
     : board(Board{size})
@@ -124,6 +125,21 @@ void GameEngine::run() {
     }
 
     std::cout << "\n=== Permainan Selesai! ===\n";
+    const std::vector<Player*> winners = turnmgr.determineWinner();
+    if (winners.empty()) {
+        std::cout << "Tidak ada pemenang yang valid.\n";
+    } else {
+        std::cout << "Pemenang:\n";
+        for (Player* winner : winners) {
+            if (winner == nullptr) {
+                continue;
+            }
+            std::cout << "- " << winner->getUsername()
+                      << " | Balance: M" << winner->getBalance()
+                      << " | Properti: " << winner->getPropertiesAmount()
+                      << " | Kartu: " << winner->getHandsAmount() << "\n";
+        }
+    }
 }
 
 #if NIMONSPOLI_HAS_RAYLIB
@@ -1096,6 +1112,21 @@ void GameEngine::runGUI() {
     }
 
     std::cout << "\n=== Permainan Selesai! ===\n";
+    const std::vector<Player*> winners = turnmgr.determineWinner();
+    if (winners.empty()) {
+        std::cout << "Tidak ada pemenang yang valid.\n";
+    } else {
+        std::cout << "Pemenang:\n";
+        for (Player* winner : winners) {
+            if (winner == nullptr) {
+                continue;
+            }
+            std::cout << "- " << winner->getUsername()
+                      << " | Balance: M" << winner->getBalance()
+                      << " | Properti: " << winner->getPropertiesAmount()
+                      << " | Kartu: " << winner->getHandsAmount() << "\n";
+        }
+    }
     renderer.Shutdown();
 #else
     std::cout << "GUI mode not available - Raylib not found.\n";
@@ -1204,9 +1235,11 @@ void GameEngine::newGame() {
     int maxTurns = getConfiguredMaxTurn(); //tergantung, kalau new game masih bisa ngeload ya brarti bener gini
     std::cout << "[INIT] Querying max turns\n";
     std::cout << "Enter max turn (-1 for unlimited turns, default from config: " << maxTurns << ")\n";
+    std::cout << "Note that turns mean each player's turn.\n";
     std::cout << "> ";
     while (!(std::cin >> maxTurns)){
         std::cout << "Input invalid! Try again! Enter max turn (-1 for unlimited turns)\n";std::cin.clear();
+        std::cout << "Note that turns mean each player's turn.\n";
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     };
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -1623,18 +1656,20 @@ GameState GameEngine::buildGameState() const {
         Player* owner = prop->getOwner();
         if (owner != nullptr) {
             propState.owner = owner->getUsername();
+        } else{
+            propState.owner = "BANK";
         }
 
         // Get status
         switch (prop->getStatus()) {
             case PropertyStatus::OWNED:
-                propState.status = "owned";
+                propState.status = "OWNED";
                 break;
             case PropertyStatus::MORTGAGED:
-                propState.status = "mortgage";
+                propState.status = "MORTGAGED";
                 break;
             default:
-                propState.status = "bank";
+                propState.status = "BANK";
                 break;
         }
 
@@ -1643,6 +1678,28 @@ GameState GameEngine::buildGameState() const {
         propState.festivalDur = prop->getFestivalDuration();
 
         state.properties.push_back(propState);
+    }
+
+    // Save remaining skill deck state using the same compact format as hand cards.
+    for (const SkillCard* card : skillDeck.getDeck()) {
+        if (card == nullptr) {
+            continue;
+        }
+
+        std::ostringstream cardLine;
+        cardLine << card->getTypeName();
+
+        const int value = card->getSkillValue();
+        const int duration = card->getRemainingDuration();
+        const bool hasValue = value != 0;
+        const bool hasDuration = duration != 0;
+        if (hasDuration || card->getTypeName() == "DiscountCard") {
+            cardLine << ' ' << value << ' ' << duration;
+        } else if (hasValue) {
+            cardLine << ' ' << value;
+        }
+
+        state.deckState.push_back(cardLine.str());
     }
 
     // Copy log from TransactionLogger to state
@@ -1765,64 +1822,11 @@ void GameEngine::loadGame(const std::string& file) {
 void GameEngine::saveGame(const std::string& file) {
     std::cout << "[INFO] Saving game to file: " << file << "\n";
 
-    GameState state;
-    state.currentTurn = turnmgr.getCurrentTurn();
-    state.maxTurn = turnmgr.getMaxTurn();
-
-    // Build player states
-    for (const auto& player : players) {
-        PlayerState ps;
-        ps.username = player->getUsername();
-        ps.balance = player->getBalance();
-
-        // Get position code from board
-        Tile* tile = board.getTile(player->getPosition());
-        ps.positionCode = tile != nullptr ? tile->getCode() : "GO";
-
-        // Get status
-        ps.status = playerStatusToString(player->getStatus());
-
-        // Check if bot
-        ps.isBot = player->isBot();
-
-        // Save hand cards
-        for (SkillCard* card : player->getHand()) {
-            CardState cs;
-            cs.type = card->getTypeName();
-            cs.value = card->getSkillValue();
-            cs.remainingDuration = card->getRemainingDuration();
-            ps.hand.push_back(cs);
-        }
-
-        state.players.push_back(ps);
-    }
-
-    // Build turn order
-    for (Player* player : turnmgr.getTurnOrder()) {
-        for (size_t i = 0; i < players.size(); ++i) {
-            if (players[i] == player) {
-                state.turnOrder.push_back(static_cast<int>(i));
-                break;
-            }
-        }
-    }
-
-    // Set active player index
-    Player* currentPlayer = turnmgr.getCurrentPlayer();
-    if (currentPlayer != nullptr) {
-        for (size_t i = 0; i < players.size(); ++i) {
-            if (players[i] == currentPlayer) {
-                state.activePlayerIdx = static_cast<int>(i);
-                break;
-            }
-        }
-    }
-
-    // Copy log from TransactionLogger to state
-    state.log = logger.getAll();
-
-    // Log the save action itself
+    // Log the save action first so it is included in saved transaction history.
     logger.log(turnmgr.getCurrentTurn(), "SYSTEM", "SAVE", "Game saved to " + file);
+
+    // Build complete snapshot (players, turn order, properties, deck, and logs).
+    GameState state = buildGameState();
 
     // Save using SaveLoadManager
     SaveLoadManager saveLoadManager;
