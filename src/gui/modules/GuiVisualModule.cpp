@@ -110,7 +110,8 @@ std::string GuiVisualModule::ResolveTileTextureKey(
     if (ContainsInsensitiveLocal(loweredCode, "pam")) {
         return "tile-pam";
     }
-    if (ContainsInsensitiveLocal(loweredCode, "festival")) {
+    if (ContainsInsensitiveLocal(loweredCode, "fes") ||
+        ContainsInsensitiveLocal(loweredCode, "festival")) {
         return "tile-festival";
     }
     if (ContainsInsensitiveLocal(loweredCode, "kesempatan") ||

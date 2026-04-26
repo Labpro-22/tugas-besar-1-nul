@@ -394,16 +394,16 @@ void GUIRenderer::RecalculateLayout() {
 void GUIRenderer::DrawPanelsBackdrop() const {
 #if NIMONSPOLI_HAS_RAYLIB
     DrawRectangleRec(boardBounds_, Color{234, 224, 205, 255});
-    DrawRectangleLinesEx(boardBounds_, 3.0F, Color{74, 58, 43, 255});
+    DrawRectangleLinesEx(boardBounds_, 4.0F, Color{50, 35, 20, 255});
 
     DrawRectangleRec(centerArea_, Color{248, 244, 235, 255});
-    DrawRectangleLinesEx(centerArea_, 2.0F, Color{136, 121, 97, 255});
+    DrawRectangleLinesEx(centerArea_, 2.0F, Color{100, 85, 65, 255});
 
     DrawRectangleRec(rightPanel_, Color{247, 241, 229, 255});
-    DrawRectangleLinesEx(rightPanel_, 2.0F, Color{105, 94, 76, 255});
+    DrawRectangleLinesEx(rightPanel_, 2.0F, Color{80, 70, 55, 255});
 
     DrawRectangleRec(bottomPanel_, Color{247, 241, 229, 255});
-    DrawRectangleLinesEx(bottomPanel_, 2.0F, Color{105, 94, 76, 255});
+    DrawRectangleLinesEx(bottomPanel_, 2.0F, Color{80, 70, 55, 255});
 #endif
 }
 
@@ -427,69 +427,86 @@ void GUIRenderer::DrawTileBase(const int index, const GameState& state) const {
     bool isStreet = IsStreetTile(index, property);
     bool isCorner = IsCornerTile(index);
 
-    // Resolve the tile name from the board data
     auto tileNameIt = state.tileNames.find(index - 1);
     std::string tileName = (tileNameIt != state.tileNames.end()) ? tileNameIt->second : "";
 
+    Color tileBg;
     if (isCorner) {
-        DrawRectangleRec(tileRect, Color{205, 197, 178, 255});
-        DrawRectangleLinesEx(tileRect, 1.0F, Color{70, 70, 70, 255});
-
-        if (!textureKey.empty()) {
-            Rectangle textureDst = Rectangle{tileRect.x + 4.0F,
-                                              tileRect.y + 4.0F,
-                                              tileRect.width - 8.0F,
-                                              tileRect.height - 8.0F};
-            DrawTextureFitted(textureKey, textureDst);
-        }
-
-        // Draw corner tile name below the texture
-        if (!tileName.empty()) {
-            int nameFontSize = kFontSmall;
-            int nameW = MeasureText(tileName.c_str(), nameFontSize);
-            int availW = static_cast<int>(tileRect.width - 8.0F);
-            if (nameW > availW && nameFontSize > 8) {
-                nameFontSize = std::max(8, nameFontSize * availW / nameW);
-                nameW = MeasureText(tileName.c_str(), nameFontSize);
-            }
-            DrawText(tileName.c_str(),
-                     static_cast<int>(tileRect.x + (tileRect.width - nameW) * 0.5f),
-                     static_cast<int>(tileRect.y + tileRect.height - nameFontSize - 4.0f),
-                     nameFontSize,
-                     Color{40, 40, 40, 255});
-        }
+        tileBg = Color{205, 197, 178, 255};
     } else if (isStreet) {
         Color headerColor = GetColorGroupForTile(index, property);
         DrawRotatedTileContent(
             square.side, tileRect, headerColor, code, property, textureKey);
+        DrawRectangleLinesEx(tileRect, 2.0F, Color{50, 40, 30, 255});
         return;
+    } else if (property != nullptr) {
+        std::string typeLower = ToLower(property->type);
+        if (typeLower.find("railroad") != std::string::npos) {
+            tileBg = Color{220, 230, 240, 255};
+        } else if (typeLower.find("utility") != std::string::npos) {
+            tileBg = Color{230, 245, 220, 255};
+        } else {
+            tileBg = Color{240, 235, 220, 255};
+        }
     } else {
-        DrawRectangleRec(tileRect, Color{240, 235, 220, 255});
-        DrawRectangleLinesEx(tileRect, 1.0F, Color{70, 70, 70, 255});
-
-        if (!textureKey.empty()) {
-            Rectangle textureDst = Rectangle{tileRect.x + 4.0F,
-                                              tileRect.y + 4.0F,
-                                              tileRect.width - 8.0F,
-                                              tileRect.height - 8.0F};
-            DrawTextureFitted(textureKey, textureDst);
+        std::string lowerCode = ToLower(code);
+        if (lowerCode.find("dnu") != std::string::npos ||
+            lowerCode.find("dana") != std::string::npos ||
+            lowerCode.find("community") != std::string::npos ||
+            lowerCode.find("ksp") != std::string::npos ||
+            lowerCode.find("kesempatan") != std::string::npos ||
+            lowerCode.find("chance") != std::string::npos) {
+            tileBg = Color{200, 215, 240, 255};
+        } else if (lowerCode.find("fes") != std::string::npos ||
+                   lowerCode.find("festival") != std::string::npos) {
+            tileBg = Color{245, 230, 200, 255};
+        } else if (lowerCode.find("pph") != std::string::npos ||
+                   lowerCode.find("pbm") != std::string::npos ||
+                   lowerCode.find("tax") != std::string::npos ||
+                   lowerCode.find("pajak") != std::string::npos) {
+            tileBg = Color{240, 210, 210, 255};
+        } else if (lowerCode.find("go") != std::string::npos ||
+                   lowerCode.find("mulai") != std::string::npos) {
+            tileBg = Color{200, 230, 200, 255};
+        } else if (lowerCode.find("pen") != std::string::npos ||
+                   lowerCode.find("jail") != std::string::npos) {
+            tileBg = Color{220, 210, 195, 255};
+        } else if (lowerCode.find("bbp") != std::string::npos ||
+                   lowerCode.find("free") != std::string::npos ||
+                   lowerCode.find("parkir") != std::string::npos) {
+            tileBg = Color{210, 230, 210, 255};
+        } else if (lowerCode.find("ppj") != std::string::npos ||
+                   lowerCode.find("gotojail") != std::string::npos) {
+            tileBg = Color{230, 200, 200, 255};
+        } else {
+            tileBg = Color{240, 235, 220, 255};
         }
+    }
 
-        // Draw the tile name label below icon
-        if (!tileName.empty()) {
-            int nameFontSize = kFontSmall;
-            int nameW = MeasureText(tileName.c_str(), nameFontSize);
-            int availW = static_cast<int>(tileRect.width - 8.0F);
-            if (nameW > availW && nameFontSize > 8) {
-                nameFontSize = std::max(8, nameFontSize * availW / nameW);
-                nameW = MeasureText(tileName.c_str(), nameFontSize);
-            }
-            DrawText(tileName.c_str(),
-                     static_cast<int>(tileRect.x + (tileRect.width - nameW) * 0.5f),
-                     static_cast<int>(tileRect.y + tileRect.height - nameFontSize - 4.0f),
-                     nameFontSize,
-                     Color{40, 40, 40, 255});
+    DrawRectangleRec(tileRect, tileBg);
+    DrawRectangleLinesEx(tileRect, 2.0F, Color{50, 40, 30, 255});
+
+    if (!textureKey.empty()) {
+        Rectangle textureDst = Rectangle{tileRect.x + 4.0F,
+                                          tileRect.y + 4.0F,
+                                          tileRect.width - 8.0F,
+                                          tileRect.height - 8.0F};
+        DrawTextureFitted(textureKey, textureDst);
+    }
+
+    if (!tileName.empty()) {
+        int nameFontSize = kFontSmall;
+        int nameW = MeasureText(tileName.c_str(), nameFontSize);
+        int availW = static_cast<int>(tileRect.width - 8.0F);
+        if (nameW > availW && nameFontSize > 8) {
+            nameFontSize = std::max(8, nameFontSize * availW / nameW);
+            nameW = MeasureText(tileName.c_str(), nameFontSize);
         }
+        DrawText(tileName.c_str(),
+                 static_cast<int>(tileRect.x + (tileRect.width - nameW) * 0.5f),
+                 static_cast<int>(tileRect.y + tileRect.height - nameFontSize - 4.0f),
+                 nameFontSize,
+                 Color{40, 40, 40, 255});
     }
 
     DrawText(TextFormat("%d", index),
@@ -516,7 +533,7 @@ void GUIRenderer::DrawRotatedTileContent(int side,
     rlRotatef(rotation, 0.0f, 0.0f, 1.0f);
     rlTranslatef(-centerX, -centerY, 0.0f);
 
-    DrawRectangleLinesEx(tileRect, 1.0F, Color{70, 70, 70, 255});
+    DrawRectangleLinesEx(tileRect, 2.0F, Color{50, 40, 30, 255});
 
     float headerHeight = tileRect.height * kTileHeaderRatio;
     Rectangle headerRect =
@@ -884,9 +901,9 @@ void GUIRenderer::DrawDeckStacks() const {
 
 void GUIRenderer::DrawDiceOutsideBoard() {
 #if NIMONSPOLI_HAS_RAYLIB
-    float dieSize = 64.0f;
-    float diceAreaY = rightPanel_.y + 15.0f;
-    float diceSpacing = 15.0f;
+    float dieSize = 56.0f;
+    float diceAreaY = rightPanel_.y + 310.0f;
+    float diceSpacing = 10.0f;
 
     float panelCenterX = rightPanel_.x + rightPanel_.width * 0.5f;
     float die1X = panelCenterX - dieSize - diceSpacing * 0.5f;
@@ -986,11 +1003,11 @@ void GUIRenderer::DrawPlayerPanels(const GameState& state) const {
 #if NIMONSPOLI_HAS_RAYLIB
     DrawText("Player Status",
              static_cast<int>(rightPanel_.x + 12.0f),
-             static_cast<int>(rightPanel_.y + 80.0f),
+             static_cast<int>(rightPanel_.y + 10.0f),
              kFontTitle,
              Color{45, 38, 30, 255});
 
-    int y = static_cast<int>(rightPanel_.y + 115.0f);
+    int y = static_cast<int>(rightPanel_.y + 40.0f);
 
     for (std::size_t i = 0; i < state.players.size(); ++i) {
         const PlayerState& p = state.players[i];
@@ -1006,7 +1023,7 @@ void GUIRenderer::DrawPlayerPanels(const GameState& state) const {
         DrawSinglePlayerStatusRow(
             p, static_cast<int>(i), y, ownedPropertyCount, isActive);
 
-        y += 75;
+        y += 55;
         if (y > static_cast<int>(rightPanel_.y + rightPanel_.height - 80.0f)) {
             break;
         }
@@ -1038,7 +1055,7 @@ void GUIRenderer::DrawSinglePlayerStatusRow(const PlayerState& player,
     const Rectangle row = Rectangle{rightPanel_.x + 8.0f,
                                     static_cast<float>(y),
                                     rightPanel_.width - 16.0f,
-                                    68.0f};
+                                    50.0f};
 
     DrawRectangleRec(
         row, isActive ? Color{226, 241, 217, 255} : Color{239, 233, 219, 255});
@@ -1047,24 +1064,18 @@ void GUIRenderer::DrawSinglePlayerStatusRow(const PlayerState& player,
     const std::string tokenKey =
         "player" + std::to_string((playerIndex % 4) + 1);
     const Rectangle iconDst =
-        Rectangle{row.x + 8.0f, row.y + 8.0f, 26.0f, 26.0f};
+        Rectangle{row.x + 6.0f, row.y + 12.0f, 26.0f, 26.0f};
     DrawTextureFitted(tokenKey, iconDst);
 
     DrawText(player.username.c_str(),
-             static_cast<int>(row.x + 42.0f),
-             static_cast<int>(row.y + 8.0f),
+             static_cast<int>(row.x + 38.0f),
+             static_cast<int>(row.y + 6.0f),
              kFontBody,
              Color{40, 40, 40, 255});
 
-    DrawText(TextFormat("Cash: %d", player.balance),
-             static_cast<int>(row.x + 42.0f),
+    DrawText(TextFormat("Cash: %d  Props: %d", player.balance, ownedPropertyCount),
+             static_cast<int>(row.x + 38.0f),
              static_cast<int>(row.y + 28.0f),
-             kFontSmall,
-             Color{50, 50, 50, 255});
-
-    DrawText(TextFormat("Props: %d", ownedPropertyCount),
-             static_cast<int>(row.x + 42.0f),
-             static_cast<int>(row.y + 44.0f),
              kFontSmall,
              Color{50, 50, 50, 255});
 #endif

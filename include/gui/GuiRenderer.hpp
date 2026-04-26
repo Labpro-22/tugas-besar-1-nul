@@ -153,7 +153,7 @@ class GUIRenderer {
   private:
     static constexpr int kBoardMargin = 24;
     static constexpr int kOuterPadding = 16;
-    static constexpr int kRightPanelWidth = 300;
+    static constexpr int kRightPanelWidth = 340;
     static constexpr int kBottomPanelHeight = 145;
     static constexpr float kTokenScale = 0.55F;
     static constexpr float kOverlayAlphaFactor = 0.72F;

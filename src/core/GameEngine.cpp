@@ -257,7 +257,7 @@ static void RenderGameFrame(GUIRenderer& renderer, GameEngine& engine,
 
     // Button dimensions
     float controlsX = snapshot.rightPanel.x + 15;
-    float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 300;
+    float controlsY = snapshot.rightPanel.y + snapshot.rightPanel.height - 280;
 
     // Draw turn info panel
     DrawRectangle(10, 10, 380, 110, Color{30, 30, 40, 230});
