@@ -131,25 +131,46 @@ void RailroadTile::onLanded(TurnContext& ctx) {
     if (property->getStatus() == PropertyStatus::BANK) {
         autoAcquire(player, ctx);
     } else if (property->getStatus() == PropertyStatus::OWNED) {
-
         if (property->getOwner() != &player) {
-            // belum buat sudut pandang player untuk pembayaran dan penerimaan cash
-            Property* prop = getProperty();
-            cout << "[" << player.getUsername() << "] landed on ["
-                 << prop->getName() << "] milik ["
-                 << prop->getOwner()->getUsername() << "].\n\n";
-            prop->printStatus(ctx); 
-            
-            // Panggil payRent (otomatis handle deduct, add ke owner, dan cek bangkrut)
-            player.payRent(prop, ctx);
-            
-            cout << "Uang anda tersisa: <M"
-                 << player.getBalance()
-                 << ">.\n\n";
+            triggerRentPayment(ctx);
         }
-    } else {
-        // kalau Mortgaged lewat aja sih
     }
+}
+
+void RailroadTile::triggerRentPayment(TurnContext& ctx) {
+    Player& player = ctx.currentPlayer;
+    if (player.isShieldActive()) {
+        cout << "You have an active shield! No rent paid\n";
+        return;
+    }
+
+    Property* prop = getProperty();
+    Player* owner = prop->getOwner();
+    if (owner == nullptr) {
+        return;
+    }
+
+    const int rent = prop->getRent(ctx);
+    cout << "You landed on [" << prop->getName() << "] owned by " << owner->getUsername() << ".\n\n";
+    prop->printStatus(ctx);
+
+    if (player.getBalance() < rent) {
+        if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
+            ctx.gameEngine.getPanelManager()->showBankruptcy(ctx, rent);
+            ctx.gameEngine.getPanelManager()->getBankruptcyState().pendingRent = rent;
+            ctx.gameEngine.getPanelManager()->getBankruptcyState().rentOwner = owner;
+            return;
+        }
+        const bool canContinue = BankruptcyManager::resolveDebtByLiquidation(ctx, rent);
+        if (!canContinue) {
+            return;
+        }
+    }
+
+    player.deductCash(rent);
+    owner->addCash(rent);
+    cout << "Rent paid: M" << rent << "\n";
+    cout << "Money left: <M" << player.getBalance() << ">.\n\n";
 }
 
 void RailroadTile::autoAcquire(Player& player, TurnContext& ctx){
@@ -162,26 +183,47 @@ void UtilityTile::onLanded(TurnContext& ctx) {
     Player& player = ctx.currentPlayer;
     if (property->getStatus() == PropertyStatus::BANK){
         autoAcquire(player, ctx);
-        
     } else if (property->getStatus() == PropertyStatus::OWNED){
         if (property->getOwner() != &player){
-            Property* prop = getProperty();
-            cout << "[" << player.getUsername() << "] landed on ["
-                 << prop->getName() << "] milik ["
-                 << prop->getOwner()->getUsername() << "].\n\n";
-            cout << "Biaya sewa:\nFaktor Pengali:\n";
-            prop->printStatus(ctx); 
-            
-            // Pada kode asli, mekanisme bayar utilitas belum diimplementasi.
-            // Sekarang kita langsung delegasikan ke payRent
-            player.payRent(prop, ctx);
-            
-            cout << "Uang anda tersisa: <M" << player.getBalance()
-                 << ">.\n\n"; 
+            triggerRentPayment(ctx);
         }
-    } else {
-        // kalau Mortgaged lewat aja sih
     }
+}
+
+void UtilityTile::triggerRentPayment(TurnContext& ctx) {
+    Player& player = ctx.currentPlayer;
+    if (player.isShieldActive()) {
+        cout << "You have an active shield! No rent paid\n";
+        return;
+    }
+
+    Property* prop = getProperty();
+    Player* owner = prop->getOwner();
+    if (owner == nullptr) {
+        return;
+    }
+
+    const int rent = prop->getRent(ctx);
+    cout << "You landed on [" << prop->getName() << "] owned by " << owner->getUsername() << ".\n\n";
+    prop->printStatus(ctx);
+
+    if (player.getBalance() < rent) {
+        if (!player.isBot() && ctx.gameEngine.getPanelManager()) {
+            ctx.gameEngine.getPanelManager()->showBankruptcy(ctx, rent);
+            ctx.gameEngine.getPanelManager()->getBankruptcyState().pendingRent = rent;
+            ctx.gameEngine.getPanelManager()->getBankruptcyState().rentOwner = owner;
+            return;
+        }
+        const bool canContinue = BankruptcyManager::resolveDebtByLiquidation(ctx, rent);
+        if (!canContinue) {
+            return;
+        }
+    }
+
+    player.deductCash(rent);
+    owner->addCash(rent);
+    cout << "Rent paid: M" << rent << "\n";
+    cout << "Money left: <M" << player.getBalance() << ">.\n\n";
 }
 
 void UtilityTile::autoAcquire(Player& player, TurnContext& ctx){

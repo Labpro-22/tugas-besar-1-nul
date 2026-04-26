@@ -79,7 +79,7 @@ void TurnManager::setActivePlayerIndex(int idx) { this->activePlayerIndex = idx;
 
 void TurnManager::setMaxTurn(int max) { this->maxTurn = max; }
 
-bool TurnManager::isGameOver() const { 
+bool TurnManager::isGameOver() const {
     int alivePlayers = 0;
     for (Player* player : this->turnOrder) {
         if (player != nullptr && player->getStatus() != PlayerStatus::BANKRUPT) {

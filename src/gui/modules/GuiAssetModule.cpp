@@ -57,6 +57,12 @@ const AssetRegistry& GetAssetRegistry() {
 
         {"overlay-mortgage", "mortgage-lock.png"},
         {"overlay-festival", "festival-effect.png"},
+
+        {"tile-jail", "jail.png"},
+        {"tile-free-parking", "free-parking.png"},
+        {"tile-go-to-jail", "go-to-jail.png"},
+        {"tile-tax", "go.png"},
+
         {"nimonspoli", "nimonspoli.png"},
     };
     return registry;

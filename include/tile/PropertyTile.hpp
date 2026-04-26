@@ -36,6 +36,7 @@ class RailroadTile : public PropertyTile{
     public:
         RailroadTile(int idx, RailroadProperty& prop);
         void onLanded(TurnContext& ctx) override;
+        void triggerRentPayment(TurnContext& ctx);
         void autoAcquire(Player& player, TurnContext& ctx);
 };
 
@@ -43,6 +44,7 @@ class UtilityTile : public PropertyTile{
     public:
         UtilityTile(int idx, UtilityProperty& prop);
         void onLanded(TurnContext& ctx) override;
+        void triggerRentPayment(TurnContext& ctx);
         void autoAcquire(Player& player, TurnContext& ctx); 
 };
 
