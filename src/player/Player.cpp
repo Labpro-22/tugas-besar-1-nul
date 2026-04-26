@@ -518,4 +518,9 @@ void Player::decrementjailTurns(){
     this->jailTurns--;
 }
 
-void Player::payRent(Property* p, TurnContext& ctx){}
+void Player::payRent(Property* p, TurnContext& ctx){
+    StreetProperty* sp = dynamic_cast<StreetProperty*> (p);
+    if (sp != nullptr){
+        deductCash(p->getRent(ctx));
+    }
+}
